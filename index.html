@@ -10865,7 +10865,7 @@ document.addEventListener('keydown', e=>{
     const total = groups.reduce((s,g)=>s+g.rows.length, 0);
     if(!total){ wtToast('Ten plik nie zawiera żadnych rozpoznanych danych do zaimportowania.', true); return; }
     const summary = groups.filter(g=>g.rows.length).map(g=>g.rows.length+' — '+g.name).join(', ');
-    const ok = await wtConfirm('Zaimportować dane z pliku? Znalezione rekordy: '+summary+'. Rekordy o tych samych identyfikatorach zostaną nadpisane w aktualnym magazynie danych ('+(window.wtUsingLocalDB?'lokalnie, w tej przeglądarce':'w chmurze Claude')+').', 'Importuj', 'primary');
+    const ok = await wtConfirm('Zaimportować dane z pliku? Znalezione rekordy: '+summary+'. Rekordy o tych samych identyfikatorach zostaną nadpisane w aktualnym magazynie danych ('+(window.wtUsingLocalDB?'lokalnie, w tej przeglądarce':(window.wtUsingFirebaseDB?'w Firebase':'w chmurze Claude'))+').', 'Importuj', 'primary');
     if(!ok) return;
     try{
       for(const g of groups){
@@ -10950,7 +10950,7 @@ document.addEventListener('keydown', e=>{
   }
   window.wtPdfUpload = function(input){
     if(!window.wtUsingLocalDB){
-      wtToast('Wgrywanie dokumentów PDF jest dostępne tylko w wersji lokalnej tego narzędzia (plik na dysku), nie w wersji na claude.ai.', true);
+      wtToast('Wgrywanie dokumentów PDF jest dostępne tylko w wersji lokalnej tego narzędzia (plik na dysku), nie w trybie zsynchronizowanym (claude.ai / Firebase).', true);
       input.value = '';
       return;
     }
