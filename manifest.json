@@ -1,0 +1,16 @@
+{
+  "name": "BHP Audyt",
+  "short_name": "BHP Audyt",
+  "description": "Wiedza prawna, checklisty, dokumentacja i narzędzia dla specjalisty BHP.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0B0B0D",
+  "theme_color": "#0F2033",
+  "lang": "pl",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
