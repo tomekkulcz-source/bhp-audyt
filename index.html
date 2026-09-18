@@ -7434,9 +7434,14 @@ document.addEventListener('keydown', e=>{
   window.wtRjDownloadTemplate = async function(key){
     const t = OFFICIAL_TEMPLATES[key];
     if(!t) return;
-    const bytes = base64ToBytes('data:'+t.mime+';base64,'+t.data);
-    const blob = new Blob([bytes], {type:t.mime});
-    await wtSaveFile(t.fileName, blob);
+    try{
+      const bytes = base64ToBytes('data:'+t.mime+';base64,'+t.data);
+      const blob = new Blob([bytes], {type:t.mime});
+      await wtSaveFile(t.fileName, blob);
+    }catch(e){
+      console.error('Pobieranie wzoru nie powiodło się', e);
+      wtToast('Nie udało się pobrać wzoru: '+(e && e.message ? e.message : e), true);
+    }
   };
 
   const REGISTER_DEFS = {
@@ -11750,9 +11755,23 @@ document.addEventListener('keydown', e=>{
   /* Uniwersalny zapis pliku na dysk — korzysta z capability `downloads`, gdy dostępna (strona na
      claude.ai), a w przeciwnym razie z najzwyklejszego pobierania przez przeglądarkę (blob + link
      z atrybutem download) — to drugie NIE wymaga żadnej capability i działa w każdej przeglądarce
-     przy otwarciu pliku lokalnie. */
+     przy otwarciu pliku lokalnie. WYJĄTEK: Safari na iOS/iPadOS nie obsługuje niezawodnie atrybutu
+     download na blob: URL — kliknięcie takiego linku często nie robi kompletnie nic (potwierdzone
+     w praktyce). Na tych przeglądarkach zamiast tego nawigujemy bezpośrednio do pliku jako
+     data: URI — Safari otwiera wtedy natywny podgląd z przyciskiem Udostępnij/Zapisz w Plikach. */
+  const wtIsIOSSafari = /iP(hone|od|ad)/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   async function wtSaveFile(filename, blob){
     if(DOWNLOADS){ await DOWNLOADS.save({filename, data:blob}); return; }
+    if(wtIsIOSSafari){
+      await new Promise((resolve, reject)=>{
+        const reader = new FileReader();
+        reader.onload = function(){ window.location.href = reader.result; resolve(); };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      return;
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = filename;
