@@ -491,7 +491,7 @@ a.jump:hover{text-decoration:underline;}
      nieklikalny znacznik tuż przy nim — ułatwia to szybkie wychwycenie przy przeglądaniu wydruku,
      które pozycje mają dodatkową notatkę, zamiast trzeba było czytać każdy akapit z osobna. */
   .wt-comment-toggle{display:none !important;}
-  .item:has(.wt-comment-input:not(:placeholder-shown)) .wt-comment-toggle{display:inline !important;opacity:.7;}
+  .item.wt-has-comment .wt-comment-toggle{display:inline !important;opacity:.7;}
   /* Kategoria odznaczona jako poza zakresem TEJ wizyty ("audyt: nie") nie ma po co się drukować —
      specjalista sam oznaczył, że tym razem jej nie weryfikuje. */
   .cat.wt-cat-inactive{display:none !important;}
@@ -500,7 +500,7 @@ a.jump:hover{text-decoration:underline;}
      obramowany prostokąt z uchwytem do zmiany rozmiaru w rogu — wyglądało to jak zapomniany
      fragment formularza. Niepuste pole traci obramowanie/tło/uchwyt i drukuje się jako zwykły,
      pochylony akapit tekstu, tak samo jak inne treści dokumentu. */
-  .wt-comment-wrap:has(textarea:placeholder-shown){display:none !important;}
+  .wt-comment-wrap.wt-comment-empty{display:none !important;}
   .wt-comment-input{border:none !important;background:transparent !important;resize:none !important;
     padding:0 !important;font-style:italic;color:#555 !important;min-height:0 !important;}
   /* Bez table-layout:fixed przeglądarka ignoruje zadane już procentowe szerokości kolumn
@@ -14197,6 +14197,22 @@ document.addEventListener('keydown', e=>{
       const opt = sel.options[sel.selectedIndex];
       label.textContent = (sel.value && opt) ? opt.textContent : '—';
       if(sel.value) label.setAttribute('data-v', sel.value); else label.removeAttribute('data-v');
+    });
+    /* Puste/niepuste pole komentarza rozstrzygaliśmy w CSS druku przez :has() (zob. dawne
+       ".wt-comment-wrap:has(textarea:placeholder-shown)" i ".item:has(.wt-comment-input:not(...))").
+       :has() to najmłodszy, relacyjny selektor CSS — wymaga od przeglądarki bieżącego śledzenia
+       zależności między elementami, a to właśnie w tym miejscu (razem z przywróceniem kolorów
+       statusu w tym samym wydaniu) zbiegło się w czasie z pojawieniem się niepotrzebnej dodatkowej
+       pustej strony na końcu wydruku list kontrolnych. Zamiast liczyć na :has() w kontekście
+       przeliczania stylów pod druk, ustalamy to raz, tutaj, zwykłym JS-em i zapisujemy jako
+       zwykłe klasy — CSS druku (patrz .wt-comment-empty / .wt-has-comment) już tylko czyta gotowy
+       wynik, bez żadnej relacyjnej logiki w trakcie samej paginacji. */
+    document.querySelectorAll('.wt-comment-wrap').forEach(wrap=>{
+      const ta = wrap.querySelector('.wt-comment-input');
+      const hasText = !!(ta && ta.value && ta.value.trim() !== '');
+      wrap.classList.toggle('wt-comment-empty', !hasText);
+      const item = wrap.closest('.item');
+      if(item) item.classList.toggle('wt-has-comment', hasText);
     });
   }
   function wtPreparePrint(){
