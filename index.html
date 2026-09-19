@@ -11342,7 +11342,19 @@ document.addEventListener('keydown', e=>{
     const targetWidth = Math.max(200, Math.min(unscaled.width, body.clientWidth - 40));
     const scale = targetWidth / unscaled.width;
     const viewport = page.getViewport({scale});
-    canvas.width = viewport.width; canvas.height = viewport.height;
+    /* canvas.width/height to REALNA (backing store) rozdzielczość bitmapy, a nie rozmiar
+       wyświetlany — bez uwzględnienia devicePixelRatio na telefonie (2x-3x) renderowaliśmy
+       bitmapę dokładnie w rozmiarze pikseli CSS, więc przeglądarka musiała ją potem SZTUCZNIE
+       powiększać (upscaling) do fizycznych pikseli ekranu — stąd tekst wyglądał rozmazany/
+       nieczytelny na telefonie, mimo że na desktopie (DPR zwykle =1) wyglądało to poprawnie.
+       Renderujemy więc bitmapę w rozdzielczości scale*DPR (ostro na Retinie/telefonie), a canvas
+       wyświetlamy z powrotem w rozmiarze CSS przez canvas.style.width/height — warstwa tekstu
+       (wtPdfRenderTextLayer) dostaje osobno "viewport" w skali CSS, żeby zaznaczanie/wyszukiwanie
+       nadal pokrywało się z tym, co faktycznie widać na ekranie. */
+    const dpr = window.devicePixelRatio || 1;
+    const renderViewport = page.getViewport({scale: scale * dpr});
+    canvas.width = renderViewport.width; canvas.height = renderViewport.height;
+    canvas.style.width = viewport.width+'px'; canvas.style.height = viewport.height+'px';
     wrap.style.width = viewport.width+'px'; wrap.style.height = viewport.height+'px';
     // Anulujemy POPRZEDNIE (jeszcze niedokończone) renderowanie zamiast pozwolić dwóm render()
     // działać naraz na tym samym canvasie (PDF.js na to nie pozwala i rzuca wyjątkiem) — typowe
@@ -11351,7 +11363,7 @@ document.addEventListener('keydown', e=>{
     // zawieszenie na stałe, więc świadomie NIE nakładamy tu własnego limitu czasu: przerywanie
     // działającego, wolnego, ale poprawnie postępującego renderowania tylko pogarsza sprawę.
     if(pdfRenderTask){ try{ pdfRenderTask.cancel(); }catch(e){} }
-    pdfRenderTask = page.render({canvasContext: canvas.getContext('2d'), viewport});
+    pdfRenderTask = page.render({canvasContext: canvas.getContext('2d'), viewport: renderViewport});
     try{
       await pdfRenderTask.promise;
       pdfPageNum = num;
