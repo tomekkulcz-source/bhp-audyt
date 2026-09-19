@@ -6305,6 +6305,25 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count">Pobierz szablon →</div>
       </div>
     </div>
+    <div class="wt-rj-cathead"><span class="wt-rj-catletter">N</span> Posiłki profilaktyczne i napoje</div>
+    <div class="startgrid">
+      <div class="card nav-card" data-rjtype="tabela_posilkow_profilaktycznych" onclick="wtRjOpenType('tabela_posilkow_profilaktycznych')">
+        <span class="wt-rj-typedel" title="Usuń typ dokumentu" onclick="wtRjDeleteType('tabela_posilkow_profilaktycznych', event)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+        <h4><span class="pill mono">N.1</span> Tabela norm przydziału profilaktycznych posiłków regeneracyjnych wg stanowisk</h4>
+        <p class="small">Stanowiska uprawnione do gorącego posiłku ≥1000 kcal — praca w skrajnych temperaturach, wysiłek fizyczny, praca pod ziemią.</p>
+        <div class="small mono" style="margin-top:8px;">Art. 232 KP; Rozp. RM z 28.05.1996 r.</div>
+        <div class="wt-rj-tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;"><span class="badge crit"><span class="dot"></span>BEZWZGL.</span></div>
+        <div class="wt-rj-count" id="rjCount-tabela_posilkow_profilaktycznych">0 wersji</div>
+      </div>
+<div class="card nav-card" data-rjtype="tabela_napojow" onclick="wtRjOpenType('tabela_napojow')">
+        <span class="wt-rj-typedel" title="Usuń typ dokumentu" onclick="wtRjDeleteType('tabela_napojow', event)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+        <h4><span class="pill mono">N.2</span> Tabela norm przydziału napojów chłodzących i ciepłych wg stanowisk</h4>
+        <p class="small">Stanowiska uprawnione do napojów — mikroklimat gorący/zimny, intensywna praca fizyczna, utrata płynów.</p>
+        <div class="small mono" style="margin-top:8px;">Art. 232 KP; Rozp. RM z 28.05.1996 r.</div>
+        <div class="wt-rj-tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;"><span class="badge crit"><span class="dot"></span>BEZWZGL.</span></div>
+        <div class="wt-rj-count" id="rjCount-tabela_napojow">0 wersji</div>
+      </div>
+    </div>
 <div class="wt-rj-cathead"><span class="wt-rj-catletter">J</span> Wykazy pracownicze</div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtype="wykaz_psn" onclick="wtRjOpenType('wykaz_psn')">
@@ -9914,6 +9933,49 @@ document.addEventListener('keydown', e=>{
         {key:'deadline', label:'Termin realizacji', type:'date'},
         {key:'status', label:'Status', type:'text'},
         {key:'actualCompletionDate', label:'Data faktycznej realizacji', type:'date'},
+        {key:'notes', label:'Uwagi', type:'text'}
+      ]
+    },
+    tabela_posilkow_profilaktycznych: {
+      code:'N.1',
+      category:'N. Posiłki profilaktyczne i napoje',
+      title:'Tabela norm przydziału profilaktycznych posiłków regeneracyjnych wg stanowisk',
+      legalBasis:'Art. 232 Kodeksu pracy; Rozporządzenie RM z 28.05.1996 r. w sprawie profilaktycznych posiłków i napojów (Dz.U. 1996 nr 60 poz. 279 ze zm. Dz.U. 2019 poz. 1160)',
+      description:'Posiłki przysługują nieodpłatnie pracownikom zatrudnionym w warunkach szczególnie uciążliwych — tabelę sporządza się indywidualnie dla zakładu na podstawie oceny wydatku energetycznego i warunków mikroklimatu (patrz kategoria F. Pomiary środowiska pracy) oraz konsultacji z lekarzem medycyny pracy.',
+      metaFields:[
+        {key:'companyName', label:'Nazwa zakładu pracy', type:'text'},
+        {key:'approvalDate', label:'Data zatwierdzenia tabeli', type:'date'}
+      ],
+      blankRowCount: 14,
+      instructionNote:'Progi uprawniające do posiłku profilaktycznego: wydatek energetyczny na zmianę roboczą powyżej 2000 kcal (mężczyźni) / 1100 kcal (kobiety); mikroklimat zimny (≤10°C) z wydatkiem powyżej 1500/1000 kcal; mikroklimat gorący z wydatkiem powyżej 2000/1100 kcal; praca pod ziemią lub na otwartej przestrzeni w okresie zimowym (1 listopada – 31 marca) — niezależnie od wydatku energetycznego. Posiłek powinien zawierać ok. 50–55% węglowodanów, 30–35% tłuszczów, 15% białek i mieć wartość ok. 1000 kcal. Bony żywieniowe zamiast posiłku są od 2023 r. wolne od podatku do kwoty określonej przepisami podatkowymi.',
+      columns:[
+        {key:'position', label:'Stanowisko', type:'text'},
+        {key:'condition', label:'Warunek uzasadniający przydział', type:'text'},
+        {key:'energyExpenditure', label:'Wydatek energetyczny na zmianę [kcal]', type:'text'},
+        {key:'mealType', label:'Rodzaj posiłku', type:'text'},
+        {key:'calorieValue', label:'Kaloryczność posiłku [kcal]', type:'text'},
+        {key:'servingTime', label:'Pora wydawania', type:'text'},
+        {key:'notes', label:'Uwagi', type:'text'}
+      ]
+    },
+    tabela_napojow: {
+      code:'N.2',
+      category:'N. Posiłki profilaktyczne i napoje',
+      title:'Tabela norm przydziału napojów chłodzących i ciepłych wg stanowisk',
+      legalBasis:'Art. 232 Kodeksu pracy; Rozporządzenie RM z 28.05.1996 r. w sprawie profilaktycznych posiłków i napojów (Dz.U. 1996 nr 60 poz. 279)',
+      description:'Napoje przysługują nieodpłatnie w ilości zaspokajającej potrzeby pracowników, stosownie do warunków wykonywania pracy.',
+      metaFields:[
+        {key:'companyName', label:'Nazwa zakładu pracy', type:'text'},
+        {key:'approvalDate', label:'Data zatwierdzenia tabeli', type:'date'}
+      ],
+      blankRowCount: 14,
+      instructionNote:'Napoje CHŁODZĄCE: mikroklimat gorący (WBGT powyżej wartości granicznych) lub wydatek energetyczny powyżej 1500 kcal (mężczyźni) / 1000 kcal (kobiety) na zmianę. Napoje CIEPŁE: praca na otwartej przestrzeni przy temperaturze poniżej 10°C oraz praca w mikroklimacie zimnym z wysiłkiem fizycznym. Napoje z solami mineralnymi: utrata przez pocenie ponad 0,5 l płynów na zmianę. Ilość min. 0,5 l na godzinę przy wysokiej temperaturze — obowiązek bezwzględny przy temp. otoczenia >28°C (praca lekka) i >25°C (praca fizyczna). Napoje nie mogą być alkoholowe.',
+      columns:[
+        {key:'position', label:'Stanowisko', type:'text'},
+        {key:'condition', label:'Warunek uzasadniający przydział', type:'text'},
+        {key:'drinkType', label:'Rodzaj napoju (chłodzący/ciepły/z solami mineralnymi)', type:'text'},
+        {key:'quantity', label:'Ilość wskazana [l / zmianę]', type:'text'},
+        {key:'servingMethod', label:'Sposób udostępnienia', type:'text'},
         {key:'notes', label:'Uwagi', type:'text'}
       ]
     },
