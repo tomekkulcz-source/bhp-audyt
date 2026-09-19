@@ -14562,7 +14562,17 @@ document.addEventListener('keydown', e=>{
   window.wtOpenStaticPdf = function(title, dataUri){
     try{
       const bytes = base64ToBytes(dataUri);
-      if(window.wtUsingLocalDB){
+      /* Tryb natywny (iframe + blob:, przeglądarka PDF wbudowana w Chrome) nie działa WYŁĄCZNIE
+         wewnątrz sandboksa opublikowanego Artifactu na claude.ai (zob. komentarz przy
+         wtSetPdfViewerMode powyżej) — to jedyne realne ograniczenie, nie ma nic wspólnego z tym,
+         czy dane są zapisywane lokalnie czy w chmurze (Firebase). Sprawdzanie tu wcześniej
+         window.wtUsingLocalDB było błędną poszlaką: na GitHub Pages w trybie zsynchronizowanym
+         (Firebase, np. po zalogowaniu) wtUsingLocalDB jest false mimo że iframe+blob działa tam
+         bez żadnych przeszkód — więc kompendia dostawały gorszy, własny podgląd zamiast bogatszej
+         wbudowanej przeglądarki Chrome, którą i tak dało się tam użyć. Sprawdzamy więc bezpośrednio
+         obecność środowiska claude.ai (window.claude), a nie sposobu przechowywania danych. */
+      const hasClaude = typeof window.claude !== 'undefined' && window.claude && typeof window.claude.use === 'function';
+      if(!hasClaude){
         wtOpenPdfViaIframe(title, new Blob([bytes], {type:'application/pdf'}));
       } else {
         wtSetPdfViewerMode(false);
