@@ -635,8 +635,14 @@ textarea.wt-input{resize:vertical;font-family:var(--font-ui);line-height:1.5;}
 .wt-pdf-viewer-overlay{position:fixed;inset:0;background:rgba(10,10,12,.92);z-index:6100;
   display:none;flex-direction:column;}
 .wt-pdf-viewer-overlay.open{display:flex;}
+/* Ten pasek (i analogicznie .wt-rjrow-bar oraz .wt-lightbox-close niżej) siedzi w nakładce
+   position:fixed;inset:0 zaczynającej się od samej góry ekranu — w przeciwieństwie do .topbar
+   głównej aplikacji nie miał żadnego odstępu na notch/pasek systemowy telefonu
+   (env(safe-area-inset-top)). Na telefonie zegar/bateria/sygnał z paska systemowego nakładały się
+   wtedy wizualnie na tytuł dokumentu — potwierdzone zrzutem ekranu z prawdziwego telefonu. */
 .wt-pdf-viewer-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:12px 18px;color:#fff;font-size:13.5px;font-weight:600;flex:0 0 auto;}
+  padding:12px 18px;padding-top:calc(12px + env(safe-area-inset-top, 0px));color:#fff;
+  font-size:13.5px;font-weight:600;flex:0 0 auto;}
 /* Bez tego długi tytuł (np. "Kompendium wiedzy o elektryczności") na wąskim telefonie zawijał się
    do dwóch linijek, ale pasek nie rósł razem z nim wysokościowo — tytuł nakładał się wtedy wizualnie
    na licznik stron i przyciski nawigacji obok. Zamiast zawijania: przycinamy tytuł do jednej linii
@@ -928,7 +934,8 @@ table.wt-rj-table .wt-rj-computed-empty{color:var(--ink-faint);}
   display:none;align-items:center;justify-content:center;padding:32px;cursor:zoom-out;}
 .wt-lightbox-overlay.open{display:flex;}
 .wt-lightbox-overlay img{max-width:100%;max-height:100%;border-radius:10px;box-shadow:var(--sh-3);}
-.wt-lightbox-close{position:fixed;top:18px;right:22px;width:36px;height:36px;border-radius:50%;
+.wt-lightbox-close{position:fixed;top:calc(18px + env(safe-area-inset-top, 0px));right:22px;
+  width:36px;height:36px;border-radius:50%;
   background:rgba(255,255,255,.12);color:#fff;font-size:20px;line-height:36px;text-align:center;
   cursor:pointer;}
 
@@ -1076,7 +1083,8 @@ table.wt-rj-table .wt-rj-computed-empty{color:var(--ink-faint);}
 /* Podgląd/edycja pełnego wiersza rejestru (pop-up) */
 .wt-rjrow-overlay{position:fixed;inset:0;background:rgba(10,10,12,.72);z-index:5000;display:none;flex-direction:column;}
 .wt-rjrow-overlay.open{display:flex;}
-.wt-rjrow-bar{display:flex;align-items:center;gap:16px;padding:14px 22px;background:var(--surface);
+.wt-rjrow-bar{display:flex;align-items:center;gap:16px;padding:14px 22px;
+  padding-top:calc(14px + env(safe-area-inset-top, 0px));background:var(--surface);
   border-bottom:1px solid var(--line);color:var(--ink);flex:0 0 auto;}
 .wt-rjrow-bar #wt-rjrow-title{font-weight:600;font-size:15px;flex:1;min-width:0;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap;}
