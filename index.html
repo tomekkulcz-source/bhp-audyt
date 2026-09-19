@@ -440,6 +440,15 @@ a.jump:hover{text-decoration:underline;}
      na czas druku, żeby wydruk kończył się dokładnie tam, gdzie kończy się treść. */
   body{background:#fff;display:block !important;min-height:0 !important;}
   .main{margin:0;max-width:none;padding:0;min-height:0 !important;}
+  /* .section.active ma na ekranie animację wejścia (fadeUp: transform:translateY + opacity) —
+     zmiana media query na "print" wymusza przeliczenie stylów całej strony, co może tę animację
+     ponownie uruchomić w kontekście silnika druku. Animacja oparta na transform zmusza
+     przeglądarkę do utworzenia dla tego elementu osobnej warstwy kompozycji, a fragmentacja
+     takiej warstwy w trakcie paginacji druku to udokumentowane źródło błędów w Chromium
+     (niezwiązanych z rzeczywistą wysokością treści — stąd zmiana marginesów/skali w oknie druku
+     nie zmieniała proporcjonalnie liczby pustych stron). Wyłączamy animację na czas druku, żeby
+     wydruk zawsze bazował na już "osiadłym" layoucie bez własnej warstwy kompozycji. */
+  .section.active{animation:none !important;}
   .card,table.ref,.cat,.progress{box-shadow:none;}
   /* CELOWO brak ".cat-body{display:block!important}" — druk ma pokazywać dokładnie to, co jest
      rozwinięte na ekranie (te same ".cat.open .cat-body{display:block}" co na ekranie), a nie
