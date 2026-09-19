@@ -12554,8 +12554,8 @@ document.addEventListener('keydown', e=>{
     host.style.display='block'; host.style.position='fixed'; host.style.left='-10000px'; host.style.top='0'; host.style.width='1500px';
     await new Promise(r=>setTimeout(r,30));
     const canvas = await html2canvas(host, {scale:2, backgroundColor:'#ffffff'});
+    const blob = canvasToPdfBlob(host, canvas, 'landscape');
     host.style.display='none'; host.style.position=''; host.style.left=''; host.style.top=''; host.style.width='';
-    const blob = canvasToPdfBlob(canvas, 'landscape');
     await wtSaveFile((v.position||'ocena-ryzyka').replace(/[^a-z0-9ąćęłńóśźż \-]/gi,'').trim()+'.pdf', blob);
   };
 
@@ -12839,8 +12839,8 @@ document.addEventListener('keydown', e=>{
     host.style.display='block'; host.style.position='fixed'; host.style.left='-10000px'; host.style.top='0'; host.style.width='1500px';
     await new Promise(r=>setTimeout(r,30));
     const canvas = await html2canvas(host, {scale:2, backgroundColor:'#ffffff'});
+    const blob = canvasToPdfBlob(host, canvas, 'landscape');
     host.style.display='none'; host.style.position=''; host.style.left=''; host.style.top=''; host.style.width='';
-    const blob = canvasToPdfBlob(canvas, 'landscape');
     await wtSaveFile((v.name||'karta-przegladow').replace(/[^a-z0-9ąćęłńóśźż \-]/gi,'').trim()+'.pdf', blob);
   };
 
@@ -13128,8 +13128,8 @@ document.addEventListener('keydown', e=>{
     host.style.display='block'; host.style.position='fixed'; host.style.left='-10000px'; host.style.top='0'; host.style.width='1100px';
     await new Promise(r=>setTimeout(r,30));
     const canvas = await html2canvas(host, {scale:2, backgroundColor:'#ffffff'});
+    const blob = canvasToPdfBlob(host, canvas, 'portrait');
     host.style.display='none'; host.style.position=''; host.style.left=''; host.style.top=''; host.style.width='';
-    const blob = canvasToPdfBlob(canvas, 'portrait');
     await wtSaveFile((m.name||'karta-maszyny').replace(/[^a-z0-9ąćęłńóśźż \-]/gi,'').trim()+'.pdf', blob);
   };
 
@@ -13984,7 +13984,19 @@ document.addEventListener('keydown', e=>{
       +'<table><thead><tr><th>Lp.</th>'+def.columns.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+rowsHtml+'</tbody></table>'
       +'<div class="rp-footer">Wygenerowano w narzędziu BHP Audyt — '+fmtWhen(Date.now())+'</div>';
   }
-  function canvasToPdfBlob(canvas, orientation){
+  /* Dzieli zrzut #rj-print-host na strony PDF WZDŁUŻ GRANIC WIERSZY, nie w stałych odstępach
+     pikseli. Poprzednia wersja (prosta pętla tnąca obrazek co dokładnie jedną wysokość strony)
+     nie miała pojęcia, gdzie kończy się jeden wiersz tabeli a zaczyna kolejny — w praktyce
+     regularnie przecinała wiersz dokładnie w połowie: górna połówka tekstu lądowała na dole
+     jednej strony, dolna połówka na górze następnej, nakładając się wizualnie na siebie
+     (dokładnie to zgłosił użytkownik: "teksty źle się przenoszą między stronami"). Naprawa:
+     zamiast robić JEDNO cięcie co stałą wysokość, mierzymy prawdziwe granice każdego <tr>
+     (i innych bezpośrednich dzieci hosta — tytuł, opis, stopka) w hoście DOM, budujemy z nich
+     listę "niepodzielnych" segmentów, i dopiero wtedy pakujemy je zachłannie na strony —
+     nigdy nie tnąc w środku segmentu. Przy okazji: gdy tabela "przechodzi" na kolejną stronę,
+     powtarzamy jej wiersz nagłówkowy (<thead>) na górze tej strony, żeby kolumny nie traciły
+     opisu w połowie dokumentu — poprzednia wersja tego w ogóle nie robiła. */
+  function canvasToPdfBlob(host, canvas, orientation){
     const { jsPDF } = window.jspdf;
     // jsPDF embeds 'PNG' images as an uncompressed raw bitmap (a canvas this size can balloon
     // to several MB for what looks like an almost-empty page) — JPEG's own compressed stream is
@@ -13992,17 +14004,83 @@ document.addEventListener('keydown', e=>{
     // quality loss for text-on-white content like this.
     const pdf = new jsPDF({orientation: orientation||'portrait', unit:'pt', format:'a4', compress:true});
     const pageW=pdf.internal.pageSize.getWidth(), pageH=pdf.internal.pageSize.getHeight();
-    const imgW=pageW, imgH = canvas.height*imgW/canvas.width;
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
-    let heightLeft=imgH, position=0;
-    pdf.addImage(imgData,'JPEG',0,position,imgW,imgH);
-    heightLeft-=pageH;
-    while(heightLeft>0){
-      position = heightLeft-imgH;
-      pdf.addPage();
-      pdf.addImage(imgData,'JPEG',0,position,imgW,imgH);
-      heightLeft-=pageH;
-    }
+    const imgW = pageW;
+    const hostRect = host.getBoundingClientRect();
+    // px canvasa na px CSS hosta (zwykle =2, bo html2canvas woła się z {scale:2}, ale liczymy
+    // to z realnych wymiarów zamiast zakładać na sztywno, więc funkcja przetrwa ewentualną
+    // zmianę tej opcji w przyszłości bez cichego rozjechania się pomiarów).
+    const scaleFactor = canvas.width / hostRect.width;
+    const ptPerCanvasPx = imgW / canvas.width;
+    const pageH_canvasPx = pageH / ptPerCanvasPx;
+    const rectOf = el => {
+      const r = el.getBoundingClientRect();
+      return { top: (r.top - hostRect.top) * scaleFactor, bottom: (r.bottom - hostRect.top) * scaleFactor };
+    };
+    // Spłaszcz hosta na uporządkowaną listę niepodzielnych segmentów. Każda <table> wśród
+    // bezpośrednich dzieci hosta jest rozbijana na jej własny wiersz nagłówkowy (do powtórzenia
+    // na kolejnych stronach, jeśli ta tabela się na nie rozciągnie) + pojedyncze wiersze <tbody>.
+    // Wszystko inne (tytuł, opis, stopka, ewentualny dodatkowy akapit) to jeden segment w całości.
+    const segments = [];
+    Array.from(host.children).forEach(child=>{
+      if(child.tagName === 'TABLE'){
+        const theadRow = child.querySelector('thead tr');
+        const headerSeg = theadRow ? Object.assign({header:true}, rectOf(theadRow)) : null;
+        if(headerSeg) segments.push(headerSeg);
+        child.querySelectorAll('tbody tr').forEach(tr=>{
+          segments.push(Object.assign({header:false, ownerHeader:headerSeg}, rectOf(tr)));
+        });
+      } else {
+        segments.push(Object.assign({header:false, ownerHeader:null}, rectOf(child)));
+      }
+    });
+    // Pakowanie zachłanne: dodawaj segmenty do bieżącej strony, dopóki się mieszczą; gdy kolejny
+    // segment by jej przepełnił, zamknij stronę i zacznij nową — powtarzając nagłówek tabeli,
+    // jeśli przepełniający segment jest wierszem tabeli mającej swój własny nagłówek.
+    const pages = [];
+    let curParts = [], curHeight = 0;
+    const flush = () => { if(curParts.length) pages.push(curParts); curParts = []; curHeight = 0; };
+    segments.forEach(seg=>{
+      const segH = seg.bottom - seg.top;
+      if(curParts.length > 0 && curHeight + segH > pageH_canvasPx){
+        flush();
+        if(seg.ownerHeader){
+          curParts.push({top:seg.ownerHeader.top, bottom:seg.ownerHeader.bottom});
+          curHeight += (seg.ownerHeader.bottom - seg.ownerHeader.top);
+        }
+      }
+      curParts.push({top:seg.top, bottom:seg.bottom});
+      curHeight += segH;
+    });
+    flush();
+    // Strona 1. ma naturalny "oddech" na górze dzięki własnemu paddingowi hosta (28px w CSS,
+    // patrz #rj-print-host) — jest częścią zrzutu ekranu. Strony 2+ zaczynają się od razu od
+    // powtórzonego nagłówka tabeli, więc bez dodatkowego marginesu wyglądałyby ciasno, inaczej
+    // niż reszta dokumentu. Doklejamy im tyle samo białego marginesu na górze, przeskalowanego
+    // do tego samego układu współrzędnych co reszta pomiarów.
+    const CONTINUATION_TOP_PAD = 28 * scaleFactor;
+    // Dla każdej strony: złóż nowy, mniejszy canvas ze zrzutów poszczególnych segmentów (bez
+    // przerw między nimi, bo granice segmentów są ciągłe — koniec jednego wiersza = początek
+    // kolejnego), i dopiero ten złożony obrazek dodaj jako jedną stronę PDF.
+    pages.forEach((parts, pageIdx)=>{
+      const topPad = pageIdx > 0 ? CONTINUATION_TOP_PAD : 0;
+      const contentH = parts.reduce((s,p)=>s+(p.bottom-p.top), 0);
+      const totalH = Math.max(1, contentH + topPad);
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = Math.ceil(totalH);
+      const ctx = pageCanvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      let y = topPad;
+      parts.forEach(p=>{
+        const h = p.bottom - p.top;
+        if(h <= 0) return;
+        ctx.drawImage(canvas, 0, p.top, canvas.width, h, 0, y, canvas.width, h);
+        y += h;
+      });
+      if(pageIdx > 0) pdf.addPage();
+      pdf.addImage(pageCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, imgW, totalH * ptPerCanvasPx);
+    });
     return pdf.output('blob');
   }
   /* window.print() wywołane ze skryptu jest zablokowane w piaskownicy Artifactu, ale gdy WIDZ sam
@@ -14055,8 +14133,9 @@ document.addEventListener('keydown', e=>{
     host.style.display='block'; host.style.position='fixed'; host.style.left='-10000px'; host.style.top='0'; host.style.width='1100px';
     await new Promise(r=>setTimeout(r,30));
     const canvas = await html2canvas(host, {scale:2, backgroundColor:'#ffffff'});
+    const blob = canvasToPdfBlob(host, canvas, 'landscape');
     host.style.display='none'; host.style.position=''; host.style.left=''; host.style.top=''; host.style.width='';
-    return canvasToPdfBlob(canvas, 'landscape');
+    return blob;
   }
   window.wtRjExportPdf = async function(){
     const v=rjState.currentVersion;
