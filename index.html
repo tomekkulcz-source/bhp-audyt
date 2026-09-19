@@ -425,6 +425,14 @@ a.jump:hover{text-decoration:underline;}
 }
 @media print{
   .topbar,.sidebar,.searchbar,.gpanel,.filters,.sidebar-overlay,.progress .presetbtn{display:none !important;}
+  /* #wt-toast-stack jest position:fixed i, w przeciwieństwie do pozostałych nakładek (modal
+     potwierdzenia, lightbox zdjęcia, podgląd PDF — te mają domyślnie display:none), NIE ma
+     domyślnego display:none — jest zwykle po prostu pusty. Fixed-position element wciąż
+     obecny w drzewie renderowania potrafi jednak namieszać w paginacji druku (m.in. był to
+     jeden ze współwinowajców niepotrzebnej dodatkowej pustej strony na końcu wydruku), więc
+     na czas druku chowamy go i pozostałe nakładki jawnie, dla pewności, niezależnie od ich
+     bieżącego stanu otwarcia/zamknięcia. */
+  #wt-toast-stack,#wt-confirm-overlay,.wt-pdf-viewer-overlay,.wt-lightbox-overlay,.wt-rjrow-overlay,#wtFirebaseGate{display:none !important;}
   /* body jest normalnie {display:flex;min-height:100vh} (sidebar + .main obok siebie) — po
      ukryciu sidebara na wydruku ten sam flex/min-height potrafi wymusić dopełnienie ostatniej
      strony i/lub całą dodatkową, kompletnie pustą stronę na końcu wydruku (typowy skutek
