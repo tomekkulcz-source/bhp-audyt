@@ -14681,14 +14681,36 @@ document.addEventListener('keydown', e=>{
   /* Uniwersalny zapis pliku na dysk — korzysta z capability `downloads`, gdy dostępna (strona na
      claude.ai), a w przeciwnym razie z najzwyklejszego pobierania przez przeglądarkę (blob + link
      z atrybutem download) — to drugie NIE wymaga żadnej capability i działa w każdej przeglądarce
-     przy otwarciu pliku lokalnie. WYJĄTEK: Safari na iOS/iPadOS nie obsługuje niezawodnie atrybutu
+     przy otwarciu pliku lokalnie. WYJĄTEK 1: Safari na iOS/iPadOS nie obsługuje niezawodnie atrybutu
      download na blob: URL — kliknięcie takiego linku często nie robi kompletnie nic (potwierdzone
      w praktyce). Na tych przeglądarkach zamiast tego nawigujemy bezpośrednio do pliku jako
-     data: URI — Safari otwiera wtedy natywny podgląd z przyciskiem Udostępnij/Zapisz w Plikach. */
+     data: URI — Safari otwiera wtedy natywny podgląd z przyciskiem Udostępnij/Zapisz w Plikach.
+     WYJĄTEK 2: gdy strona działa jako zainstalowana aplikacja PWA (dodana do ekranu głównego,
+     "standalone" — brak paska adresu i chrome'u Safari), NAWET nawigacja do data: URI nie pokazuje
+     żadnego podglądu ani przycisku Zapisz — to udokumentowane ograniczenie iOS: w trybie standalone
+     nie ma przeglądarkowego UI, które mogłoby obsłużyć pobieranie. Jedyny niezawodny sposób w tym
+     trybie to Web Share API (navigator.share z files) — otwiera naturalny arkusz "Udostępnij",
+     z którego można wybrać "Zapisz w Plikach". Próbujemy Web Share NAJPIERW w trybie standalone,
+     zanim spadniemy na data: URI (które w standalone i tak nic nie da, ale nie zaszkodzi jako
+     ostatnia deska ratunku na starszym iOS bez wsparcia dla udostępniania plików). */
   const wtIsIOSSafari = /iP(hone|od|ad)/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const wtIsStandalonePWA = window.navigator.standalone === true ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
   async function wtSaveFile(filename, blob){
     if(DOWNLOADS){ await DOWNLOADS.save({filename, data:blob}); return; }
+    if(wtIsStandalonePWA && navigator.canShare){
+      try{
+        const file = new File([blob], filename, {type: blob.type || 'application/octet-stream'});
+        if(navigator.canShare({files:[file]})){
+          await navigator.share({files:[file], title:filename});
+          return;
+        }
+      }catch(e){
+        if(e && e.name === 'AbortError') return; // użytkownik zamknął arkusz udostępniania — nie próbuj dalej
+        // inny błąd (np. brak wsparcia w tej wersji iOS) — spadamy na kolejne metody poniżej
+      }
+    }
     if(wtIsIOSSafari){
       await new Promise((resolve, reject)=>{
         const reader = new FileReader();
