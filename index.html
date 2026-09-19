@@ -490,10 +490,20 @@ a.jump:hover{text-decoration:underline;}
      table-layout:fixed te szerokości wreszcie działają tak, jak zostały zaprojektowane. */
   table.ref{table-layout:fixed;font-size:11px;border-radius:0;}
   table.ref th,table.ref td{overflow-wrap:anywhere;word-break:break-word;padding:7px 9px;}
-  /* Reference'owe tabele (katalog dokumentów, akty prawne, normy, checklisty) mają zwykle
-     5-7 gęstych kolumn tekstowych — pionowa strona A4 jest za wąska, więc drukujemy poziomo
-     tak samo jak rejestry (patrz @page rjpage niżej). */
-  @page{size:landscape;margin:14mm 12mm;}
+  /* Reference'owe tabele (katalog dokumentów, akty prawne, normy) mają zwykle 5-7 gęstych
+     kolumn tekstowych — pionowa strona A4 jest za wąska, więc drukujemy je poziomo. WAŻNE:
+     to musi być NAZWANA strona przypisana WYŁĄCZNIE przez table.ref{page:wideref}, a NIE
+     domyślne @page bez nazwy — domyślne @page{size:landscape} obowiązywałoby dla KAŻDEGO
+     wydruku z tej aplikacji, łącznie z Checklistą audytową i innymi listami jednokolumnowymi,
+     które nie mają żadnej table.ref i powinny drukować się pionowo. Wcześniej właśnie tak było
+     (bez nazwy) — a niezgodność między "CSS każe poziomo" i "użytkownik wybrał pionowo w oknie
+     drukowania" myliła paginację przeglądarki i była faktyczną przyczyną dodatkowej, pustej
+     strony na końcu wydruku list kontrolnych (potwierdzone: dwie kolejne poprawki mierzące
+     wysokość treści nie pomogły, bo problem nie leżał w wysokości treści, tylko w niezgodności
+     wymiarów strony). Domyślna (nienazwana) strona zostaje teraz nietknięta — orientację
+     dla list kontrolnych wybiera sam użytkownik/przeglądarka, zwykle pionowo. */
+  @page wideref{size:landscape;margin:14mm 12mm;}
+  table.ref{page:wideref;}
 }
 </style>
 <style>
