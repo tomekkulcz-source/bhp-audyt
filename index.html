@@ -14572,7 +14572,16 @@ document.addEventListener('keydown', e=>{
          wbudowanej przeglądarki Chrome, którą i tak dało się tam użyć. Sprawdzamy więc bezpośrednio
          obecność środowiska claude.ai (window.claude), a nie sposobu przechowywania danych. */
       const hasClaude = typeof window.claude !== 'undefined' && window.claude && typeof window.claude.use === 'function';
-      if(!hasClaude){
+      /* Druga, osobna przesłanka: wbudowana przeglądarka PDF Chrome (tryb natywny) sama w sobie
+         jest zaprojektowana pod szeroki ekran — ma własny panel miniatur i pasek narzędzi, których
+         wygląd i układ narzuca silnik przeglądarki, a nie CSS tej strony. W wąskiej ramce (telefon)
+         renderuje stronę dokumentu w wąskiej kolumnie na środku, zostawiając dużo pustego, ciemnego
+         tła po bokach — sprawdzone empirycznie, wygląda na zepsute. Ten sam próg co ogólny mobilny
+         layout aplikacji (@media max-width:880px) decyduje więc dodatkowo, czy w ogóle próbować
+         trybu natywnego — poniżej niego zawsze używamy własnej, w pełni responsywnej przeglądarki
+         (<canvas> + PDF.js), niezależnie od tego, czy jesteśmy na claude.ai, czy nie. */
+      const narrowViewport = window.innerWidth <= 880;
+      if(!hasClaude && !narrowViewport){
         wtOpenPdfViaIframe(title, new Blob([bytes], {type:'application/pdf'}));
       } else {
         wtSetPdfViewerMode(false);
