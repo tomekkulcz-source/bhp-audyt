@@ -5885,6 +5885,14 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;"><span class="badge blue"><span class="dot"></span>WZÓR DO POBRANIA</span><span class="badge med"><span class="dot"></span>WSKAZANA</span></div>
         <div class="wt-rj-count">Pobierz wzór Word ↓</div>
       </div>
+<div class="card nav-card" data-rjtype="karta_przegladow_elektronarzedzi" onclick="wtRjOpenType('karta_przegladow_elektronarzedzi')">
+        <span class="wt-rj-typedel" title="Usuń typ dokumentu" onclick="wtRjDeleteType('karta_przegladow_elektronarzedzi', event)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+        <h4><span class="pill mono">E.92</span> Karta okresowych przeglądów elektronarzędzi i przedłużaczy</h4>
+        <p class="small">Uzupełnienie instrukcji E.43 — cykliczna kontrola stanu technicznego sprzętu (oględziny, pomiar izolacji/PE).</p>
+        <div class="small mono" style="margin-top:8px;">§ 41 Rozp. MPiPS z 26.09.1997 r.</div>
+        <div class="wt-rj-tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;"><span class="badge med"><span class="dot"></span>WSKAZANA</span></div>
+        <div class="wt-rj-count" id="rjCount-karta_przegladow_elektronarzedzi">0 wersji</div>
+      </div>
     </div>
         <div class="wt-rj-cathead"><span class="wt-rj-catletter">F</span> Pomiary środowiska pracy</div>
     <div class="startgrid">
@@ -8614,6 +8622,32 @@ document.addEventListener('keydown', e=>{
         {key:'instructionNumbers', label:'Nr instrukcji, z którymi zapoznano', type:'text'},
         {key:'date', label:'Data zapoznania', type:'date'},
         {key:'signature', label:'Podpis', type:'text'}
+      ]
+    },
+    karta_przegladow_elektronarzedzi: {
+      code:'E.92',
+      category:'E. Instrukcje i procedury BHP',
+      title:'Karta okresowych przeglądów elektronarzędzi i przedłużaczy',
+      legalBasis:'§ 41 Rozporządzenia MPiPS z 26.09.1997 r. (obowiązek utrzymania sprawności technicznej narzędzi); dobra praktyka — brak jednolitej normy określającej częstotliwość dla elektronarzędzi ręcznych',
+      description:'Dokument dodatkowy — uzupełnienie instrukcji E.43 (zasady bezpiecznej obsługi) o cykliczną kontrolę stanu technicznego samego sprzętu.',
+      metaFields:[
+        {key:'companyName', label:'Nazwa zakładu pracy', type:'text'},
+        {key:'updateDate', label:'Data aktualizacji rejestru', type:'date'}
+      ],
+      blankRowCount: 18,
+      instructionNote:'Legenda statusu: AKTUALNE (>90 dni) → UWAGA (≤90 dni) → PILNE (≤30 dni) → PRZETERMINOWANE. Zalecana częstotliwość przeglądów: co 6–12 miesięcy, zależnie od intensywności użytkowania, środowiska pracy (wilgoć, pył, plac budowy) oraz zaleceń producenta. Przegląd obejmuje: oględziny (stan obudowy, przewodu, wtyczki) oraz — zalecane — pomiar rezystancji izolacji i ciągłości przewodu ochronnego PE. Narzędzie z oceną UJEMNY lub widocznym uszkodzeniem należy natychmiast wycofać z użytku do czasu naprawy lub wymiany — patrz zasady bezpiecznej obsługi w instrukcji E.43.',
+      columns:[
+        {key:'toolName', label:'Nazwa / rodzaj narzędzia', type:'text'},
+        {key:'inventoryNumber', label:'Nr inwentarzowy', type:'text'},
+        {key:'serialNumber', label:'Nr seryjny', type:'text'},
+        {key:'lastReviewDate', label:'Data ostatniego przeglądu', type:'date'},
+        {key:'visualResult', label:'Wynik oględzin (sprawne/uszkodzone)', type:'text'},
+        {key:'insulationTest', label:'Pomiar izolacji / ciągłości PE', type:'text'},
+        {key:'assessment', label:'Ocena (DODATNI/UJEMNY)', type:'text'},
+        {key:'nextReviewDate', label:'Termin kolejnego przeglądu', type:'date'},
+        {key:'status', label:'Status', type:'text'},
+        {key:'reviewer', label:'Osoba wykonująca przegląd', type:'text'},
+        {key:'notes', label:'Uwagi', type:'text'}
       ]
     },
     rejestr_prac_cmr: {
