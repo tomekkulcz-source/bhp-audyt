@@ -637,7 +637,13 @@ textarea.wt-input{resize:vertical;font-family:var(--font-ui);line-height:1.5;}
 .wt-pdf-viewer-overlay.open{display:flex;}
 .wt-pdf-viewer-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:12px 18px;color:#fff;font-size:13.5px;font-weight:600;flex:0 0 auto;}
-.wt-pdf-viewer-bar .wt-lightbox-close{position:static;}
+/* Bez tego długi tytuł (np. "Kompendium wiedzy o elektryczności") na wąskim telefonie zawijał się
+   do dwóch linijek, ale pasek nie rósł razem z nim wysokościowo — tytuł nakładał się wtedy wizualnie
+   na licznik stron i przyciski nawigacji obok. Zamiast zawijania: przycinamy tytuł do jednej linii
+   z wielokropkiem, a licznikowi/przyciskom dajemy flex:0 0 auto, żeby nigdy się nie ściskały. */
+#wt-pdf-viewer-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wt-pdf-viewer-nav{flex:0 0 auto;}
+.wt-pdf-viewer-bar .wt-lightbox-close{position:static;flex:0 0 auto;}
 .wt-pdf-viewer-nav{display:flex;align-items:center;gap:10px;color:#fff;font-size:12.5px;
   font-family:var(--font-mono);}
 .wt-pdf-viewer-nav .wt-btn{padding:5px 11px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);
