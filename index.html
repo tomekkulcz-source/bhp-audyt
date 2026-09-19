@@ -269,6 +269,11 @@ td.prio-cell .badge .dot{margin-right:8px;opacity:.85;}
 .status-select[data-v="TAK"]{background:var(--ok-bg);color:var(--ok-ink);border-color:transparent;font-weight:600;}
 .status-select[data-v="NIE"]{background:var(--bad-bg);color:var(--bad-ink);border-color:transparent;font-weight:600;}
 .status-select[data-v="N.D."]{background:var(--warn-bg);color:var(--warn-ink);border-color:transparent;font-weight:600;}
+/* Tekstowy odpowiednik <select class="status-select"> pokazywany WYŁĄCZNIE na wydruku (patrz
+   wtPrepareListPrint() i @media print niżej) — bo wydrukowana rozwijana lista wygląda jak
+   fragment formularza aplikacji, nie jak dokument. Ukryty na ekranie, wypełniany tuż przed
+   drukiem tekstem aktualnie wybranej opcji. */
+.wt-print-status{display:none;font-weight:600;}
 
 /* month calendar rows */
 .mrow{display:flex;gap:11px;align-items:flex-start;padding:11px 18px;border-top:1px solid var(--line);font-size:13.5px;line-height:1.5;}
@@ -415,8 +420,13 @@ a.jump:hover{text-decoration:underline;}
 }
 @media print{
   .topbar,.sidebar,.searchbar,.gpanel,.filters,.sidebar-overlay,.progress .presetbtn{display:none !important;}
-  body{background:#fff;}
-  .main{margin:0;max-width:none;padding:0;}
+  /* body jest normalnie {display:flex;min-height:100vh} (sidebar + .main obok siebie) — po
+     ukryciu sidebara na wydruku ten sam flex/min-height potrafi wymusić dopełnienie ostatniej
+     strony i/lub całą dodatkową, kompletnie pustą stronę na końcu wydruku (typowy skutek
+     min-height:100vh w kontekście paginacji druku). Resetujemy do zwykłego przepływu blokowego
+     na czas druku, żeby wydruk kończył się dokładnie tam, gdzie kończy się treść. */
+  body{background:#fff;display:block !important;min-height:0 !important;}
+  .main{margin:0;max-width:none;padding:0;min-height:0 !important;}
   .card,table.ref,.cat,.progress{box-shadow:none;}
   /* CELOWO brak ".cat-body{display:block!important}" — druk ma pokazywać dokładnie to, co jest
      rozwinięte na ekranie (te same ".cat.open .cat-body{display:block}" co na ekranie), a nie
@@ -431,6 +441,30 @@ a.jump:hover{text-decoration:underline;}
      połowa tekstu zostaje na dole jednej strony, reszta na górze kolejnej (nakłada się wizualnie
      na nagłówek/stopkę drukarki), stąd break-inside na każdym elemencie "wierszowym" */
   table.ref tr,.item,.mrow{break-inside:avoid;page-break-inside:avoid;}
+  /* Listy kontrolne (Checklista audytowa, Obchód zakładu, listy PIP/SANEPID/DTR/biuro/zdalna)
+     wzbogacają każdą pozycję o żywe kontrolki: rozwijaną listę statusu, ikonę komentarza (💬),
+     przycisk dodawania zdjęcia, checkbox "audyt" przy nagłówku kategorii. Świetne na ekranie,
+     ale na wydruku wyglądały jak zrzut ekranu aplikacji, nie jak dokument dla klienta — stąd
+     ukrywamy tu wszystko czysto-interaktywne. Wybrany status pokazuje się mimo to jako zwykły
+     pogrubiony tekst (.wt-print-status, wypełniany tuż przed drukiem przez wtPrepareListPrint()
+     w skrypcie) zamiast jako rozwijana lista. */
+  /* Klasa .status-select jest współdzielona też przez selektor klienta u góry checklisty/obchodu,
+     pola formularzy maszyn/ryzyka/przeglądów/rejestrów i nawigator miesiąca/roku w kalendarzu —
+     to wyłącznie wspólny styl wizualny, nie oznacza to samo co "status TAK/NIE/N.D. pozycji".
+     [onchange*="saveStatus"] trafia WYŁĄCZNIE w prawdziwe pozycje checklisty (jedyne, które
+     wołają saveStatus(this)), więc tamte inne selecty zostają nietknięte. */
+  .wt-cat-toggle,.wt-comment-toggle,.wt-photo-add,.wt-photo-del,select.status-select[onchange*="saveStatus"]{display:none !important;}
+  /* Kategoria odznaczona jako poza zakresem TEJ wizyty ("audyt: nie") nie ma po co się drukować —
+     specjalista sam oznaczył, że tym razem jej nie weryfikuje. */
+  .cat.wt-cat-inactive{display:none !important;}
+  .wt-print-status{display:inline-block;}
+  /* Puste pole komentarza (nikt nic nie wpisał) znika całkowicie zamiast drukować się jako pusty,
+     obramowany prostokąt z uchwytem do zmiany rozmiaru w rogu — wyglądało to jak zapomniany
+     fragment formularza. Niepuste pole traci obramowanie/tło/uchwyt i drukuje się jako zwykły,
+     pochylony akapit tekstu, tak samo jak inne treści dokumentu. */
+  .wt-comment-wrap:has(textarea:placeholder-shown){display:none !important;}
+  .wt-comment-input{border:none !important;background:transparent !important;resize:none !important;
+    padding:0 !important;font-style:italic;color:#555 !important;min-height:0 !important;}
   /* Bez table-layout:fixed przeglądarka ignoruje zadane już procentowe szerokości kolumn
      (width:6%/18%/... na <th>) i dopasowuje kolumny do treści — długi tekst w "Opis"/"Podstawa
      prawna" rozpycha tabelę i ucina/zawija pozostałe kolumny w nieprzewidywalny sposób. Z
@@ -14098,7 +14132,26 @@ document.addEventListener('keydown', e=>{
     const host=document.getElementById('rj-print-host');
     if(host) host.innerHTML='';
   };
+  /* Wypełnia .wt-print-status (ukryty na ekranie span tuż za każdym <select class="status-select">)
+     czytelnym tekstem aktualnie wybranej opcji ("TAK"/"NIE"/"N.D." albo "—" gdy nic nie wybrano) —
+     patrz komentarz przy .wt-print-status w CSS. Bezpieczne do wywołania zawsze przy każdym
+     drukowaniu, niezależnie od tego, która sekcja jest aktywna — strony bez żadnego .status-select
+     po prostu nic tu nie znajdą. Nie trzeba tego cofać po druku: element jest i tak niewidoczny
+     na ekranie (display:none poza @media print), więc zostawienie go wypełnionym jest nieszkodliwe. */
+  function wtPrepareListPrint(){
+    document.querySelectorAll('select.status-select[onchange*="saveStatus"]').forEach(sel=>{
+      let label = sel.nextElementSibling;
+      if(!label || !label.classList.contains('wt-print-status')){
+        label = document.createElement('span');
+        label.className = 'wt-print-status';
+        sel.insertAdjacentElement('afterend', label);
+      }
+      const opt = sel.options[sel.selectedIndex];
+      label.textContent = (sel.value && opt) ? opt.textContent : '—';
+    });
+  }
   function wtPreparePrint(){
+    wtPrepareListPrint();
     wtResetPrintHost();
     const ryzSection = document.getElementById('sec-oceny-ryzyka');
     const przSection = document.getElementById('sec-terminy-kontroli');
