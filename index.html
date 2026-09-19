@@ -63,7 +63,15 @@ html[data-theme="dark"]{
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);
   font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
-  font-feature-settings:"tnum" 1,"cv11" 1;}
+  font-feature-settings:"tnum" 1,"cv11" 1;
+  /* Bez tego mobilny Chrome/Safari potrafi samoczynnie powiększać tekst ("font boosting")
+     wewnątrz wąskich, przewijalnych poziomo kolumn (np. tabele referencyjne z table.ref,
+     zob. wtWrapTableRef() — kolumna z długim pytaniem w szerokiej, przewijanej tabeli to
+     dokładnie sytuacja, którą ta heurystyka próbuje "poprawiać"), mimo że font-size w CSS
+     jest ustawiony poprawnie — stąd zgłoszenie "za duża czcionka" akurat w listach typu
+     Lista PIP na telefonie. text-size-adjust:100% wyłącza to zgadywanie i każe przeglądarce
+     zawsze honorować dokładnie taki rozmiar czcionki, jaki podaje CSS. */
+  -webkit-text-size-adjust:100%;text-size-adjust:100%;}
 body{display:flex;min-height:100vh;
   background-image:radial-gradient(1100px 520px at 22% -12%, var(--bg-tint), transparent 70%);
   background-repeat:no-repeat;background-attachment:fixed;}
@@ -7780,8 +7788,16 @@ function wtWrapTableRef(t){
       if(m){ const p = parseFloat(m[1])/100; if(p<minPct){minPct=p;} hasPct = true; }
       else freeCols++;
     });
-    let minw = hasPct ? Math.max(60/minPct, 420) : 150*cells.length;
-    minw += freeCols * 90 + fixedPx;
+    /* Na telefonie (≤480px) te same budżety 60/90/420/150px robiły z 4-5-kolumnowej
+       tabeli (np. Lista PIP) wymuszoną szerokość blisko 950px na ekranie 375px —
+       teoretycznie tekst miał poprawny rozmiar w CSS, ale każda linijka pytania była
+       widoczna tylko we fragmencie i urywała się na krawędzi ekranu, co w praktyce
+       wygląda i "czyta się" jak za duża czcionka. Na szerokich ekranach zostawiamy
+       budżety bez zmian — dotyczy to wyłącznie wąskich, telefonicznych szerokości. */
+    const narrow = window.innerWidth <= 480;
+    const perPct = narrow ? 44 : 60, perFree = narrow ? 72 : 90, floorW = narrow ? 300 : 420, perColNoPct = narrow ? 120 : 150;
+    let minw = hasPct ? Math.max(perPct/minPct, floorW) : perColNoPct*cells.length;
+    minw += freeCols * perFree + fixedPx;
     t.style.minWidth = Math.round(minw) + 'px';
   }
 }
