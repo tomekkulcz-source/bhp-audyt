@@ -525,6 +525,12 @@ a.jump:hover{text-decoration:underline;}
      dla list kontrolnych wybiera sam użytkownik/przeglądarka, zwykle pionowo. */
   @page wideref{size:landscape;margin:14mm 12mm;}
   table.ref{page:wideref;}
+  /* "page" to właściwość dziedziczona — ustawiając ją też na całej .section (gdy JS
+     (wtPrepareWideSections(), wołane przy każdym druku) oznaczy ją klasą .wt-print-wide, bo
+     zawiera choć jedną table.ref), nagłówek i wstęp tej sekcji trafiają na tę samą, poziomą
+     stronę co jej tabela — bez tego tytuł drukował się pionowo, a zaraz po nim tabela poziomo,
+     czyli pojedynczy dokument na przemian zmieniał orientację między stronami. */
+  .section.wt-print-wide{page:wideref;}
 }
 </style>
 <style>
@@ -14217,8 +14223,24 @@ document.addEventListener('keydown', e=>{
       if(item) item.classList.toggle('wt-has-comment', hasText);
     });
   }
+  /* Sekcje z szeroką tabelą referencyjną (kompendia, katalog dokumentów, akty prawne, normy...)
+     drukowały nagłówek/wstęp w orientacji pionowej (domyślna strona), a samą tabelę poziomo
+     (table.ref{page:wideref} w CSS) — w obrębie JEDNEGO wydruku strony na przemian pionowe
+     i poziome, co wygląda nieprofesjonalnie. Właściwość CSS "page" jest dziedziczona, więc
+     zamiast poprawiać to per-tabela, oznaczamy tu całą aktywną sekcję jedną klasą, gdy zawiera
+     choć jedną table.ref — .section.wt-print-wide{page:wideref} w CSS obejmuje wtedy całą
+     sekcję (nagłówek, wstęp, tabelę) tą samą, nazwaną stroną, więc cały wydruk tego dokumentu
+     jest spójnie poziomy, bez przeskakiwania orientacji między stronami. Nie zmienia to, KTÓRE
+     tabele są poziome (to nadal decyduje table.ref{page:wideref}) — tylko sprawia, że reszta
+     tej samej sekcji podąża za tą samą decyzją zamiast zostawać w orientacji domyślnej. */
+  function wtPrepareWideSections(){
+    document.querySelectorAll('.section').forEach(sec=>{
+      sec.classList.toggle('wt-print-wide', !!sec.querySelector('table.ref'));
+    });
+  }
   function wtPreparePrint(){
     wtPrepareListPrint();
+    wtPrepareWideSections();
     wtResetPrintHost();
     const ryzSection = document.getElementById('sec-oceny-ryzyka');
     const przSection = document.getElementById('sec-terminy-kontroli');
