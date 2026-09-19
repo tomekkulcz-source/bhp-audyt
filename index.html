@@ -463,16 +463,18 @@ a.jump:hover{text-decoration:underline;}
      połowa tekstu zostaje na dole jednej strony, reszta na górze kolejnej (nakłada się wizualnie
      na nagłówek/stopkę drukarki), stąd break-inside na każdym elemencie "wierszowym" */
   table.ref tr,.item,.mrow{break-inside:avoid;page-break-inside:avoid;}
-  /* To samo dotyczy całej karty kategorii (.cat) — ma zaokrąglone rogi i overflow:hidden do
-     przycinania tła. Bez break-inside:avoid silnik druku potrafi przeciąć taką kartę TUŻ przy
-     jej ostatniej pozycji (np. zostawiając jedną pozycję samą na kolejnej stronie), a wtedy
-     reszta tamtej strony zostaje pusta — dokładnie tak wyglądał zgłoszony przypadek "niepotrzebna
-     dodatkowa strona": 3 kategorie kończyły się idealnie na granicy strony, ostatnia pozycja
-     ostatniej kategorii lądowała samotnie na kolejnej, a strona po niej świeciła pustką. Z
-     break-inside:avoid cała karta (albo żadna z jej pozycji) przechodzi w całości na następną
-     stronę, gdy nie mieści się w całości na bieżącej — więcej białego miejsca na dole jednej
-     strony, ale koniec bez samotnych, osieroconych fragmentów kart. */
-  .cat{break-inside:avoid;page-break-inside:avoid;}
+  /* UWAGA — historia tej reguły: przez jakiś czas cała karta kategorii (.cat) miała tu też
+     break-inside:avoid, w podejrzeniu że to ona powodowała zgłoszoną "niepotrzebną dodatkową
+     stronę". Prawdziwa przyczyna (znaleziona później) leżała gdzie indziej — w animacji
+     .section.active i w regułach :has() (zob. niżej) — a break-inside:avoid na całej .cat
+     okazało się mieć własny, kosztowny efekt uboczny: gdy kategoria nie mieściła się w całości
+     w pozostałym miejscu na stronie, CAŁA karta (nawet 7 pozycji) przeskakiwała w komplecie na
+     kolejną stronę, zamiast wypełnić dostępne miejsce, ile się dało — stąd duże, realnie
+     niepotrzebne puste obszary na dole stron. Skoro prawdziwa przyczyna zniknięcia treści jest
+     już naprawiona gdzie indziej, samo .item (pojedyncza pozycja) nadal ma break-inside:avoid
+     powyżej — to w zupełności wystarcza, żeby żadna pozycja nigdy nie rozerwała się w połowie;
+     kategoria jako całość może się teraz swobodnie dzielić między stronami, wypełniając je
+     efektywnie zamiast zostawiać puste miejsce "na zapas". */
   /* Listy kontrolne (Checklista audytowa, Obchód zakładu, listy PIP/SANEPID/DTR/biuro/zdalna)
      wzbogacają każdą pozycję o żywe kontrolki: rozwijaną listę statusu, ikonę komentarza (💬),
      przycisk dodawania zdjęcia, checkbox "audyt" przy nagłówku kategorii. Świetne na ekranie,
