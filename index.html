@@ -571,8 +571,14 @@ textarea.wt-input{resize:vertical;font-family:var(--font-ui);line-height:1.5;}
 .wt-pdf-hit-active{background:rgba(255,140,0,.8);}
 
 #rjHub .card.nav-card{position:relative;}
-.wt-rj-cathead{display:flex;align-items:center;gap:10px;margin:28px 0 12px;font-size:13.5px;font-weight:600;color:var(--ink-soft);}
+.wt-rj-cathead{display:flex;align-items:center;gap:10px;margin:28px 0 12px;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;user-select:none;}
 #rjHub>.wt-rj-cathead:first-child{margin-top:0;}
+.wt-rj-chevron{margin-left:auto;flex:0 0 auto;font-size:11px;color:var(--ink-soft);transition:transform .15s ease;}
+.wt-rj-cathead.wt-rj-collapsed .wt-rj-chevron{transform:rotate(-90deg);}
+.startgrid.wt-rj-hidden{display:none;}
+.wt-rj-collapseall{display:flex;gap:10px;margin:0 0 18px;}
+.wt-rj-collapseall button{font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink-soft);cursor:pointer;}
+.wt-rj-collapseall button:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);}
 .wt-rj-catletter{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
   border-radius:7px;background:var(--accent-soft);color:var(--accent);font-family:var(--font-mono);
   font-size:12px;font-weight:700;flex:0 0 auto;}
@@ -5526,7 +5532,11 @@ window.__WT_FIREBASE_CONFIG__ = {
   </div>
 
   <div id="rjHub">
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">A</span> Szkolenia BHP</div>
+    <div class="wt-rj-collapseall">
+      <button type="button" onclick="wtRjSetAllCollapsed(false)">Rozwiń wszystkie</button>
+      <button type="button" onclick="wtRjSetAllCollapsed(true)">Zwiń wszystkie</button>
+    </div>
+    <div class="wt-rj-cathead" data-catkey="A" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">A</span> Szkolenia BHP<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtype="szkolenia_wstepne" onclick="wtRjOpenType('szkolenia_wstepne')">
         <span class="wt-rj-typedel" title="Usuń typ dokumentu" onclick="wtRjDeleteType('szkolenia_wstepne', event)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
@@ -5615,7 +5625,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count" id="rjCount-program_szkolenia_okresowego">0 wersji</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">B</span> Medycyna pracy</div>
+    <div class="wt-rj-cathead" data-catkey="B" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">B</span> Medycyna pracy<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="b1_skierowanie_na_badania" onclick="wtRjDownloadTemplate('b1_skierowanie_na_badania')">
         <h4><span class="pill mono">B.1</span> Skierowanie na badania lekarskie profilaktyczne</h4>
@@ -5679,7 +5689,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count" id="rjCount-przeglady_apteczki">0 wersji</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">C</span> Dokumentacja wypadkowa</div>
+    <div class="wt-rj-cathead" data-catkey="C" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">C</span> Dokumentacja wypadkowa<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="c1_protokol_powypadkowy" onclick="wtRjDownloadTemplate('c1_protokol_powypadkowy')">
         <h4><span class="pill mono">C.1</span> Protokół ustalenia okoliczności i przyczyn wypadku</h4>
@@ -5763,7 +5773,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count">Pobierz wzór Word ↓</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">D</span> Ocena ryzyka zawodowego</div>
+    <div class="wt-rj-cathead" data-catkey="D" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">D</span> Ocena ryzyka zawodowego<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjlink="oceny-ryzyka" onclick="showSection('oceny-ryzyka')">
         <h4><span class="pill mono">D.1</span> Karta oceny ryzyka zawodowego na stanowisku pracy</h4>
@@ -5811,7 +5821,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count" id="rjCount-plan_dzialan_orz">0 wersji</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">E</span> Instrukcje i procedury BHP</div>
+    <div class="wt-rj-cathead" data-catkey="E" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">E</span> Instrukcje i procedury BHP<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="e1_instrukcja_ogolna" onclick="wtRjDownloadTemplate('e1_instrukcja_ogolna')">
         <h4><span class="pill mono">E.1</span> Instrukcja ogólna BHP dla zakładu pracy</h4>
@@ -5894,7 +5904,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count" id="rjCount-karta_przegladow_elektronarzedzi">0 wersji</div>
       </div>
     </div>
-        <div class="wt-rj-cathead"><span class="wt-rj-catletter">F</span> Pomiary środowiska pracy</div>
+        <div class="wt-rj-cathead" data-catkey="F" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">F</span> Pomiary środowiska pracy<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="f1_rejestr_czynnikow_szkodliwych" onclick="wtRjDownloadTemplate('f1_rejestr_czynnikow_szkodliwych')">
         <h4><span class="pill mono">F.1</span> Rejestr wyników badań i pomiarów czynników szkodliwych</h4>
@@ -5982,7 +5992,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count" id="rjCount-ryzyko_halas_drgania">0 wersji</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">G</span> Choroby zawodowe</div>
+    <div class="wt-rj-cathead" data-catkey="G" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">G</span> Choroby zawodowe<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtype="rejestr_chorob_zawodowych" onclick="wtRjOpenType('rejestr_chorob_zawodowych')">
         <span class="wt-rj-typedel" title="Usuń typ dokumentu" onclick="wtRjDeleteType('rejestr_chorob_zawodowych', event)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
@@ -6031,7 +6041,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count">Pobierz wzór Word ↓</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">H</span> ŚOI i odzież robocza</div>
+    <div class="wt-rj-cathead" data-catkey="H" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">H</span> ŚOI i odzież robocza<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtype="normy_soi" onclick="wtRjOpenType('normy_soi')">
         <span class="wt-rj-typedel" title="Usuń typ dokumentu" onclick="wtRjDeleteType('normy_soi', event)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
@@ -6082,7 +6092,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count" id="rjCount-higiena_osobista">0 wersji</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">I</span> Ochrona ppoż. i ewakuacja</div>
+    <div class="wt-rj-cathead" data-catkey="I" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">I</span> Ochrona ppoż. i ewakuacja<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="i1_szablon_ibp" onclick="wtRjDownloadTemplate('i1_szablon_ibp')">
         <h4><span class="pill mono">I.1</span> Instrukcja Bezpieczeństwa Pożarowego (IBP)</h4>
@@ -6138,7 +6148,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count">Pobierz wzór Word ↓</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">K</span> Maszyny i UDT</div>
+    <div class="wt-rj-cathead" data-catkey="K" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">K</span> Maszyny i UDT<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjlink="maszyny" onclick="showSection('maszyny')">
         <h4><span class="pill mono">K.1–K.3</span> Rejestr maszyn, karta przeglądów, protokół minimalnych wymagań BHP</h4>
@@ -6188,7 +6198,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count" id="rjCount-rejestr_dostosowania_maszyn">0 wersji</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">L</span> Substancje niebezpieczne i chemia</div>
+    <div class="wt-rj-cathead" data-catkey="L" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">L</span> Substancje niebezpieczne i chemia<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtype="spis_substancji_niebezpiecznych" onclick="wtRjOpenType('spis_substancji_niebezpiecznych')">
         <span class="wt-rj-typedel" title="Usuń typ dokumentu" onclick="wtRjDeleteType('spis_substancji_niebezpiecznych', event)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
@@ -6222,7 +6232,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count">Pobierz szablon →</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">M</span> Kontrole wewnętrzne i komisja BHP</div>
+    <div class="wt-rj-cathead" data-catkey="M" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">M</span> Kontrole wewnętrzne i komisja BHP<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtype="protokol_kontroli_wewnetrznej" onclick="wtRjOpenType('protokol_kontroli_wewnetrznej')">
         <span class="wt-rj-typedel" title="Usuń typ dokumentu" onclick="wtRjDeleteType('protokol_kontroli_wewnetrznej', event)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
@@ -6305,7 +6315,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count">Pobierz szablon →</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">N</span> Posiłki profilaktyczne i napoje</div>
+    <div class="wt-rj-cathead" data-catkey="N" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">N</span> Posiłki profilaktyczne i napoje<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtype="tabela_posilkow_profilaktycznych" onclick="wtRjOpenType('tabela_posilkow_profilaktycznych')">
         <span class="wt-rj-typedel" title="Usuń typ dokumentu" onclick="wtRjDeleteType('tabela_posilkow_profilaktycznych', event)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
@@ -6324,7 +6334,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count" id="rjCount-tabela_napojow">0 wersji</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">O</span> Dokumentacja ogólna</div>
+    <div class="wt-rj-cathead" data-catkey="O" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">O</span> Dokumentacja ogólna<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="o1_regulamin_bhp" onclick="wtRjDownloadTemplate('o1_regulamin_bhp')">
         <h4><span class="pill mono">O.1</span> Regulamin pracy z rozdziałem BHP + potwierdzenia zapoznania pracowników</h4>
@@ -6392,7 +6402,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count" id="rjCount-ksiazka_kontroli_przedsiebiorcy">0 wersji</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">P</span> Ergonomia i praca przy monitorach</div>
+    <div class="wt-rj-cathead" data-catkey="P" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">P</span> Ergonomia i praca przy monitorach<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="p1_ergonomia_stanowiska" onclick="wtRjDownloadTemplate('p1_ergonomia_stanowiska')">
         <h4><span class="pill mono">P.1</span> Ocena ergonomii stanowiska komputerowego (lista kontrolna)</h4>
@@ -6417,7 +6427,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count">Pobierz szablon →</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">Q</span> Praca zdalna</div>
+    <div class="wt-rj-cathead" data-catkey="Q" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">Q</span> Praca zdalna<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="q1_q3_informacja_oswiadczenie" onclick="wtRjDownloadTemplate('q1_q3_informacja_oswiadczenie')">
         <h4><span class="pill mono">Q.1/Q.3</span> Informacja o BHP przy pracy zdalnej oraz oświadczenie pracownika</h4>
@@ -6441,7 +6451,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count">Pobierz szablon →</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">R</span> Azbest — jeśli dotyczy</div>
+    <div class="wt-rj-cathead" data-catkey="R" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">R</span> Azbest — jeśli dotyczy<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="r1_ocena_azbest" onclick="wtRjDownloadTemplate('r1_ocena_azbest')">
         <h4><span class="pill mono">R.1</span> Ocena stanu technicznego i możliwości bezpiecznego użytkowania wyrobów zawierających azbest</h4>
@@ -6467,7 +6477,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count" id="rjCount-rejestr_narazonych_azbest">0 wersji</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">S</span> Prace szczególnie niebezpieczne</div>
+    <div class="wt-rj-cathead" data-catkey="S" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">S</span> Prace szczególnie niebezpieczne<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="s1_polecenie_psn" onclick="wtRjDownloadTemplate('s1_polecenie_psn')">
         <h4><span class="pill mono">S.1</span> Pisemne polecenie wykonania pracy szczególnie niebezpiecznej</h4>
@@ -6492,7 +6502,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count">Pobierz szablon →</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">T</span> Transport i logistyka</div>
+    <div class="wt-rj-cathead" data-catkey="T" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">T</span> Transport i logistyka<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="t1_zrodla_adr" onclick="wtRjDownloadTemplate('t1_zrodla_adr')">
         <h4><span class="pill mono">T.1</span> Dokumentacja ADR — dotyczy przewozu towarów niebezpiecznych</h4>
@@ -6517,7 +6527,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count">Pobierz szablon →</div>
       </div>
     </div>
-    <div class="wt-rj-cathead"><span class="wt-rj-catletter">U</span> Ochrona środowiska</div>
+    <div class="wt-rj-cathead" data-catkey="U" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">U</span> Ochrona środowiska<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtpl="u0_informator_srodowisko" onclick="wtRjDownloadTemplate('u0_informator_srodowisko')">
         <h4><span class="pill mono">U.0</span> Ochrona środowiska — informator i źródła</h4>
@@ -6550,7 +6560,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-rj-count">Pobierz szablon →</div>
       </div>
     </div>
-<div class="wt-rj-cathead"><span class="wt-rj-catletter">J</span> Wykazy pracownicze</div>
+<div class="wt-rj-cathead" data-catkey="J" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">J</span> Wykazy pracownicze<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
       <div class="card nav-card" data-rjtype="wykaz_psn" onclick="wtRjOpenType('wykaz_psn')">
         <span class="wt-rj-typedel" title="Usuń typ dokumentu" onclick="wtRjDeleteType('wykaz_psn', event)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
@@ -8344,6 +8354,39 @@ document.addEventListener('keydown', e=>{
       wtToast('Nie udało się pobrać instrukcji: '+(e && e.message ? e.message : e), true);
     }
   };
+  window.wtRjCatCollapsedDefault = function(key){
+    try{
+      const v = localStorage.getItem('wtRjCatCollapsed:'+key);
+      if(v === '0') return false;
+      if(v === '1') return true;
+    }catch(e){}
+    return true;
+  };
+  window.wtRjToggleCat = function(el){
+    const grid = el.nextElementSibling;
+    if(!grid || !grid.classList.contains('startgrid')) return;
+    const collapsed = el.classList.toggle('wt-rj-collapsed');
+    grid.classList.toggle('wt-rj-hidden', collapsed);
+    try{ localStorage.setItem('wtRjCatCollapsed:'+(el.dataset.catkey||el.textContent.trim()), collapsed?'1':'0'); }catch(e){}
+  };
+  window.wtRjSetAllCollapsed = function(collapsed){
+    document.querySelectorAll('.wt-rj-cathead[data-catkey]').forEach(el => {
+      const grid = el.nextElementSibling;
+      if(!grid || !grid.classList.contains('startgrid')) return;
+      el.classList.toggle('wt-rj-collapsed', collapsed);
+      grid.classList.toggle('wt-rj-hidden', collapsed);
+      try{ localStorage.setItem('wtRjCatCollapsed:'+el.dataset.catkey, collapsed?'1':'0'); }catch(e){}
+    });
+  };
+  window.wtRjInitCollapse = function(){
+    document.querySelectorAll('#rjHub > .wt-rj-cathead[data-catkey]').forEach(el => {
+      const grid = el.nextElementSibling;
+      if(!grid || !grid.classList.contains('startgrid')) return;
+      const collapsed = wtRjCatCollapsedDefault(el.dataset.catkey);
+      el.classList.toggle('wt-rj-collapsed', collapsed);
+      grid.classList.toggle('wt-rj-hidden', collapsed);
+    });
+  };
   window.wtRenderBibliotekaInstrukcji = function(){
     const grid = document.getElementById('bibliotekaGrid');
     const countEl = document.getElementById('bibliotekaCount');
@@ -8362,7 +8405,10 @@ document.addEventListener('keydown', e=>{
     filtered.forEach(it => { (byCat[it.category] = byCat[it.category] || []).push(it); });
     let html = '';
     Object.keys(byCat).forEach(cat => {
-      html += '<div class="wt-rj-cathead">'+esc(cat)+'</div><div class="startgrid">';
+      const key = 'lib:'+cat;
+      const collapsed = query ? false : wtRjCatCollapsedDefault(key);
+      html += '<div class="wt-rj-cathead'+(collapsed?' wt-rj-collapsed':'')+'" data-catkey="'+esc(key)+'" onclick="wtRjToggleCat(this)">'+esc(cat)+'<span class="wt-rj-chevron">▾</span></div>'
+        + '<div class="startgrid'+(collapsed?' wt-rj-hidden':'')+'">';
       byCat[cat].forEach(it => {
         html += '<div class="card nav-card" onclick="wtLibraryDownload(\''+it.id+'\')">'
           + '<h4><span class="pill mono">'+esc(it.code)+'</span> '+esc(it.title)+'</h4>'
@@ -15053,7 +15099,7 @@ document.addEventListener('keydown', e=>{
     window.showSection = function(key){
       _wtOrigShowSection2(key);
       if(key==='start'){ renderDeadlinePanel(); wtRenderLegalWatchBanner(); wtRenderBackupReminderBanner(); wtRenderOverdueRegPanel(); wtRenderWeekPanel(); }
-      if(key==='rejestry'){ wtRenderBibliotekaInstrukcji(); }
+      if(key==='rejestry'){ wtRenderBibliotekaInstrukcji(); wtRjInitCollapse(); }
     };
   }
   /* Nawigacja do sekcji z drążeniem (Klienci: lista/szczegóły klienta; Rejestry: hub/lista/edytor)
