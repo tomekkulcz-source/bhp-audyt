@@ -13644,6 +13644,22 @@ document.addEventListener('keydown', e=>{
       '<div><label class="small" style="display:block;margin-bottom:4px;color:var(--ink-soft);">'+esc(f.label)+'</label>'
       +'<input class="wt-input" style="width:100%;" type="'+(f.type==='date'?'date':'text')+'" value="'+esc(linked[f.key]||'')+'" oninput="window.wtAuditReportMetaInput(\''+auditId+'\',\''+f.key+'\',this.value)"></div>'
     ).join('') + '</div>' : '';
+    // przy checklistach 300+ pozycji przewijanie do garstki niezgodności jest niewygodne —
+    // filtr statusu (razem z rozwiń/zwiń wszystkie) pozwala od razu pokazać tylko np. "NIE"
+    const tak = results.filter(r=>r.value==='TAK').length;
+    const nie = results.filter(r=>r.value==='NIE').length;
+    const nd = results.filter(r=>r.value==='N.D.').length;
+    const none = results.length - tak - nie - nd;
+    const filterBarHtml = results.length ? '<div class="filters" style="margin-bottom:14px;">'
+      +'<span class="chip on" data-audit-filter="ALL" onclick="wtAuditReportFilter(this,\'ALL\')">Wszystkie ('+results.length+')</span>'
+      +'<span class="chip" data-audit-filter="NIE" onclick="wtAuditReportFilter(this,\'NIE\')">NIE ('+nie+')</span>'
+      +'<span class="chip" data-audit-filter="TAK" onclick="wtAuditReportFilter(this,\'TAK\')">TAK ('+tak+')</span>'
+      +'<span class="chip" data-audit-filter="N.D." onclick="wtAuditReportFilter(this,\'N.D.\')">N.D. ('+nd+')</span>'
+      +'<span class="chip" data-audit-filter="" onclick="wtAuditReportFilter(this,\'\')">Bez oceny ('+none+')</span>'
+      +'<span style="flex:1"></span>'
+      +'<button class="wt-btn" style="padding:6px 13px;font-size:12.5px;" onclick="expandAllCats(\'#klienciAuditReportBody\')">Rozwiń wszystkie</button>'
+      +'<button class="wt-btn" style="padding:6px 13px;font-size:12.5px;" onclick="collapseAllCats(\'#klienciAuditReportBody\')">Zwiń wszystkie</button>'
+      +'</div>' : '';
     const catsHtml = order.map(cat=>{
       const items = groups[cat];
       const inScope = scopeKnown ? activeSet.has(cat) : true;
@@ -13679,6 +13695,7 @@ document.addEventListener('keydown', e=>{
       + '<h3 style="margin:0;font-size:22px;">Raport z audytu — '+esc(fmtWhen(a.createdAt))+(client?' · '+esc(client.name):'')+'</h3>'
       + '</div>'
       + metaHtml
+      + filterBarHtml
       + (results.length ? catsHtml : '<div class="wt-empty">Ten audyt nie zawiera żadnych pozycji.</div>')
       + '<div class="small" style="color:var(--ink-soft);margin:16px 0 8px;">Dodatkowe sekcje trafią do wygenerowanego PDF, po liście niezgodności (np. wprowadzenie, zalecenia ogólne, podsumowanie dla zarządu).</div>'
       + '<div class="wt-report-sections"></div>'
@@ -13714,6 +13731,27 @@ document.addEventListener('keydown', e=>{
       if(!DB) return;
       DB.doc('register_versions/'+st.protocolId).update({rows: st.rows, updatedAt: Date.now()}).catch(()=>{});
     }, 500);
+  };
+  window.wtAuditReportFilter = function(el, status){
+    const bar = el.parentElement;
+    bar.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+    el.classList.add('on');
+    const root = document.getElementById('klienciAuditReportBody');
+    root.querySelectorAll('.cat').forEach(catEl=>{
+      let anyVisible = false;
+      catEl.querySelectorAll('.item').forEach(itemEl=>{
+        const sel = itemEl.querySelector('.status-select');
+        const v = sel ? sel.getAttribute('data-v') : '';
+        const match = status==='ALL' || v===status;
+        itemEl.style.display = match ? '' : 'none';
+        if(match) anyVisible = true;
+      });
+      catEl.style.display = anyVisible ? '' : 'none';
+      // tylko DODAJEMY .open przy aktywnym filtrze (żeby pasujące pozycje od razu było
+      // widać) — nigdy nie zwijamy z powrotem przy powrocie do "Wszystkie", zgodnie z tym,
+      // jak działa już istniejący filtr checklisty (applyChecklistFilters)
+      if(status!=='ALL' && anyVisible) catEl.classList.add('open');
+    });
   };
   function wtReportRenderSections(auditId){
     const panel = document.querySelector('.wt-report-panel[data-audit-id="'+auditId+'"]');
