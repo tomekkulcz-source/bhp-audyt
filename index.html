@@ -15474,7 +15474,13 @@ document.addEventListener('keydown', e=>{
     (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
   async function wtSaveFile(filename, blob){
     if(DOWNLOADS){ await DOWNLOADS.save({filename, data:blob}); return; }
-    if(wtIsStandalonePWA && navigator.canShare){
+    // wtIsStandalonePWA sam w sobie (display-mode: standalone) dotyczy też komputerowych
+    // aplikacji zainstalowanych z przeglądarki (Chrome/Edge/Safari na macOS/Windows) — tam
+    // zwykłe pobieranie przez <a download> działa bezawaryjnie i Web Share tylko przeszkadza,
+    // otwierając systemowy arkusz "Udostępnij" (AirDrop/Wiadomości/Notatki…) zamiast po prostu
+    // zapisać plik do Pobranych. Ograniczenie z komentarza WYJĄTEK 2 dotyczy WYŁĄCZNIE iOS/
+    // iPadOS w trybie standalone — stąd dodatkowy warunek wtIsIOSSafari poniżej.
+    if(wtIsStandalonePWA && wtIsIOSSafari && navigator.canShare){
       try{
         const file = new File([blob], filename, {type: blob.type || 'application/octet-stream'});
         if(navigator.canShare({files:[file]})){
