@@ -881,6 +881,9 @@ table.wt-rj-table .wt-rj-computed-empty{color:var(--ink-faint);}
 #rj-print-host tr{break-inside:avoid;page-break-inside:avoid;}
 #rj-print-host thead{display:table-header-group;}
 #rj-print-host .rp-footer{margin-top:16px;font-size:9.5px;color:#999;}
+#rj-print-host .rp-section{margin-top:18px;}
+#rj-print-host .rp-section-title{font-size:13px;font-weight:700;margin:0 0 6px;padding-bottom:4px;border-bottom:1px solid #ccc;}
+#rj-print-host .rp-section-text{font-size:11px;color:#222;white-space:pre-wrap;line-height:1.5;}
 
 @media print{
   /* rejestry mają zwykle 8-10 kolumn — bez wymuszenia poziomej strony ostatnie kolumny
@@ -13474,16 +13477,91 @@ document.addEventListener('keydown', e=>{
       + (flagged.length
         ? '<table><thead><tr><th>Stwierdzone niezgodności — wymagane działania</th><th style="width:22%;">Termin realizacji</th></tr></thead><tbody>'+rowsHtml+'</tbody></table>'
         : '<p style="font-size:11px;color:#333;">Podczas audytu nie stwierdzono niezgodności w ocenionych punktach kontrolnych.</p>')
+      + (a.reportSections && a.reportSections.length ? a.reportSections.map(s=>
+          '<div class="rp-section"><div class="rp-section-title">'+esc(s.title||'Sekcja')+'</div>'
+          +'<div class="rp-section-text">'+esc(s.text||'')+'</div></div>'
+        ).join('') : '')
       +'<div class="rp-footer">Raport wygenerowany automatycznie na podstawie checklisty audytowej BHP. Pełna dokumentacja robocza (wszystkie ocenione punkty, zdjęcia i komentarze) dostępna u audytora na życzenie.</div>';
   }
-  window.wtClientReportExportPdf = async function(auditId){
+  /* Edytor dodatkowych sekcji raportu — otwierany zamiast natychmiastowego eksportu,
+     żeby specjalista mógł dopisać własny tekst (wprowadzenie, zalecenia, podsumowanie
+     dla zarządu itp.) PRZED wygenerowaniem PDF. Robocze sekcje trzymane w pamięci
+     (window.__wtReportDraft) do chwili zapisu — dopiero "Zapisz i generuj PDF" utrwala
+     je w checklist_snapshots/<id>.reportSections, więc przeglądanie/odrzucenie edycji
+     nie zostawia częściowych zapisów. */
+  window.wtClientReportOpen = function(auditId){
+    const a = allChecklistSnapshots.find(x=>x.id===auditId);
+    if(!a) return;
+    const card = document.querySelector('#klienciAudits [data-id="'+auditId+'"]');
+    if(!card) return;
+    const existing = card.querySelector('.wt-report-panel');
+    if(existing){ existing.remove(); return; }
+    window.__wtReportDraft = window.__wtReportDraft || {};
+    window.__wtReportDraft[auditId] = (a.reportSections||[]).map(s=>Object.assign({}, s));
+    const panel = document.createElement('div');
+    panel.className = 'wt-report-panel';
+    panel.dataset.auditId = auditId;
+    panel.style.cssText = 'flex-basis:100%;margin-top:12px;border-top:1px solid var(--line);padding-top:10px;';
+    panel.innerHTML = '<div class="small" style="color:var(--ink-soft);margin-bottom:8px;">Dodatkowe sekcje trafią do wygenerowanego PDF, po liście niezgodności (np. wprowadzenie, zalecenia ogólne, podsumowanie dla zarządu).</div>'
+      +'<div class="wt-report-sections"></div>'
+      +'<button class="wt-btn" style="margin-top:4px;" onclick="window.wtReportAddSection(\''+auditId+'\')">+ Dodaj sekcję</button>'
+      +'<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">'
+      +'<button class="wt-btn" onclick="this.closest(\'.wt-report-panel\').remove()">Anuluj</button>'
+      +'<button class="wt-btn primary" onclick="window.wtReportSaveAndExport(\''+auditId+'\')">Zapisz i generuj PDF</button></div>';
+    card.appendChild(panel);
+    wtReportRenderSections(auditId);
+  };
+  function wtReportRenderSections(auditId){
+    const panel = document.querySelector('.wt-report-panel[data-audit-id="'+auditId+'"]');
+    if(!panel) return;
+    const list = panel.querySelector('.wt-report-sections');
+    const sections = (window.__wtReportDraft && window.__wtReportDraft[auditId]) || [];
+    list.innerHTML = sections.length ? sections.map((s,i)=>
+      '<div style="margin-bottom:10px;padding:10px;border:1px solid var(--line);border-radius:8px;">'
+      +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">'
+      +'<input class="wt-input" placeholder="Tytuł sekcji (np. Zalecenia)" value="'+esc(s.title||'')+'" style="flex:1;" oninput="window.wtReportUpdateSection(\''+auditId+'\','+i+',\'title\',this.value)">'
+      +'<span class="wt-iconbtn danger" title="Usuń sekcję" onclick="window.wtReportRemoveSection(\''+auditId+'\','+i+')"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>'
+      +'</div>'
+      +'<textarea class="wt-input" placeholder="Treść sekcji…" style="width:100%;min-height:70px;resize:vertical;" oninput="window.wtReportUpdateSection(\''+auditId+'\','+i+',\'text\',this.value)">'+esc(s.text||'')+'</textarea>'
+      +'</div>'
+    ).join('') : '<div class="wt-empty">Brak dodatkowych sekcji. Kliknij „+ Dodaj sekcję”, aby dopisać własny tekst do raportu.</div>';
+  }
+  window.wtReportAddSection = function(auditId){
+    window.__wtReportDraft = window.__wtReportDraft || {};
+    if(!window.__wtReportDraft[auditId]) window.__wtReportDraft[auditId] = [];
+    window.__wtReportDraft[auditId].push({title:'', text:''});
+    wtReportRenderSections(auditId);
+  };
+  window.wtReportRemoveSection = function(auditId, idx){
+    const arr = window.__wtReportDraft && window.__wtReportDraft[auditId];
+    if(!arr) return;
+    arr.splice(idx,1);
+    wtReportRenderSections(auditId);
+  };
+  window.wtReportUpdateSection = function(auditId, idx, field, value){
+    const arr = window.__wtReportDraft && window.__wtReportDraft[auditId];
+    if(!arr || !arr[idx]) return;
+    arr[idx][field] = value;
+  };
+  window.wtReportSaveAndExport = async function(auditId){
+    const sections = ((window.__wtReportDraft && window.__wtReportDraft[auditId]) || []).filter(s=>(s.title&&s.title.trim())||(s.text&&s.text.trim()));
+    if(DB){
+      try{ await DB.doc('checklist_snapshots/'+auditId).update({reportSections: sections}); }
+      catch(err){ console.error(err); wtToast('Nie udało się zapisać sekcji raportu.', true); }
+    }
+    await window.wtClientReportExportPdf(auditId, sections);
+    const panel = document.querySelector('.wt-report-panel[data-audit-id="'+auditId+'"]');
+    if(panel) panel.remove();
+  };
+  window.wtClientReportExportPdf = async function(auditId, overrideSections){
     const a = allChecklistSnapshots.find(x=>x.id===auditId);
     if(!a) return;
     const client = wtProjectById(a.projectId);
     const host = document.getElementById('rj-print-host');
     try{
       await ensurePdfLibs();
-      host.innerHTML = buildClientReportHtml(a, client);
+      const aForReport = overrideSections ? Object.assign({}, a, {reportSections: overrideSections}) : a;
+      host.innerHTML = buildClientReportHtml(aForReport, client);
       host.style.display='block'; host.style.position='fixed'; host.style.left='-10000px'; host.style.top='0'; host.style.width='800px';
       await new Promise(r=>setTimeout(r,30));
       const canvas = await html2canvas(host, {scale:2, backgroundColor:'#ffffff'});
@@ -13643,6 +13721,58 @@ document.addEventListener('keydown', e=>{
      razu tutaj), a "Zapisz zmiany" nadpisuje results w tym samym dokumencie Firestore (update,
      nie nowy snapshot) — zdjęcia zostają tylko podglądowe (dodawanie nowych zdjęć do już
      zamkniętej wizyty zostaje poza zakresem tej poprawki). */
+  /* Widok pojedynczego zapisanego audytu ma wyglądać "praktycznie tak samo jak w
+     checkliście audytowej" (żądanie użytkownika) — zamiast własnego, płaskiego,
+     bezbarwnego layoutu, budujemy dokładnie te same klasy .cat/.item/.pbar/.badge/
+     .freqset/.status-select[data-v] co #sec-checklist, więc kolory wg statusu
+     (TAK/NIE/N.D.) i priorytetu są od razu widoczne, a kategorie zwijają się jak w
+     checkliście. Priorytet/częstotliwość/podstawę prawną snapshot NIE przechowuje
+     (zob. schema w wtSaveChecklistAudit) — dociągamy je z żywego DOM #sec-checklist,
+     dopasowując po treści pytania (ten sam klucz co używa saveStatus/hashText). */
+  function wtPrioClass(p){
+    return p==='Krytyczny'?'crit':p==='Wysoki'?'high':p==='Średni'?'med':p==='Niski'?'low':'';
+  }
+  function wtChecklistMetaMap(){
+    if(window.__wtChkMetaMap) return window.__wtChkMetaMap;
+    const map = {};
+    document.querySelectorAll('#sec-checklist .item[data-prio]').forEach(it=>{
+      const txt = it.querySelector('.txt');
+      if(!txt) return;
+      const basisEl = it.querySelector('.basis');
+      map[txt.textContent.trim()] = {
+        prio: it.dataset.prio || '',
+        freq: it.dataset.freq || '',
+        basis: basisEl ? basisEl.textContent.replace(/^—\s*/,'').trim() : ''
+      };
+    });
+    window.__wtChkMetaMap = map;
+    return map;
+  }
+  function wtAuditStatusOpt(v){
+    return ['',['TAK','TAK'],['NIE','NIE'],['N.D.','N.D.']].map(o=>{
+      if(!o) return '<option value=""'+(v?'':' selected')+'>—</option>';
+      return '<option value="'+o[0]+'"'+(v===o[0]?' selected':'')+'>'+o[1]+'</option>';
+    }).join('');
+  }
+  function wtAuditItemHtml(r){
+    const meta = wtChecklistMetaMap()[r.text] || null;
+    const prioClass = meta ? wtPrioClass(meta.prio) : '';
+    const barColor = prioClass ? 'var(--'+prioClass+')' : 'var(--line-strong)';
+    const badgeHtml = meta && meta.prio ? '<span class="badge '+prioClass+'"><span class="dot" style="background:'+barColor+'"></span>'+esc(meta.prio)+'</span>' : '';
+    const freqHtml = meta && meta.freq ? '<span class="freqset">'+['M','K','R'].map(l=>'<span class="freq'+(meta.freq.indexOf(l)>-1?' on':'')+'">'+l+'</span>').join('')+'</span>' : '';
+    const basisHtml = meta && meta.basis ? '<span class="basis">'+esc(meta.basis)+'</span>' : '';
+    const photosHtml = (r.photos&&r.photos.length) ? '<div class="wt-photo-strip">'+r.photos.map(u=>'<span class="wt-photo-thumb"><img src="'+u+'" alt=""></span>').join('')+'</div>' : '';
+    return '<div class="item">'
+      +'<div class="pbar" style="background:'+barColor+'"></div>'
+      +'<div class="body">'
+      +'<div class="txt">'+esc(r.text)+'</div>'
+      +'<div class="meta">'+badgeHtml+freqHtml+basisHtml
+      +'<select class="status-select wt-audit-edit-select" data-idx="'+r.idx+'" data-v="'+esc(r.value||'')+'" onchange="this.setAttribute(\'data-v\', this.value)">'+wtAuditStatusOpt(r.value)+'</select>'
+      +'</div>'
+      + photosHtml
+      +'<div class="wt-comment-wrap"><textarea class="wt-comment-input wt-audit-edit-comment" data-idx="'+r.idx+'" placeholder="Komentarz…">'+esc(r.comment||'')+'</textarea></div>'
+      +'</div></div>';
+  }
   window.wtViewAudit = function(id){
     const a = allChecklistSnapshots.find(x=>x.id===id);
     if(!a) return;
@@ -13657,28 +13787,33 @@ document.addEventListener('keydown', e=>{
       if(!groups[cat]){ groups[cat]=[]; order.push(cat); }
       groups[cat].push(Object.assign({idx}, r));
     });
-    const statusOpt = (v)=>['',['TAK','TAK'],['NIE','NIE'],['N.D.','N.D.']].map(o=>{
-      if(!o) return '<option value=""'+(v?'':' selected')+'>—</option>';
-      return '<option value="'+o[0]+'"'+(v===o[0]?' selected':'')+'>'+o[1]+'</option>';
+    const panelId = 'wt-audit-panel-'+id;
+    const tak = results.filter(r=>r.value==='TAK').length;
+    const nie = results.filter(r=>r.value==='NIE').length;
+    const nd = results.filter(r=>r.value==='N.D.').length;
+    const none = results.length - tak - nie - nd;
+    const summaryHtml = '<div class="small" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--ink-soft);margin-bottom:12px;">'
+      +'<span style="background:var(--ok-bg);color:var(--ok-ink);font-weight:600;padding:3px 9px;border-radius:999px;">'+tak+' TAK</span>'
+      +'<span style="background:var(--bad-bg);color:var(--bad-ink);font-weight:600;padding:3px 9px;border-radius:999px;">'+nie+' NIE</span>'
+      +'<span style="background:var(--warn-bg);color:var(--warn-ink);font-weight:600;padding:3px 9px;border-radius:999px;">'+nd+' N.D.</span>'
+      +'<span>'+none+' bez oceny</span><span style="flex:1"></span>'
+      +'<button class="wt-btn" style="padding:4px 10px;font-size:12px;" onclick="expandAllCats(\'#'+panelId+'\')">Rozwiń wszystkie</button>'
+      +'<button class="wt-btn" style="padding:4px 10px;font-size:12px;" onclick="collapseAllCats(\'#'+panelId+'\')">Zwiń wszystkie</button>'
+      +'</div>';
+    const catsHtml = order.map(cat=>{
+      const items = groups[cat];
+      const anyAssessed = items.some(r=>r.value);
+      return '<div class="cat'+(anyAssessed?' open':'')+'">'
+        +'<div class="cat-head" onclick="toggleCat(this)"><span class="chev"><svg class="ic" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>'
+        +'<span class="title">'+esc(cat)+'</span><span class="count">'+items.length+'</span></div>'
+        +'<div class="cat-body">'+items.map(wtAuditItemHtml).join('')+'</div></div>';
     }).join('');
     const panel = document.createElement('div');
     panel.className = 'wt-audit-panel';
+    panel.id = panelId;
     panel.dataset.auditId = id;
-    panel.style.cssText = 'flex-basis:100%;margin-top:12px;border-top:1px solid var(--line);padding-top:6px;max-height:520px;overflow-y:auto;';
-    panel.innerHTML = (results.length ? order.map(cat=>{
-      return '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin:14px 0 4px;">'
-        +esc(cat)+' <span style="font-family:var(--font-mono);font-weight:400;">('+groups[cat].length+')</span></div>'
-        + groups[cat].map(r=>{
-          const photosHtml = (r.photos&&r.photos.length) ? '<div class="wt-photo-strip" style="margin-top:6px;">'
-            +r.photos.map(u=>'<span class="wt-photo-thumb"><img src="'+u+'" alt=""></span>').join('')+'</div>' : '';
-          return '<div style="padding:7px 0;border-bottom:1px solid var(--line);font-size:13px;">'
-            +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">'
-            +'<span style="flex:1;min-width:0;">'+esc(r.text)+'</span>'
-            +'<select class="status-select wt-audit-edit-select" data-idx="'+r.idx+'" style="flex:0 0 auto;">'+statusOpt(r.value)+'</select></div>'
-            +'<textarea class="wt-input wt-audit-edit-comment" data-idx="'+r.idx+'" placeholder="Komentarz…" style="width:100%;margin-top:6px;min-height:36px;font-size:12.5px;resize:vertical;">'+esc(r.comment||'')+'</textarea>'
-            + photosHtml + '</div>';
-        }).join('');
-    }).join('') : '<div class="wt-empty" style="margin-top:8px;">Ten audyt nie zawiera żadnych pozycji.</div>')
+    panel.style.cssText = 'flex-basis:100%;margin-top:12px;border-top:1px solid var(--line);padding-top:10px;max-height:560px;overflow-y:auto;';
+    panel.innerHTML = (results.length ? summaryHtml + catsHtml : '<div class="wt-empty" style="margin-top:8px;">Ten audyt nie zawiera żadnych pozycji.</div>')
       + (results.length ? '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;position:sticky;bottom:0;background:var(--surface);padding-top:10px;">'
         +'<button class="wt-btn" onclick="this.closest(\'.wt-audit-panel\').remove()">Zamknij</button>'
         +'<button class="wt-btn primary" onclick="window.wtSaveAuditEdits(\''+id+'\')">Zapisz zmiany</button></div>' : '');
@@ -14923,7 +15058,7 @@ document.addEventListener('keydown', e=>{
       if(btn.dataset.action==='openreg'){ rjBackToClientId=klienciCurrentId; showSection('rejestry'); window.wtRjOpenVersion(id); }
       else if(btn.dataset.action==='viewaudit') window.wtViewAudit(id);
       else if(btn.dataset.action==='delaudit') window.wtDeleteAudit(id);
-      else if(btn.dataset.action==='clientreport') window.wtClientReportExportPdf(id);
+      else if(btn.dataset.action==='clientreport') window.wtClientReportOpen(id);
       else if(btn.dataset.action==='opennote'){ showSection('notatnik'); window.wtSelectNote(id); }
       else if(btn.dataset.action==='openrisk'){ showSection('oceny-ryzyka'); window.wtRyzOpen(id); }
       else if(btn.dataset.action==='openreview'){ showSection('terminy-kontroli'); window.wtPrzOpen(id); }
