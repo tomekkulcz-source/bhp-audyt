@@ -6846,6 +6846,13 @@ window.__WT_FIREBASE_CONFIG__ = {
     <h3 class="subhead">Maszyny</h3>
     <div id="klienciMachines"></div>
   </div>
+  <div id="klienciAuditReport" style="display:none;">
+    <div class="wt-rj-back" onclick="window.wtCloseAuditReport()">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <span id="klienciAuditReportBackLabel">Wróć do klienta</span>
+    </div>
+    <div id="klienciAuditReportBody"></div>
+  </div>
 </section>
 <section id="sec-notatnik" class="section">
   <div class="section-head">
@@ -13333,12 +13340,12 @@ document.addEventListener('keydown', e=>{
     }).join('') : '<div class="wt-empty">Brak wersji rejestrów przypisanych do tego klienta. Przypisz je w edytorze rejestru (pole „Klient”).</div>';
     const audits = allChecklistSnapshots.filter(a=>a.projectId===klienciCurrentId);
     const klienciAuditsEl = document.getElementById('klienciAudits');
-    // "Utwórz raport" zapisuje pola M.1 automatycznie przy KAŻDEJ zmianie (debounce), co
-    // wywołuje onSnapshot na register_versions, który woła renderClientView() — bez tego
-    // zabezpieczenia nadpisałoby to całą listę audytów (i wyrwało fokus z pola, w którym
-    // specjalista właśnie pisze) w trakcie wypełniania. Zawartość listy i tak nie zmienia
-    // się w sposób istotny podczas edycji otwartego panelu "Zobacz"/"Utwórz raport".
-    if(!klienciAuditsEl.querySelector('.wt-audit-panel, .wt-report-panel')){
+    // "Zobacz" zapisuje zmiany w edytowalnym panelu wewnątrz tej samej listy — bez tego
+    // zabezpieczenia dowolny inny zapis w tle (np. do innej kolekcji) mógłby nadpisać całą
+    // listę audytów w trakcie edycji i wyrwać fokus z pola. ("Utwórz raport" nie ma tego
+    // problemu — renderuje się w osobnym widoku #klienciAuditReport, którego ta funkcja
+    // w ogóle nie dotyka.)
+    if(!klienciAuditsEl.querySelector('.wt-audit-panel')){
       klienciAuditsEl.innerHTML = audits.length ? audits.map(a=>{
         const nieCount = a.results ? a.results.filter(r=>r.value==='NIE').length : 0;
         return '<div class="wt-rj-versioncard" data-id="'+a.id+'">'
@@ -13579,13 +13586,14 @@ document.addEventListener('keydown', e=>{
      kliknięciem "Generuj raport PDF". Dopasowanie wiersza M.1 do pozycji checklisty
      idzie po treści (irregularity = tekst pytania + ewentualny komentarz), a nie po
      pozycji w tablicy — przetrwa to nawet ręczną zmianę kolejności wierszy w rejestrze. */
+  window.wtCloseAuditReport = function(){
+    document.getElementById('klienciAuditReport').style.display='none';
+    document.getElementById('klienciDetail').style.display='';
+    document.getElementById('klienciAuditReportBody').innerHTML='';
+  };
   window.wtOpenAuditReport = async function(auditId){
     const a = allChecklistSnapshots.find(x=>x.id===auditId);
     if(!a) return;
-    const card = document.querySelector('#klienciAudits [data-id="'+auditId+'"]');
-    if(!card) return;
-    const existing = card.querySelector('.wt-report-panel');
-    if(existing){ existing.remove(); return; }
     if(!DB){ wtToast('Ta funkcja jest dostępna po otwarciu tego narzędzia jako strony na claude.ai.', true); return; }
     const results = a.results || [];
     const flagged = results.filter(r=>r.value==='NIE');
@@ -13616,8 +13624,6 @@ document.addEventListener('keydown', e=>{
         return;
       }
     }
-    // drugie kliknięcie mogło zdążyć otworzyć panel, zanim powyższy await się zakończył
-    if(card.querySelector('.wt-report-panel')) return;
     window.__wtAuditReportState = window.__wtAuditReportState || {};
     window.__wtAuditReportState[auditId] = linked
       ? { protocolId: linked.id, rows: JSON.parse(JSON.stringify(linked.rows||[])) }
@@ -13665,19 +13671,28 @@ document.addEventListener('keydown', e=>{
           return wtAuditItemHtml(r, extra);
         }).join('')+'</div></div>';
     }).join('');
+    const client = wtProjectById(a.projectId);
     const panel = document.createElement('div');
     panel.className = 'wt-report-panel';
     panel.dataset.auditId = auditId;
-    panel.style.cssText = 'flex-basis:100%;margin-top:12px;border-top:1px solid var(--line);padding-top:10px;max-height:640px;overflow-y:auto;';
-    panel.innerHTML = metaHtml
+    panel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 22px;">'
+      + '<h3 style="margin:0;font-size:22px;">Raport z audytu — '+esc(fmtWhen(a.createdAt))+(client?' · '+esc(client.name):'')+'</h3>'
+      + '</div>'
+      + metaHtml
       + (results.length ? catsHtml : '<div class="wt-empty">Ten audyt nie zawiera żadnych pozycji.</div>')
       + '<div class="small" style="color:var(--ink-soft);margin:16px 0 8px;">Dodatkowe sekcje trafią do wygenerowanego PDF, po liście niezgodności (np. wprowadzenie, zalecenia ogólne, podsumowanie dla zarządu).</div>'
       + '<div class="wt-report-sections"></div>'
       + '<button class="wt-btn" style="margin-top:4px;" onclick="window.wtReportAddSection(\''+auditId+'\')">+ Dodaj sekcję</button>'
-      + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;position:sticky;bottom:0;background:var(--surface);padding-top:10px;">'
-      + '<button class="wt-btn" onclick="this.closest(\'.wt-report-panel\').remove()">Zamknij</button>'
+      + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;position:sticky;bottom:0;background:var(--bg);padding:14px 0;">'
+      + '<button class="wt-btn" onclick="window.wtCloseAuditReport()">Zamknij</button>'
       + '<button class="wt-btn primary" onclick="window.wtReportSaveAndExport(\''+auditId+'\')">Generuj raport PDF</button></div>';
-    card.appendChild(panel);
+    document.getElementById('klienciDetail').style.display='none';
+    const reportSection = document.getElementById('klienciAuditReport');
+    const body = document.getElementById('klienciAuditReportBody');
+    body.innerHTML = '';
+    body.appendChild(panel);
+    reportSection.style.display='';
+    reportSection.scrollTop = 0;
     wtReportRenderSections(auditId);
   };
   window.wtAuditReportMetaInput = function(auditId, key, value){
@@ -13739,8 +13754,7 @@ document.addEventListener('keydown', e=>{
       catch(err){ console.error(err); wtToast('Nie udało się zapisać sekcji raportu.', true); }
     }
     await window.wtClientReportExportPdf(auditId, sections);
-    const panel = document.querySelector('.wt-report-panel[data-audit-id="'+auditId+'"]');
-    if(panel) panel.remove();
+    window.wtCloseAuditReport();
   };
   window.wtClientReportExportPdf = async function(auditId, overrideSections){
     const a = allChecklistSnapshots.find(x=>x.id===auditId);
@@ -13837,6 +13851,7 @@ document.addEventListener('keydown', e=>{
     klienciDoneOpen = false;
     document.getElementById('klienciList').style.display='none';
     document.getElementById('klienciDetail').style.display='';
+    document.getElementById('klienciAuditReport').style.display='none';
     document.getElementById('klienciDashboard').style.display='none';
     renderClientView();
   };
@@ -13856,6 +13871,7 @@ document.addEventListener('keydown', e=>{
     klienciCurrentId = null;
     document.getElementById('klienciList').style.display='';
     document.getElementById('klienciDetail').style.display='none';
+    document.getElementById('klienciAuditReport').style.display='none';
     document.getElementById('klienciDashboard').style.display='';
     renderClientListView();
     renderClientDashboard();
