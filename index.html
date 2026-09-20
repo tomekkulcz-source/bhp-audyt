@@ -6400,13 +6400,12 @@ window.__WT_FIREBASE_CONFIG__ = {
     </div>
     <div class="wt-rj-cathead" data-catkey="M" onclick="wtRjToggleCat(this)"><span class="wt-rj-catletter">M</span> Kontrole wewnętrzne i komisja BHP<span class="wt-rj-chevron">▾</span></div>
     <div class="startgrid">
-      <div class="card nav-card" data-rjtype="protokol_kontroli_wewnetrznej" onclick="wtRjOpenType('protokol_kontroli_wewnetrznej')">
-        <span class="wt-rj-typedel" title="Usuń typ dokumentu" onclick="wtRjDeleteType('protokol_kontroli_wewnetrznej', event)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+      <div class="card nav-card" data-rjlink="checklist" onclick="showSection('checklist')">
         <h4><span class="pill mono">M.1</span> Protokół / karta wewnętrznej kontroli warunków pracy</h4>
-        <p class="small">Formularz na jedną kontrolę — stwierdzone nieprawidłowości, zalecane działania, terminy.</p>
+        <p class="small">Powstaje automatycznie z checklisty audytowej — po zapisaniu audytu klienta użyj przycisku „Prześlij niezgodności do protokołu kontroli”, a stwierdzone nieprawidłowości trafią też do raportu dla klienta.</p>
         <div class="small mono" style="margin-top:8px;">§ 2 Rozp. RM z 2.09.1997 r. ws. służby bhp</div>
-        <div class="wt-rj-tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;"><span class="badge crit"><span class="dot"></span>BEZWZGL.</span></div>
-        <div class="wt-rj-count" id="rjCount-protokol_kontroli_wewnetrznej">0 wersji</div>
+        <div class="wt-rj-tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;"><span class="badge blue"><span class="dot"></span>OSOBNA FUNKCJA</span><span class="badge crit"><span class="dot"></span>BEZWZGL.</span></div>
+        <div class="wt-rj-count">Otwórz w „Checklista audytowa” →</div>
       </div>
 <div class="card nav-card" data-rjtpl="m2_roczna_analiza_bhp" onclick="wtRjDownloadTemplate('m2_roczna_analiza_bhp')">
         <h4><span class="pill mono">M.2</span> Roczna analiza stanu bezpieczeństwa i higieny pracy w zakładzie</h4>
@@ -13483,27 +13482,62 @@ document.addEventListener('keydown', e=>{
     ).join('');
     return '<table><thead><tr><th>Pozycja kontrolna</th><th style="width:14%;">Status</th></tr></thead><tbody>'+rowsHtml+'</tbody></table>';
   }
-  function buildClientReportHtml(a, client){
+  /* Renderuje TĘ SAMĄ tabelę co generyczny eksport rejestru M.1 (zob. buildPrintHost) —
+     żeby "Raport dla klienta" i osobno wyeksportowany protokół M.1 nigdy nie pokazywały
+     dwóch różnych układów tych samych danych. Używane, gdy audyt ma powiązany protokół
+     (utworzony przyciskiem "Prześlij niezgodności do protokołu kontroli", zob.
+     wtSendAuditToProtocol) — wtedy pełne dane M.1 (z zalecanym działaniem, odpowiedzialnym
+     i terminem realizacji, wypełnionymi przez specjalistę w edytorze rejestru) trafiają
+     bezpośrednio do raportu klienckiego, zamiast wymagać osobnego dokumentu. */
+  function buildProtocolSectionHtml(v){
+    const def = REGISTER_DEFS['protokol_kontroli_wewnetrznej'];
+    const metaHtml = (def.metaFields||[]).map(f=>{
+      const val = f.type==='date' ? fmtDatePL(v[f.key]) : v[f.key];
+      return val ? '<span><b>'+esc(f.label)+':</b> '+esc(val)+'</span>' : '';
+    }).join('');
+    const rowsHtml = (v.rows||[]).map((row,idx)=>'<tr><td>'+(idx+1)+'</td>'+def.columns.map(c=>
+      '<td>'+esc(c.type==='date' ? fmtDatePL(row[c.key]) : (row[c.key]||''))+'</td>'
+    ).join('')+'</tr>').join('');
+    return '<div class="rp-section"><div class="rp-section-title">Protokół kontroli (M.1) — stwierdzone niezgodności</div>'
+      + (metaHtml ? '<div class="rp-meta">'+metaHtml+'</div>' : '')
+      + (v.rows && v.rows.length
+        ? '<table><thead><tr><th style="width:4%;">Lp.</th>'+def.columns.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+rowsHtml+'</tbody></table>'
+        : '<p style="font-size:11px;color:#333;">Protokół kontroli nie zawiera żadnych wierszy.</p>')
+      + '</div>';
+  }
+  function buildClientReportHtml(a, client, linkedProtocol){
     const results = a.results || [];
     const tak = results.filter(r=>r.value==='TAK').length;
     const nie = results.filter(r=>r.value==='NIE').length;
     const nd = results.filter(r=>r.value==='N.D.').length;
     const flagged = results.filter(r=>r.value==='NIE');
     const scopeKnown = Array.isArray(a.activeCategories);
-    const flaggedGroups = {}, flaggedOrder = [];
-    flagged.forEach(r=>{
-      const cat = r.category || 'Bez kategorii';
-      if(!flaggedGroups[cat]){ flaggedGroups[cat]=[]; flaggedOrder.push(cat); }
-      flaggedGroups[cat].push(r);
-    });
-    const flaggedRowsHtml = flaggedOrder.map(cat=>
-      '<tr><td colspan="2" style="background:#f2f2f2;font-weight:700;text-transform:uppercase;font-size:8px;letter-spacing:.02em;">'+esc(cat)+'</td></tr>'
-      + flaggedGroups[cat].map(r=>
-        '<tr><td>'+esc(r.text)
-        +(r.comment ? '<div style="margin-top:5px;font-style:italic;color:#555;">Uwaga specjalisty: '+esc(r.comment)+'</div>' : '')
-        +'</td><td></td></tr>'
-      ).join('')
-    ).join('');
+    let nonConformityHtml;
+    if(linkedProtocol){
+      nonConformityHtml = buildProtocolSectionHtml(linkedProtocol);
+    } else if(flagged.length){
+      // Brak przesłanego protokołu M.1 dla tego audytu — dotychczasowy, prostszy widok
+      // (bez odpowiedzialnego/terminu, bo tych danych po prostu nigdzie nie ma).
+      const flaggedGroups = {}, flaggedOrder = [];
+      flagged.forEach(r=>{
+        const cat = r.category || 'Bez kategorii';
+        if(!flaggedGroups[cat]){ flaggedGroups[cat]=[]; flaggedOrder.push(cat); }
+        flaggedGroups[cat].push(r);
+      });
+      const flaggedRowsHtml = flaggedOrder.map(cat=>
+        '<tr><td colspan="2" style="background:#f2f2f2;font-weight:700;text-transform:uppercase;font-size:8px;letter-spacing:.02em;">'+esc(cat)+'</td></tr>'
+        + flaggedGroups[cat].map(r=>
+          '<tr><td>'+esc(r.text)
+          +(r.comment ? '<div style="margin-top:5px;font-style:italic;color:#555;">Uwaga specjalisty: '+esc(r.comment)+'</div>' : '')
+          +'</td><td></td></tr>'
+        ).join('')
+      ).join('');
+      nonConformityHtml = '<div class="rp-section"><div class="rp-section-title">Stwierdzone niezgodności — wymagane działania</div>'
+        +'<table><thead><tr><th>Pozycja</th><th style="width:22%;">Termin realizacji</th></tr></thead><tbody>'+flaggedRowsHtml+'</tbody></table></div>';
+    } else {
+      nonConformityHtml = '<div class="rp-section"><div class="rp-section-title">Stwierdzone niezgodności</div>'
+        +'<p style="font-size:11px;color:#333;">Podczas audytu nie stwierdzono niezgodności w ocenionych punktach kontrolnych.</p></div>';
+    }
     return '<div class="rp-title">Raport z audytu BHP</div>'
       +'<div class="rp-sub">'+esc(client?client.name:'Klient nieprzypisany')+'</div>'
       +'<div class="rp-basis">Data audytu: '+fmtWhen(a.createdAt)+' &nbsp;•&nbsp; Raport wygenerowany: '+fmtWhen(Date.now())+'</div>'
@@ -13511,10 +13545,8 @@ document.addEventListener('keydown', e=>{
       + buildFullChecklistTable(results, a.activeCategories)
       +'<div class="rp-section"><div class="rp-section-title">Podsumowanie</div>'
       +'<div class="rp-meta"><span><b>Ocenionych punktów:</b> '+results.filter(r=>r.value).length+'</span><span><b>Zgodne:</b> '+tak+'</span><span><b>Niezgodne:</b> '+nie+'</span><span><b>Nie dotyczy:</b> '+nd+'</span></div>'
-      + (flagged.length
-        ? '<table><thead><tr><th>Stwierdzone niezgodności — wymagane działania</th><th style="width:22%;">Termin realizacji</th></tr></thead><tbody>'+flaggedRowsHtml+'</tbody></table>'
-        : '<p style="font-size:11px;color:#333;">Podczas audytu nie stwierdzono niezgodności w ocenionych punktach kontrolnych.</p>')
       +'</div>'
+      + nonConformityHtml
       + (a.reportSections && a.reportSections.length ? a.reportSections.map(s=>
           '<div class="rp-section"><div class="rp-section-title">'+esc(s.title||'Sekcja')+'</div>'
           +'<div class="rp-section-text">'+esc(s.text||'')+'</div></div>'
@@ -13595,11 +13627,15 @@ document.addEventListener('keydown', e=>{
     const a = allChecklistSnapshots.find(x=>x.id===auditId);
     if(!a) return;
     const client = wtProjectById(a.projectId);
+    // jeśli specjalista wcześniej przesłał ten audyt do protokołu M.1 (wtSendAuditToProtocol),
+    // jego w pełni wypełnione dane (zalecane działanie/odpowiedzialny/termin) wchodzą teraz
+    // wprost do tego samego raportu — nie trzeba już generować dwóch osobnych dokumentów.
+    const linkedProtocol = allVersions.find(v=>v.registerType==='protokol_kontroli_wewnetrznej' && v.sourceAuditId===auditId);
     const host = document.getElementById('rj-print-host');
     try{
       await ensurePdfLibs();
       const aForReport = overrideSections ? Object.assign({}, a, {reportSections: overrideSections}) : a;
-      host.innerHTML = buildClientReportHtml(aForReport, client);
+      host.innerHTML = buildClientReportHtml(aForReport, client, linkedProtocol);
       host.style.display='block'; host.style.position='fixed'; host.style.left='-10000px'; host.style.top='0'; host.style.width='800px';
       await new Promise(r=>setTimeout(r,30));
       const canvas = await html2canvas(host, {scale:2, backgroundColor:'#ffffff'});
