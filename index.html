@@ -13720,25 +13720,34 @@ document.addEventListener('keydown', e=>{
     const clientId = sel ? sel.value : '';
     if(!clientId){ wtToast('Wybierz klienta, dla którego zapisujesz wynik audytu.', true); return; }
     if(!DB){ wtToast('Zapis audytu jest dostępny po otwarciu tego narzędzia jako strony na claude.ai.', true); return; }
+    // nie każdy audyt obejmuje wszystkie kategorie (checkbox "audyt" przy nagłówku
+    // kategorii, zob. wtToggleCatActive) — zapisujemy, które kategorie były aktywne
+    // w CHWILI zapisu, żeby widok audytu i raport dla klienta mogły pokazać, co
+    // faktycznie było w zakresie tej konkretnej wizyty
+    const activeCategories = Array.from(document.querySelectorAll('#sec-checklist .cat[data-cat]'))
+      .filter(catDiv=>!catDiv.classList.contains('wt-cat-inactive'))
+      .map(catDiv=>catDiv.dataset.cat);
+    const activeCatSet = new Set(activeCategories);
     const results = Array.from(document.querySelectorAll('#sec-checklist .item')).map(item=>{
       const txt = item.querySelector('.txt');
       const stat = item.querySelector('.status-select');
       const catEl = item.closest('.cat');
+      const category = catEl ? (catEl.dataset.cat||'') : '';
+      // status-select bywa przywracany z localStorage globalnie (restoreStatuses/
+      // saveStatus, klucz = tylko hash tekstu pytania, bez powiązania z aktywnością
+      // kategorii) — więc pozycja z kategorii odznaczonej z bieżącego audytu może
+      // mieć "przeciekniętą" wartość z wcześniejszego użycia checklisty. Kategoria
+      // POZA zakresem tego audytu musi trafić do zapisu jako całkowicie pusta,
+      // inaczej "Podsumowanie"/raport dla klienta/wykrywanie powtarzających się
+      // uchybień policzą coś, co w tej wizycie w ogóle nie było sprawdzane.
+      const inScope = activeCatSet.has(category);
+      if(!inScope) return { text: txt ? txt.textContent.trim() : '', value: '', category, photos: [], comment: '' };
       const strip = item.querySelector('.wt-photo-strip');
       const key = strip ? strip.dataset.photoKey : '';
       const photos = key ? allItemPhotos.filter(p=>p.itemKey===key && p.projectId===clientId).map(p=>p.dataUrl) : [];
       const cm = key ? allItemComments.find(c=>c.itemKey===key && c.projectId===clientId) : null;
-      return { text: txt ? txt.textContent.trim() : '', value: stat ? stat.value : '', category: catEl ? (catEl.dataset.cat||'') : '', photos, comment: cm ? (cm.text||'') : '' };
+      return { text: txt ? txt.textContent.trim() : '', value: stat ? stat.value : '', category, photos, comment: cm ? (cm.text||'') : '' };
     }).filter(r=>r.text);
-    // nie każdy audyt obejmuje wszystkie kategorie (checkbox "audyt" przy nagłówku
-    // kategorii, zob. wtToggleCatActive) — zapisujemy, które kategorie były aktywne
-    // w CHWILI zapisu, żeby widok audytu i raport dla klienta mogły pokazać, co
-    // faktycznie było w zakresie tej konkretnej wizyty, a nie tylko co ma wypełnioną
-    // wartość (kategoria w zakresie może mieć puste pozycje, a poza zakresem —
-    // nigdy nie powinna mieć żadnych zaznaczeń)
-    const activeCategories = Array.from(document.querySelectorAll('#sec-checklist .cat[data-cat]'))
-      .filter(catDiv=>!catDiv.classList.contains('wt-cat-inactive'))
-      .map(catDiv=>catDiv.dataset.cat);
     try{
       await DB.collection('checklist_snapshots').add({ projectId: clientId, createdAt: Date.now(), results, activeCategories });
       // zdjęcia i komentarze zostały wbudowane w powyższy zapis audytu — usuwamy je z bieżącego
