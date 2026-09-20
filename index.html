@@ -885,6 +885,51 @@ table.wt-rj-table .wt-rj-computed-empty{color:var(--ink-faint);}
 #rj-print-host .rp-section-title{font-size:13px;font-weight:700;margin:0 0 6px;padding-bottom:4px;border-bottom:1px solid #ccc;}
 #rj-print-host .rp-section-text{font-size:11px;color:#222;white-space:pre-wrap;line-height:1.5;}
 
+/* ---------------- "Raport dla klienta" — osobna, bardziej dopracowana warstwa wizualna,
+   celowo zawężona do .rp-client-report (nigdy nie wpływa na wygląd eksportu generycznych
+   rejestrów przez buildPrintHost, ani na ryzyko/przeglądy/maszyny — te dalej używają
+   gołych .rp-title/.rp-meta/itd. zdefiniowanych powyżej). Paleta: głęboki granat #0F2A43
+   jako kolor marki dokumentu (autorytet, wiarygodność — typowy dla dokumentów compliance/
+   bezpieczeństwa), zestawiony z istniejącymi kolorami statusu (ok/bad/warn) używanymi
+   już wszędzie indziej w aplikacji, więc raport wygląda spójnie z resztą narzędzia. */
+#rj-print-host .rp-client-report{font-family:var(--font-ui);}
+#rj-print-host .rp-client-report .rpc-header{background:#0F2A43;margin:-28px -28px 26px;padding:30px 28px 24px;}
+#rj-print-host .rp-client-report .rpc-eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:#9DC2E0 !important;font-weight:700;margin:0 0 10px;}
+#rj-print-host .rp-client-report .rpc-headmeta{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;}
+#rj-print-host .rp-client-report .rpc-title{font-size:25px;font-weight:700;letter-spacing:-.01em;
+  color:#fff !important;line-height:1.2;}
+#rj-print-host .rp-client-report .rpc-datebox{font-size:10px;color:#C4D7E8 !important;text-align:right;line-height:1.7;white-space:nowrap;}
+#rj-print-host .rp-client-report .rp-section-title{font-size:12.5px;font-weight:700;color:#0F2A43 !important;
+  text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #0F2A43;padding-bottom:7px;margin-bottom:11px;}
+#rj-print-host .rp-client-report .rp-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+#rj-print-host .rp-client-report .rp-meta span{background:#F4F6F8;border:1px solid #E3E8ED;border-radius:6px;padding:5px 10px;font-size:10px;}
+#rj-print-host .rp-client-report .rp-meta b{color:#0F2A43 !important;}
+#rj-print-host .rp-client-report .rpc-stats{display:flex;gap:10px;margin:2px 0 24px;}
+#rj-print-host .rp-client-report .rpc-stat{flex:1;border-radius:9px;padding:13px 14px;background:#F4F6F8;border:1px solid #E3E8ED;}
+#rj-print-host .rp-client-report .rpc-stat-num{font-size:22px;font-weight:700;line-height:1;margin-bottom:5px;color:#0F2A43 !important;}
+#rj-print-host .rp-client-report .rpc-stat-label{font-size:9px;text-transform:uppercase;letter-spacing:.05em;
+  color:#5B6B7A !important;font-weight:600;}
+#rj-print-host .rp-client-report .rpc-stat.ok .rpc-stat-num{color:var(--ok-ink) !important;}
+#rj-print-host .rp-client-report .rpc-stat.bad .rpc-stat-num{color:var(--bad-ink) !important;}
+#rj-print-host .rp-client-report .rpc-stat.warn .rpc-stat-num{color:var(--warn-ink) !important;}
+#rj-print-host .rp-client-report table{border:1px solid #E3E8ED;border-radius:8px;overflow:hidden;}
+#rj-print-host .rp-client-report th,#rj-print-host .rp-client-report td{border-color:#E9EDF1 !important;}
+#rj-print-host .rp-client-report th{background:#0F2A43;color:#fff !important;font-weight:600;}
+#rj-print-host .rp-client-report tbody tr:nth-child(even){background:#FAFBFC;}
+#rj-print-host .rp-client-report td.rpc-catrow{background:#EAF0F5 !important;color:#0F2A43 !important;
+  font-weight:700;text-transform:uppercase;font-size:8px;letter-spacing:.04em;}
+#rj-print-host .rp-client-report .rpc-note{border-left:4px solid #0F2A43;background:#F4F6F8;
+  border-radius:0 8px 8px 0;padding:14px 16px;}
+#rj-print-host .rp-client-report .rpc-note .rp-section-title{border-bottom:none;padding-bottom:0;margin-bottom:8px;}
+#rj-print-host .rp-client-report .rp-section-text{white-space:normal;}
+#rj-print-host .rp-client-report .rp-section-text p{margin:0 0 8px;}
+#rj-print-host .rp-client-report .rp-section-text p:last-child{margin-bottom:0;}
+#rj-print-host .rp-client-report .rp-section-text ul,#rj-print-host .rp-client-report .rp-section-text ol{margin:6px 0 8px;padding-left:18px;}
+#rj-print-host .rp-client-report .rp-section-text li{margin-bottom:4px;}
+#rj-print-host .rp-client-report .rp-section-text strong{color:#0F2A43 !important;}
+#rj-print-host .rp-client-report .rp-footer{border-top:1px solid #E3E8ED;padding-top:11px;}
+
 @media print{
   /* rejestry mają zwykle 8-10 kolumn — bez wymuszenia poziomej strony ostatnie kolumny
      (np. "Podpis pracownika") nie mieszczą się w szerokości pionowej A4 i są ucinane */
@@ -13488,7 +13533,7 @@ document.addEventListener('keydown', e=>{
     });
     if(!order.length) return '<p style="font-size:11px;color:#333;">Brak pozycji w zakresie tego audytu.</p>';
     const rowsHtml = order.map(cat=>
-      '<tr><td colspan="2" style="background:#f2f2f2;font-weight:700;text-transform:uppercase;font-size:8px;letter-spacing:.02em;">'+esc(cat)+'</td></tr>'
+      '<tr><td colspan="2" class="rpc-catrow">'+esc(cat)+'</td></tr>'
       + groups[cat].map(r=>
         '<tr><td>'+esc(r.text)
         +(r.comment ? '<div style="margin-top:4px;font-style:italic;color:#555;">Uwaga specjalisty: '+esc(r.comment)+'</div>' : '')
@@ -13540,7 +13585,7 @@ document.addEventListener('keydown', e=>{
         flaggedGroups[cat].push(r);
       });
       const flaggedRowsHtml = flaggedOrder.map(cat=>
-        '<tr><td colspan="2" style="background:#f2f2f2;font-weight:700;text-transform:uppercase;font-size:8px;letter-spacing:.02em;">'+esc(cat)+'</td></tr>'
+        '<tr><td colspan="2" class="rpc-catrow">'+esc(cat)+'</td></tr>'
         + flaggedGroups[cat].map(r=>
           '<tr><td>'+esc(r.text)
           +(r.comment ? '<div style="margin-top:5px;font-style:italic;color:#555;">Uwaga specjalisty: '+esc(r.comment)+'</div>' : '')
@@ -13553,20 +13598,61 @@ document.addEventListener('keydown', e=>{
       nonConformityHtml = '<div class="rp-section"><div class="rp-section-title">Stwierdzone niezgodności</div>'
         +'<p style="font-size:11px;color:#333;">Podczas audytu nie stwierdzono niezgodności w ocenionych punktach kontrolnych.</p></div>';
     }
-    return '<div class="rp-title">Raport z audytu BHP</div>'
-      +'<div class="rp-sub">'+esc(client?client.name:'Klient nieprzypisany')+'</div>'
-      +'<div class="rp-basis">Data audytu: '+fmtWhen(a.createdAt)+' &nbsp;•&nbsp; Raport wygenerowany: '+fmtWhen(Date.now())+'</div>'
+    const ocenionych = results.filter(r=>r.value).length;
+    return '<div class="rp-client-report">'
+      +'<div class="rpc-header"><div class="rpc-eyebrow">Raport z audytu BHP</div>'
+      +'<div class="rpc-headmeta"><div class="rpc-title">'+esc(client?client.name:'Klient nieprzypisany')+'</div>'
+      +'<div class="rpc-datebox">Data audytu: '+esc(fmtWhen(a.createdAt))+'<br>Wygenerowano: '+esc(fmtWhen(Date.now()))+'</div></div></div>'
       +'<div class="rp-section-title">Pełna lista kontrolna'+(scopeKnown?' — zakres tego audytu':'')+'</div>'
       + buildFullChecklistTable(results, a.activeCategories)
       +'<div class="rp-section"><div class="rp-section-title">Podsumowanie</div>'
-      +'<div class="rp-meta"><span><b>Ocenionych punktów:</b> '+results.filter(r=>r.value).length+'</span><span><b>Zgodne:</b> '+tak+'</span><span><b>Niezgodne:</b> '+nie+'</span><span><b>Nie dotyczy:</b> '+nd+'</span></div>'
-      +'</div>'
+      +'<div class="rpc-stats">'
+      +'<div class="rpc-stat"><div class="rpc-stat-num">'+ocenionych+'</div><div class="rpc-stat-label">Ocenionych punktów</div></div>'
+      +'<div class="rpc-stat ok"><div class="rpc-stat-num">'+tak+'</div><div class="rpc-stat-label">Zgodne</div></div>'
+      +'<div class="rpc-stat bad"><div class="rpc-stat-num">'+nie+'</div><div class="rpc-stat-label">Niezgodne</div></div>'
+      +'<div class="rpc-stat warn"><div class="rpc-stat-num">'+nd+'</div><div class="rpc-stat-label">Nie dotyczy</div></div>'
+      +'</div></div>'
       + nonConformityHtml
       + (a.reportSections && a.reportSections.length ? a.reportSections.map(s=>
-          '<div class="rp-section"><div class="rp-section-title">'+esc(s.title||'Sekcja')+'</div>'
-          +'<div class="rp-section-text">'+esc(s.text||'')+'</div></div>'
+          '<div class="rp-section rpc-note"><div class="rp-section-title">'+esc(s.title||'Sekcja')+'</div>'
+          +'<div class="rp-section-text">'+wtRpFormatSectionText(s.text||'')+'</div></div>'
         ).join('') : '')
-      +'<div class="rp-footer">Raport wygenerowany automatycznie na podstawie checklisty audytowej BHP. Pełna dokumentacja robocza (zdjęcia i wszystkie komentarze) dostępna u audytora na życzenie.</div>';
+      +'<div class="rp-footer">Raport wygenerowany automatycznie na podstawie checklisty audytowej BHP. Pełna dokumentacja robocza (zdjęcia i wszystkie komentarze) dostępna u audytora na życzenie.</div>'
+      +'</div>';
+  }
+  /* Lekkie formatowanie tekstu własnych sekcji raportu — specjalista pisze zwykły tekst
+     (bez edytora WYSIWYG), ale **pogrubienia**, myślniki/gwiazdki jako listy punktowane i
+     "1. "/"1) " jako listy numerowane zamieniają się na prawdziwe <strong>/<ul>/<ol>, więc
+     dłuższe zalecenia czy wprowadzenia wyglądają jak realny dokument, a nie ściana tekstu.
+   Bezpieczne pod XSS: esc() ucieka HTML PRZED interpretacją składni — wygenerowane <strong>/
+     <ul>/<li> to jedyny HTML, jaki ta funkcja kiedykolwiek wstrzykuje. */
+  function wtRpFormatSectionText(text){
+    const escaped = esc(text||'').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    const lines = escaped.split('\n');
+    let html = '', listType = null, buffer = [];
+    function flushBuffer(){
+      if(listType) html += '<'+listType+'>'+buffer.map(li=>'<li>'+li+'</li>').join('')+'</'+listType+'>';
+      else if(buffer.length) html += '<p>'+buffer.join('<br>')+'</p>';
+      buffer = []; listType = null;
+    }
+    lines.forEach(line=>{
+      const trimmed = line.trim();
+      if(!trimmed){ flushBuffer(); return; }
+      const bullet = /^[-*]\s+(.*)/.exec(trimmed);
+      const numbered = /^\d+[.)]\s+(.*)/.exec(trimmed);
+      if(bullet){
+        if(listType && listType!=='ul') flushBuffer();
+        listType = 'ul'; buffer.push(bullet[1]);
+      } else if(numbered){
+        if(listType && listType!=='ol') flushBuffer();
+        listType = 'ol'; buffer.push(numbered[1]);
+      } else {
+        if(listType) flushBuffer();
+        buffer.push(trimmed);
+      }
+    });
+    flushBuffer();
+    return html;
   }
   /* Edytor dodatkowych sekcji raportu — otwierany zamiast natychmiastowego eksportu,
      żeby specjalista mógł dopisać własny tekst (wprowadzenie, zalecenia, podsumowanie
@@ -13769,6 +13855,7 @@ document.addEventListener('keydown', e=>{
       +'<span class="wt-iconbtn danger" title="Usuń sekcję" onclick="window.wtReportRemoveSection(\''+auditId+'\','+i+')"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>'
       +'</div>'
       +'<textarea class="wt-input" placeholder="Treść sekcji…" style="width:100%;min-height:70px;resize:vertical;" oninput="window.wtReportUpdateSection(\''+auditId+'\','+i+',\'text\',this.value)">'+esc(s.text||'')+'</textarea>'
+      +'<div class="small" style="color:var(--ink-faint);margin-top:5px;">Formatowanie w PDF: **pogrubienie**, linia zaczynająca się od „- ” = lista punktowana, od „1. ” = lista numerowana.</div>'
       +'</div>'
     ).join('') : '<div class="wt-empty">Brak dodatkowych sekcji. Kliknij „+ Dodaj sekcję”, aby dopisać własny tekst do raportu.</div>';
   }
