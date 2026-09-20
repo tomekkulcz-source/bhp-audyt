@@ -13450,21 +13450,55 @@ document.addEventListener('keydown', e=>{
      feedback_bhp_checklist_print_cleanup w pamięci projektu — to inny, osobny dokument,
      nie kolejna wersja tego samego wydruku). Reużywa istniejący silnik eksportu PDF
      (html2canvas + canvasToPdfBlob), ten sam co przy Eksportuj PDF w rejestrach. ---------------- */
+  function wtReportStatusBadge(v){
+    if(v==='TAK') return '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:var(--ok-bg);color:var(--ok-ink);font-weight:700;font-size:8px;">TAK</span>';
+    if(v==='NIE') return '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:var(--bad-bg);color:var(--bad-ink);font-weight:700;font-size:8px;">NIE</span>';
+    if(v==='N.D.') return '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:var(--warn-bg);color:var(--warn-ink);font-weight:700;font-size:8px;">N.D.</span>';
+    return '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:#eee;color:#888;font-weight:700;font-size:8px;">—</span>';
+  }
+  /* Pełna lista kontrolna do raportu — pokazuje KAŻDĄ pozycję (nie tylko "NIE"),
+     ale tylko z kategorii, które faktycznie były w zakresie tego konkretnego
+     audytu (zob. activeCategories w wtSaveChecklistAudit) — audyt dotyczący
+     1-2 kategorii nie ma sensu ilustrować klientowi jako "340 pustych,
+     niesprawdzonych pozycji z całej biblioteki". Starsze audyty bez zapisanego
+     zakresu (activeCategories===undefined) pokazują wszystkie kategorie, tak
+     jak przed tą zmianą. */
+  function buildFullChecklistTable(results, activeCategories){
+    const scopeKnown = Array.isArray(activeCategories);
+    const groups = {}, order = [];
+    results.forEach(r=>{
+      const cat = r.category || 'Bez kategorii';
+      if(scopeKnown && !activeCategories.includes(cat)) return;
+      if(!groups[cat]){ groups[cat]=[]; order.push(cat); }
+      groups[cat].push(r);
+    });
+    if(!order.length) return '<p style="font-size:11px;color:#333;">Brak pozycji w zakresie tego audytu.</p>';
+    const rowsHtml = order.map(cat=>
+      '<tr><td colspan="2" style="background:#f2f2f2;font-weight:700;text-transform:uppercase;font-size:8px;letter-spacing:.02em;">'+esc(cat)+'</td></tr>'
+      + groups[cat].map(r=>
+        '<tr><td>'+esc(r.text)
+        +(r.comment ? '<div style="margin-top:4px;font-style:italic;color:#555;">Uwaga specjalisty: '+esc(r.comment)+'</div>' : '')
+        +'</td><td style="text-align:center;">'+wtReportStatusBadge(r.value)+'</td></tr>'
+      ).join('')
+    ).join('');
+    return '<table><thead><tr><th>Pozycja kontrolna</th><th style="width:14%;">Status</th></tr></thead><tbody>'+rowsHtml+'</tbody></table>';
+  }
   function buildClientReportHtml(a, client){
     const results = a.results || [];
     const tak = results.filter(r=>r.value==='TAK').length;
     const nie = results.filter(r=>r.value==='NIE').length;
     const nd = results.filter(r=>r.value==='N.D.').length;
     const flagged = results.filter(r=>r.value==='NIE');
-    const groups = {}, order = [];
+    const scopeKnown = Array.isArray(a.activeCategories);
+    const flaggedGroups = {}, flaggedOrder = [];
     flagged.forEach(r=>{
       const cat = r.category || 'Bez kategorii';
-      if(!groups[cat]){ groups[cat]=[]; order.push(cat); }
-      groups[cat].push(r);
+      if(!flaggedGroups[cat]){ flaggedGroups[cat]=[]; flaggedOrder.push(cat); }
+      flaggedGroups[cat].push(r);
     });
-    const rowsHtml = order.map(cat=>
+    const flaggedRowsHtml = flaggedOrder.map(cat=>
       '<tr><td colspan="2" style="background:#f2f2f2;font-weight:700;text-transform:uppercase;font-size:8px;letter-spacing:.02em;">'+esc(cat)+'</td></tr>'
-      + groups[cat].map(r=>
+      + flaggedGroups[cat].map(r=>
         '<tr><td>'+esc(r.text)
         +(r.comment ? '<div style="margin-top:5px;font-style:italic;color:#555;">Uwaga specjalisty: '+esc(r.comment)+'</div>' : '')
         +'</td><td></td></tr>'
@@ -13473,15 +13507,19 @@ document.addEventListener('keydown', e=>{
     return '<div class="rp-title">Raport z audytu BHP</div>'
       +'<div class="rp-sub">'+esc(client?client.name:'Klient nieprzypisany')+'</div>'
       +'<div class="rp-basis">Data audytu: '+fmtWhen(a.createdAt)+' &nbsp;•&nbsp; Raport wygenerowany: '+fmtWhen(Date.now())+'</div>'
+      +'<div class="rp-section-title">Pełna lista kontrolna'+(scopeKnown?' — zakres tego audytu':'')+'</div>'
+      + buildFullChecklistTable(results, a.activeCategories)
+      +'<div class="rp-section"><div class="rp-section-title">Podsumowanie</div>'
       +'<div class="rp-meta"><span><b>Ocenionych punktów:</b> '+results.filter(r=>r.value).length+'</span><span><b>Zgodne:</b> '+tak+'</span><span><b>Niezgodne:</b> '+nie+'</span><span><b>Nie dotyczy:</b> '+nd+'</span></div>'
       + (flagged.length
-        ? '<table><thead><tr><th>Stwierdzone niezgodności — wymagane działania</th><th style="width:22%;">Termin realizacji</th></tr></thead><tbody>'+rowsHtml+'</tbody></table>'
+        ? '<table><thead><tr><th>Stwierdzone niezgodności — wymagane działania</th><th style="width:22%;">Termin realizacji</th></tr></thead><tbody>'+flaggedRowsHtml+'</tbody></table>'
         : '<p style="font-size:11px;color:#333;">Podczas audytu nie stwierdzono niezgodności w ocenionych punktach kontrolnych.</p>')
+      +'</div>'
       + (a.reportSections && a.reportSections.length ? a.reportSections.map(s=>
           '<div class="rp-section"><div class="rp-section-title">'+esc(s.title||'Sekcja')+'</div>'
           +'<div class="rp-section-text">'+esc(s.text||'')+'</div></div>'
         ).join('') : '')
-      +'<div class="rp-footer">Raport wygenerowany automatycznie na podstawie checklisty audytowej BHP. Pełna dokumentacja robocza (wszystkie ocenione punkty, zdjęcia i komentarze) dostępna u audytora na życzenie.</div>';
+      +'<div class="rp-footer">Raport wygenerowany automatycznie na podstawie checklisty audytowej BHP. Pełna dokumentacja robocza (zdjęcia i wszystkie komentarze) dostępna u audytora na życzenie.</div>';
   }
   /* Edytor dodatkowych sekcji raportu — otwierany zamiast natychmiastowego eksportu,
      żeby specjalista mógł dopisać własny tekst (wprowadzenie, zalecenia, podsumowanie
@@ -13692,8 +13730,17 @@ document.addEventListener('keydown', e=>{
       const cm = key ? allItemComments.find(c=>c.itemKey===key && c.projectId===clientId) : null;
       return { text: txt ? txt.textContent.trim() : '', value: stat ? stat.value : '', category: catEl ? (catEl.dataset.cat||'') : '', photos, comment: cm ? (cm.text||'') : '' };
     }).filter(r=>r.text);
+    // nie każdy audyt obejmuje wszystkie kategorie (checkbox "audyt" przy nagłówku
+    // kategorii, zob. wtToggleCatActive) — zapisujemy, które kategorie były aktywne
+    // w CHWILI zapisu, żeby widok audytu i raport dla klienta mogły pokazać, co
+    // faktycznie było w zakresie tej konkretnej wizyty, a nie tylko co ma wypełnioną
+    // wartość (kategoria w zakresie może mieć puste pozycje, a poza zakresem —
+    // nigdy nie powinna mieć żadnych zaznaczeń)
+    const activeCategories = Array.from(document.querySelectorAll('#sec-checklist .cat[data-cat]'))
+      .filter(catDiv=>!catDiv.classList.contains('wt-cat-inactive'))
+      .map(catDiv=>catDiv.dataset.cat);
     try{
-      await DB.collection('checklist_snapshots').add({ projectId: clientId, createdAt: Date.now(), results });
+      await DB.collection('checklist_snapshots').add({ projectId: clientId, createdAt: Date.now(), results, activeCategories });
       // zdjęcia i komentarze zostały wbudowane w powyższy zapis audytu — usuwamy je z bieżącego
       // roboczego arkusza tego klienta, żeby nie "przeciekły" do kolejnej wizyty/audytu
       allItemPhotos.filter(p=>p.itemKey.indexOf('chk')===0 && p.projectId===clientId)
@@ -13792,20 +13839,34 @@ document.addEventListener('keydown', e=>{
     const nie = results.filter(r=>r.value==='NIE').length;
     const nd = results.filter(r=>r.value==='N.D.').length;
     const none = results.length - tak - nie - nd;
+    // starsze audyty (sprzed tej zmiany) nie mają zapisanego zakresu — wtedy
+    // traktujemy WSZYSTKIE kategorie jako "w zakresie", żeby nie pokazać nagle
+    // całej historii jako "poza zakresem" tylko dlatego, że dane o zakresie
+    // jeszcze nie istniały w chwili zapisu
+    const scopeKnown = Array.isArray(a.activeCategories);
+    const activeSet = scopeKnown ? new Set(a.activeCategories) : null;
+    const inScopeCatCount = scopeKnown ? order.filter(c=>activeSet.has(c)).length : order.length;
     const summaryHtml = '<div class="small" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--ink-soft);margin-bottom:12px;">'
       +'<span style="background:var(--ok-bg);color:var(--ok-ink);font-weight:600;padding:3px 9px;border-radius:999px;">'+tak+' TAK</span>'
       +'<span style="background:var(--bad-bg);color:var(--bad-ink);font-weight:600;padding:3px 9px;border-radius:999px;">'+nie+' NIE</span>'
       +'<span style="background:var(--warn-bg);color:var(--warn-ink);font-weight:600;padding:3px 9px;border-radius:999px;">'+nd+' N.D.</span>'
-      +'<span>'+none+' bez oceny</span><span style="flex:1"></span>'
+      +'<span>'+none+' bez oceny</span>'
+      + (scopeKnown ? '<span>•</span><span>'+inScopeCatCount+' z '+order.length+' kategorii w zakresie tego audytu</span>' : '')
+      +'<span style="flex:1"></span>'
       +'<button class="wt-btn" style="padding:4px 10px;font-size:12px;" onclick="expandAllCats(\'#'+panelId+'\')">Rozwiń wszystkie</button>'
       +'<button class="wt-btn" style="padding:4px 10px;font-size:12px;" onclick="collapseAllCats(\'#'+panelId+'\')">Zwiń wszystkie</button>'
       +'</div>';
     const catsHtml = order.map(cat=>{
       const items = groups[cat];
+      const inScope = scopeKnown ? activeSet.has(cat) : true;
       const anyAssessed = items.some(r=>r.value);
-      return '<div class="cat'+(anyAssessed?' open':'')+'">'
+      const openDefault = scopeKnown ? inScope : anyAssessed;
+      const scopeBadge = !scopeKnown ? '' : (inScope
+        ? '<span class="small" style="margin-left:8px;padding:2px 8px;border-radius:999px;background:var(--ok-bg);color:var(--ok-ink);font-weight:600;">W zakresie audytu</span>'
+        : '<span class="small" style="margin-left:8px;padding:2px 8px;border-radius:999px;background:var(--surface-3);color:var(--ink-faint);font-weight:600;">Poza zakresem audytu</span>');
+      return '<div class="cat'+(openDefault?' open':'')+'"'+(inScope?'':' style="opacity:.6;"')+'>'
         +'<div class="cat-head" onclick="toggleCat(this)"><span class="chev"><svg class="ic" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>'
-        +'<span class="title">'+esc(cat)+'</span><span class="count">'+items.length+'</span></div>'
+        +'<span class="title">'+esc(cat)+'</span>'+scopeBadge+'<span class="count">'+items.length+'</span></div>'
         +'<div class="cat-body">'+items.map(wtAuditItemHtml).join('')+'</div></div>';
     }).join('');
     const panel = document.createElement('div');
