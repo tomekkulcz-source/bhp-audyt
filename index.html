@@ -13677,10 +13677,14 @@ document.addEventListener('keydown', e=>{
           const rowIdx = rowIdxByIrregularity[key];
           if(rowIdx===undefined) return wtAuditItemHtml(r);
           const row = linked.rows[rowIdx] || {};
+          // "Zalecane działanie" bywa obszernym tekstem (kilka zdań) — jednowierszowy <input>
+          // go przycinał/przewijał w bok, więc dostaje własny, rozciągany <textarea> na pełną
+          // szerokość; "Odpowiedzialny"/"Termin" są z natury krótkie (imię/nazwisko, data),
+          // więc zostają w węższym rzędzie pod spodem.
           const extra = '<div style="margin-top:8px;padding:10px;border:1px dashed var(--bad-ink);border-radius:8px;background:var(--bad-bg);">'
             +'<div class="small" style="font-weight:700;color:var(--bad-ink);margin-bottom:6px;">Protokół kontroli (M.1)</div>'
-            +'<div style="display:grid;grid-template-columns:1fr 1fr 150px;gap:8px;">'
-            +'<input class="wt-input" placeholder="Zalecane działanie" value="'+esc(row.recommendedAction||'')+'" oninput="window.wtAuditReportRowInput(\''+auditId+'\','+rowIdx+',\'recommendedAction\',this.value)">'
+            +'<textarea class="wt-comment-input" placeholder="Zalecane działanie" style="margin-bottom:8px;min-height:76px;" oninput="window.wtAuditReportRowInput(\''+auditId+'\','+rowIdx+',\'recommendedAction\',this.value)">'+esc(row.recommendedAction||'')+'</textarea>'
+            +'<div style="display:grid;grid-template-columns:1fr 150px;gap:8px;">'
             +'<input class="wt-input" placeholder="Odpowiedzialny" value="'+esc(row.responsible||'')+'" oninput="window.wtAuditReportRowInput(\''+auditId+'\','+rowIdx+',\'responsible\',this.value)">'
             +'<input class="wt-input" type="date" value="'+esc(row.deadline||'')+'" oninput="window.wtAuditReportRowInput(\''+auditId+'\','+rowIdx+',\'deadline\',this.value)">'
             +'</div></div>';
