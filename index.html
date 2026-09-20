@@ -13340,7 +13340,7 @@ document.addEventListener('keydown', e=>{
         +'<div class="meta"><span>'+(a.results?a.results.filter(r=>r.value).length:0)+' ocenionych punktów</span>'
         +(nieCount ? '<span class="badge crit"><span class="dot" style="background:var(--crit)"></span>'+nieCount+' niezgodności</span>' : '')
         +'</div></div>'
-        +'<div class="wt-rj-actions">'+iconBtn('clientreport','Raport dla klienta (PDF)','M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v4h4M9 13h6M9 17h6')+iconBtn('viewaudit','Zobacz','M9 6l6 6-6 6')+iconBtn('delaudit','Usuń','M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13', true)+'</div></div>';
+        +'<div class="wt-rj-actions">'+iconBtn('clientreport','Raport dla klienta (PDF)','M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v4h4M9 13h6M9 17h6')+iconBtn('sendtoprotocol','Prześlij niezgodności do protokołu kontroli (M.1)','M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z')+iconBtn('viewaudit','Zobacz','M9 6l6 6-6 6')+iconBtn('delaudit','Usuń','M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13', true)+'</div></div>';
     }).join('') : '<div class="wt-empty">Brak zapisanych audytów dla tego klienta. Zapisz wynik checklisty przyciskiem „Zapisz jako audyt klienta”.</div>';
     renderClientContract();
     renderClientRecurringIssues();
@@ -13612,6 +13612,59 @@ document.addEventListener('keydown', e=>{
       if(err && err.code==='declined') return;
       console.error(err);
       wtToast('Nie udało się wygenerować raportu: '+(err&&err.message?err.message:'nieznany błąd'), true);
+    }
+  };
+  /* ---------------- Prześlij niezgodności audytu do rejestru M.1 (Protokół / karta
+     wewnętrznej kontroli warunków pracy) — DODATKOWA, eksperymentalna opcja obok
+     dotychczasowego raportu dla klienta (nie zastępuje go). Pomysł: M.1 w Rejestrach
+     już ma dokładnie te pola, których w raporcie klienckim nie ma (odpowiedzialny,
+     termin realizacji) — zamiast budować trzeci, osobny format raportu, ten przycisk
+     tworzy nową wersję M.1 z góry wypełnioną listą niezgodności z audytu, a specjalista
+     tylko dopisuje odpowiedzialnego/termin w już istniejącym edytorze rejestru. Jeśli
+     się nie sprawdzi w praktyce — do usunięcia bez wpływu na resztę funkcji audytu. */
+  window.wtSendAuditToProtocol = async function(auditId){
+    const a = allChecklistSnapshots.find(x=>x.id===auditId);
+    if(!a) return;
+    if(!DB){ wtToast('Ta funkcja jest dostępna po otwarciu tego narzędzia jako strony na claude.ai.', true); return; }
+    const flagged = (a.results||[]).filter(r=>r.value==='NIE');
+    if(!flagged.length){ wtToast('Ten audyt nie ma żadnych niezgodności ("NIE") do przesłania.', true); return; }
+    const def = REGISTER_DEFS['protokol_kontroli_wewnetrznej'];
+    const rows = flagged.map(r=>{
+      const row = blankRow(def);
+      row.irregularity = r.text + (r.comment ? ' — uwaga: '+r.comment : '');
+      row.location = r.category || '';
+      return row;
+    });
+    const data = {
+      registerType: 'protokol_kontroli_wewnetrznej',
+      versionLabel: 'Kontrola z audytu — '+fmtWhen(a.createdAt),
+      projectId: a.projectId || '',
+      inspectionDate: new Date(a.createdAt).toISOString().slice(0,10),
+      area: '', inspector: '', accompanying: '',
+      rows,
+      sourceAuditId: auditId,
+      createdAt: Date.now(), updatedAt: Date.now()
+    };
+    try{
+      const ref = await DB.collection('register_versions').add(data);
+      wtToast('Utworzono protokół kontroli z '+flagged.length+' niezgodnościami — uzupełnij odpowiedzialnego i termin realizacji.');
+      rjBackToClientId = a.projectId || null;
+      showSection('rejestry');
+      // NIE przez wtRjOpenVersion(ref.id) — ta funkcja szuka wersji w lokalnym cache
+      // allVersions, który tuż po .add() może jeszcze nie zdążyć się zaktualizować
+      // (aktualizacja idzie przez osobny listener onSnapshot). Budujemy stan edytora
+      // wprost z danych, które już mamy — dokładnie ten sam wzorzec co wtRjNewVersion.
+      rjState.type = 'protokol_kontroli_wewnetrznej';
+      rjState.currentVersion = Object.assign({id: ref.id}, data);
+      rjState.view = 'editor';
+      document.getElementById('rjHub').style.display='none';
+      document.getElementById('rjList').style.display='none';
+      document.getElementById('rjEditor').style.display='';
+      document.getElementById('rjBackLabel').textContent = def.title;
+      renderRjEditor();
+    }catch(err){
+      console.error(err);
+      wtToast('Nie udało się utworzyć protokołu kontroli.', true);
     }
   };
   /* ---------------- Pulpit klientów — przekrój po WSZYSTKICH klientach naraz (ostatni
@@ -15129,6 +15182,7 @@ document.addEventListener('keydown', e=>{
       else if(btn.dataset.action==='viewaudit') window.wtViewAudit(id);
       else if(btn.dataset.action==='delaudit') window.wtDeleteAudit(id);
       else if(btn.dataset.action==='clientreport') window.wtClientReportOpen(id);
+      else if(btn.dataset.action==='sendtoprotocol') window.wtSendAuditToProtocol(id);
       else if(btn.dataset.action==='opennote'){ showSection('notatnik'); window.wtSelectNote(id); }
       else if(btn.dataset.action==='openrisk'){ showSection('oceny-ryzyka'); window.wtRyzOpen(id); }
       else if(btn.dataset.action==='openreview'){ showSection('terminy-kontroli'); window.wtPrzOpen(id); }
