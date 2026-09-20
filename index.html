@@ -6402,7 +6402,7 @@ window.__WT_FIREBASE_CONFIG__ = {
     <div class="startgrid">
       <div class="card nav-card" data-rjlink="checklist" onclick="showSection('checklist')">
         <h4><span class="pill mono">M.1</span> Protokół / karta wewnętrznej kontroli warunków pracy</h4>
-        <p class="small">Powstaje automatycznie z checklisty audytowej — po zapisaniu audytu klienta użyj przycisku „Prześlij niezgodności do protokołu kontroli”, a stwierdzone nieprawidłowości trafią też do raportu dla klienta.</p>
+        <p class="small">Powstaje automatycznie z checklisty audytowej — po zapisaniu audytu klienta kliknij „Utwórz raport” i uzupełnij zalecane działania, odpowiedzialnych i terminy wprost przy niezgodnościach.</p>
         <div class="small mono" style="margin-top:8px;">§ 2 Rozp. RM z 2.09.1997 r. ws. służby bhp</div>
         <div class="wt-rj-tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;"><span class="badge blue"><span class="dot"></span>OSOBNA FUNKCJA</span><span class="badge crit"><span class="dot"></span>BEZWZGL.</span></div>
         <div class="wt-rj-count">Otwórz w „Checklista audytowa” →</div>
@@ -13332,15 +13332,23 @@ document.addEventListener('keydown', e=>{
         +'<div class="wt-rj-actions">'+iconBtn('openreg','Otwórz','M9 6l6 6-6 6')+'</div></div>';
     }).join('') : '<div class="wt-empty">Brak wersji rejestrów przypisanych do tego klienta. Przypisz je w edytorze rejestru (pole „Klient”).</div>';
     const audits = allChecklistSnapshots.filter(a=>a.projectId===klienciCurrentId);
-    document.getElementById('klienciAudits').innerHTML = audits.length ? audits.map(a=>{
-      const nieCount = a.results ? a.results.filter(r=>r.value==='NIE').length : 0;
-      return '<div class="wt-rj-versioncard" data-id="'+a.id+'">'
-        +'<div class="info"><h4>Audyt z '+fmtWhen(a.createdAt)+'</h4>'
-        +'<div class="meta"><span>'+(a.results?a.results.filter(r=>r.value).length:0)+' ocenionych punktów</span>'
-        +(nieCount ? '<span class="badge crit"><span class="dot" style="background:var(--crit)"></span>'+nieCount+' niezgodności</span>' : '')
-        +'</div></div>'
-        +'<div class="wt-rj-actions">'+iconBtn('clientreport','Raport dla klienta (PDF)','M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v4h4M9 13h6M9 17h6')+iconBtn('sendtoprotocol','Prześlij niezgodności do protokołu kontroli (M.1)','M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z')+iconBtn('viewaudit','Zobacz','M9 6l6 6-6 6')+iconBtn('delaudit','Usuń','M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13', true)+'</div></div>';
-    }).join('') : '<div class="wt-empty">Brak zapisanych audytów dla tego klienta. Zapisz wynik checklisty przyciskiem „Zapisz jako audyt klienta”.</div>';
+    const klienciAuditsEl = document.getElementById('klienciAudits');
+    // "Utwórz raport" zapisuje pola M.1 automatycznie przy KAŻDEJ zmianie (debounce), co
+    // wywołuje onSnapshot na register_versions, który woła renderClientView() — bez tego
+    // zabezpieczenia nadpisałoby to całą listę audytów (i wyrwało fokus z pola, w którym
+    // specjalista właśnie pisze) w trakcie wypełniania. Zawartość listy i tak nie zmienia
+    // się w sposób istotny podczas edycji otwartego panelu "Zobacz"/"Utwórz raport".
+    if(!klienciAuditsEl.querySelector('.wt-audit-panel, .wt-report-panel')){
+      klienciAuditsEl.innerHTML = audits.length ? audits.map(a=>{
+        const nieCount = a.results ? a.results.filter(r=>r.value==='NIE').length : 0;
+        return '<div class="wt-rj-versioncard" data-id="'+a.id+'">'
+          +'<div class="info"><h4>Audyt z '+fmtWhen(a.createdAt)+'</h4>'
+          +'<div class="meta"><span>'+(a.results?a.results.filter(r=>r.value).length:0)+' ocenionych punktów</span>'
+          +(nieCount ? '<span class="badge crit"><span class="dot" style="background:var(--crit)"></span>'+nieCount+' niezgodności</span>' : '')
+          +'</div></div>'
+          +'<div class="wt-rj-actions">'+iconBtn('viewaudit','Zobacz','M9 6l6 6-6 6')+iconBtn('auditreport','Utwórz raport','M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v4h4M9 13h6M9 17h6')+iconBtn('delaudit','Usuń','M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13', true)+'</div></div>';
+      }).join('') : '<div class="wt-empty">Brak zapisanych audytów dla tego klienta. Zapisz wynik checklisty przyciskiem „Zapisz jako audyt klienta”.</div>';
+    }
     renderClientContract();
     renderClientRecurringIssues();
     const notes = allNotes.filter(n=>n.projectId===klienciCurrentId).sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
@@ -13483,12 +13491,12 @@ document.addEventListener('keydown', e=>{
     return '<table><thead><tr><th>Pozycja kontrolna</th><th style="width:14%;">Status</th></tr></thead><tbody>'+rowsHtml+'</tbody></table>';
   }
   /* Renderuje TĘ SAMĄ tabelę co generyczny eksport rejestru M.1 (zob. buildPrintHost) —
-     żeby "Raport dla klienta" i osobno wyeksportowany protokół M.1 nigdy nie pokazywały
-     dwóch różnych układów tych samych danych. Używane, gdy audyt ma powiązany protokół
-     (utworzony przyciskiem "Prześlij niezgodności do protokołu kontroli", zob.
-     wtSendAuditToProtocol) — wtedy pełne dane M.1 (z zalecanym działaniem, odpowiedzialnym
-     i terminem realizacji, wypełnionymi przez specjalistę w edytorze rejestru) trafiają
-     bezpośrednio do raportu klienckiego, zamiast wymagać osobnego dokumentu. */
+     żeby "Utwórz raport" nigdy nie pokazywał innego układu tych samych danych niż osobno
+     wyeksportowany protokół M.1. Używane, gdy audyt ma powiązany protokół (tworzony
+     automatycznie przy pierwszym otwarciu "Utwórz raport", zob. wtOpenAuditReport) —
+     wtedy pełne dane M.1 (z zalecanym działaniem, odpowiedzialnym i terminem realizacji,
+     wypełnionymi przez specjalistę wprost przy pozycjach audytu) trafiają bezpośrednio
+     do raportu klienckiego, zamiast wymagać osobnego dokumentu. */
   function buildProtocolSectionHtml(v){
     const def = REGISTER_DEFS['protokol_kontroli_wewnetrznej'];
     const metaHtml = (def.metaFields||[]).map(f=>{
@@ -13559,27 +13567,138 @@ document.addEventListener('keydown', e=>{
      (window.__wtReportDraft) do chwili zapisu — dopiero "Zapisz i generuj PDF" utrwala
      je w checklist_snapshots/<id>.reportSections, więc przeglądanie/odrzucenie edycji
      nie zostawia częściowych zapisów. */
-  window.wtClientReportOpen = function(auditId){
+  /* ---------------- Utwórz raport — jeden, zunifikowany widok zamiast dawnych dwóch
+     osobnych kroków ("Raport dla klienta" + "Prześlij niezgodności do protokołu M.1").
+     Kliknięcie od razu (w tle, bez dodatkowego przycisku) tworzy — jeśli jeszcze nie
+     istnieje — powiązany wpis rejestru M.1 z wierszem na każdą pozycję "NIE", po czym
+     pokazuje PEŁNĄ checklistę audytu (jak w "Zobacz") z dopisanymi NA MIEJSCU, przy
+     każdej niezgodności, polami z M.1 (zalecane działanie/odpowiedzialny/termin) —
+     bez przechodzenia do osobnego rejestru. Te pola zapisują się automatycznie
+     (debounce, zob. wtAuditReportRowInput/wtAuditReportMetaInput) wprost do tego
+     samego wpisu M.1, więc po ich uzupełnieniu nie trzeba nic więcej robić poza
+     kliknięciem "Generuj raport PDF". Dopasowanie wiersza M.1 do pozycji checklisty
+     idzie po treści (irregularity = tekst pytania + ewentualny komentarz), a nie po
+     pozycji w tablicy — przetrwa to nawet ręczną zmianę kolejności wierszy w rejestrze. */
+  window.wtOpenAuditReport = async function(auditId){
     const a = allChecklistSnapshots.find(x=>x.id===auditId);
     if(!a) return;
     const card = document.querySelector('#klienciAudits [data-id="'+auditId+'"]');
     if(!card) return;
     const existing = card.querySelector('.wt-report-panel');
     if(existing){ existing.remove(); return; }
+    if(!DB){ wtToast('Ta funkcja jest dostępna po otwarciu tego narzędzia jako strony na claude.ai.', true); return; }
+    const results = a.results || [];
+    const flagged = results.filter(r=>r.value==='NIE');
+    const def = REGISTER_DEFS['protokol_kontroli_wewnetrznej'];
+    let linked = allVersions.find(v=>v.registerType==='protokol_kontroli_wewnetrznej' && v.sourceAuditId===auditId);
+    if(!linked && flagged.length){
+      const rows = flagged.map(r=>{
+        const row = blankRow(def);
+        row.irregularity = r.text + (r.comment ? ' — uwaga: '+r.comment : '');
+        row.location = r.category || '';
+        return row;
+      });
+      const data = {
+        registerType: 'protokol_kontroli_wewnetrznej',
+        versionLabel: 'Kontrola z audytu — '+fmtWhen(a.createdAt),
+        projectId: a.projectId || '',
+        inspectionDate: new Date(a.createdAt).toISOString().slice(0,10),
+        area: '', inspector: '', accompanying: '',
+        rows, sourceAuditId: auditId,
+        createdAt: Date.now(), updatedAt: Date.now()
+      };
+      try{
+        const ref = await DB.collection('register_versions').add(data);
+        linked = Object.assign({id: ref.id}, data);
+      }catch(err){
+        console.error(err);
+        wtToast('Nie udało się utworzyć protokołu kontroli.', true);
+        return;
+      }
+    }
+    // drugie kliknięcie mogło zdążyć otworzyć panel, zanim powyższy await się zakończył
+    if(card.querySelector('.wt-report-panel')) return;
+    window.__wtAuditReportState = window.__wtAuditReportState || {};
+    window.__wtAuditReportState[auditId] = linked
+      ? { protocolId: linked.id, rows: JSON.parse(JSON.stringify(linked.rows||[])) }
+      : null;
     window.__wtReportDraft = window.__wtReportDraft || {};
     window.__wtReportDraft[auditId] = (a.reportSections||[]).map(s=>Object.assign({}, s));
+    const rowIdxByIrregularity = {};
+    if(linked) (linked.rows||[]).forEach((row,i)=>{ rowIdxByIrregularity[row.irregularity] = i; });
+    const groups = {}, order = [];
+    results.forEach((r,idx)=>{
+      const cat = r.category || 'Bez kategorii';
+      if(!groups[cat]){ groups[cat]=[]; order.push(cat); }
+      groups[cat].push(Object.assign({idx}, r));
+    });
+    const scopeKnown = Array.isArray(a.activeCategories);
+    const activeSet = scopeKnown ? new Set(a.activeCategories) : null;
+    const metaHtml = linked ? '<div class="wt-rj-fields" style="margin-bottom:14px;">' + (def.metaFields||[]).map(f=>
+      '<div><label class="small" style="display:block;margin-bottom:4px;color:var(--ink-soft);">'+esc(f.label)+'</label>'
+      +'<input class="wt-input" style="width:100%;" type="'+(f.type==='date'?'date':'text')+'" value="'+esc(linked[f.key]||'')+'" oninput="window.wtAuditReportMetaInput(\''+auditId+'\',\''+f.key+'\',this.value)"></div>'
+    ).join('') + '</div>' : '';
+    const catsHtml = order.map(cat=>{
+      const items = groups[cat];
+      const inScope = scopeKnown ? activeSet.has(cat) : true;
+      const anyAssessed = items.some(r=>r.value);
+      const openDefault = scopeKnown ? inScope : anyAssessed;
+      const scopeBadge = !scopeKnown ? '' : (inScope
+        ? '<span class="small" style="margin-left:8px;padding:2px 8px;border-radius:999px;background:var(--ok-bg);color:var(--ok-ink);font-weight:600;">W zakresie audytu</span>'
+        : '<span class="small" style="margin-left:8px;padding:2px 8px;border-radius:999px;background:var(--surface-3);color:var(--ink-faint);font-weight:600;">Poza zakresem audytu</span>');
+      return '<div class="cat'+(openDefault?' open':'')+'"'+(inScope?'':' style="opacity:.6;"')+'>'
+        +'<div class="cat-head" onclick="toggleCat(this)"><span class="chev"><svg class="ic" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>'
+        +'<span class="title">'+esc(cat)+'</span>'+scopeBadge+'<span class="count">'+items.length+'</span></div>'
+        +'<div class="cat-body">'+items.map(r=>{
+          if(r.value!=='NIE' || !linked) return wtAuditItemHtml(r);
+          const key = r.text + (r.comment ? ' — uwaga: '+r.comment : '');
+          const rowIdx = rowIdxByIrregularity[key];
+          if(rowIdx===undefined) return wtAuditItemHtml(r);
+          const row = linked.rows[rowIdx] || {};
+          const extra = '<div style="margin-top:8px;padding:10px;border:1px dashed var(--bad-ink);border-radius:8px;background:var(--bad-bg);">'
+            +'<div class="small" style="font-weight:700;color:var(--bad-ink);margin-bottom:6px;">Protokół kontroli (M.1)</div>'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr 150px;gap:8px;">'
+            +'<input class="wt-input" placeholder="Zalecane działanie" value="'+esc(row.recommendedAction||'')+'" oninput="window.wtAuditReportRowInput(\''+auditId+'\','+rowIdx+',\'recommendedAction\',this.value)">'
+            +'<input class="wt-input" placeholder="Odpowiedzialny" value="'+esc(row.responsible||'')+'" oninput="window.wtAuditReportRowInput(\''+auditId+'\','+rowIdx+',\'responsible\',this.value)">'
+            +'<input class="wt-input" type="date" value="'+esc(row.deadline||'')+'" oninput="window.wtAuditReportRowInput(\''+auditId+'\','+rowIdx+',\'deadline\',this.value)">'
+            +'</div></div>';
+          return wtAuditItemHtml(r, extra);
+        }).join('')+'</div></div>';
+    }).join('');
     const panel = document.createElement('div');
     panel.className = 'wt-report-panel';
     panel.dataset.auditId = auditId;
-    panel.style.cssText = 'flex-basis:100%;margin-top:12px;border-top:1px solid var(--line);padding-top:10px;';
-    panel.innerHTML = '<div class="small" style="color:var(--ink-soft);margin-bottom:8px;">Dodatkowe sekcje trafią do wygenerowanego PDF, po liście niezgodności (np. wprowadzenie, zalecenia ogólne, podsumowanie dla zarządu).</div>'
-      +'<div class="wt-report-sections"></div>'
-      +'<button class="wt-btn" style="margin-top:4px;" onclick="window.wtReportAddSection(\''+auditId+'\')">+ Dodaj sekcję</button>'
-      +'<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">'
-      +'<button class="wt-btn" onclick="this.closest(\'.wt-report-panel\').remove()">Anuluj</button>'
-      +'<button class="wt-btn primary" onclick="window.wtReportSaveAndExport(\''+auditId+'\')">Zapisz i generuj PDF</button></div>';
+    panel.style.cssText = 'flex-basis:100%;margin-top:12px;border-top:1px solid var(--line);padding-top:10px;max-height:640px;overflow-y:auto;';
+    panel.innerHTML = metaHtml
+      + (results.length ? catsHtml : '<div class="wt-empty">Ten audyt nie zawiera żadnych pozycji.</div>')
+      + '<div class="small" style="color:var(--ink-soft);margin:16px 0 8px;">Dodatkowe sekcje trafią do wygenerowanego PDF, po liście niezgodności (np. wprowadzenie, zalecenia ogólne, podsumowanie dla zarządu).</div>'
+      + '<div class="wt-report-sections"></div>'
+      + '<button class="wt-btn" style="margin-top:4px;" onclick="window.wtReportAddSection(\''+auditId+'\')">+ Dodaj sekcję</button>'
+      + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;position:sticky;bottom:0;background:var(--surface);padding-top:10px;">'
+      + '<button class="wt-btn" onclick="this.closest(\'.wt-report-panel\').remove()">Zamknij</button>'
+      + '<button class="wt-btn primary" onclick="window.wtReportSaveAndExport(\''+auditId+'\')">Generuj raport PDF</button></div>';
     card.appendChild(panel);
     wtReportRenderSections(auditId);
+  };
+  window.wtAuditReportMetaInput = function(auditId, key, value){
+    const st = window.__wtAuditReportState && window.__wtAuditReportState[auditId];
+    if(!st) return;
+    clearTimeout(st.metaTimer);
+    st.metaTimer = setTimeout(()=>{
+      if(!DB) return;
+      const patch = {}; patch[key] = value; patch.updatedAt = Date.now();
+      DB.doc('register_versions/'+st.protocolId).update(patch).catch(()=>{});
+    }, 500);
+  };
+  window.wtAuditReportRowInput = function(auditId, rowIdx, field, value){
+    const st = window.__wtAuditReportState && window.__wtAuditReportState[auditId];
+    if(!st || !st.rows[rowIdx]) return;
+    st.rows[rowIdx][field] = value;
+    clearTimeout(st.rowsTimer);
+    st.rowsTimer = setTimeout(()=>{
+      if(!DB) return;
+      DB.doc('register_versions/'+st.protocolId).update({rows: st.rows, updatedAt: Date.now()}).catch(()=>{});
+    }, 500);
   };
   function wtReportRenderSections(auditId){
     const panel = document.querySelector('.wt-report-panel[data-audit-id="'+auditId+'"]');
@@ -13627,9 +13746,10 @@ document.addEventListener('keydown', e=>{
     const a = allChecklistSnapshots.find(x=>x.id===auditId);
     if(!a) return;
     const client = wtProjectById(a.projectId);
-    // jeśli specjalista wcześniej przesłał ten audyt do protokołu M.1 (wtSendAuditToProtocol),
-    // jego w pełni wypełnione dane (zalecane działanie/odpowiedzialny/termin) wchodzą teraz
-    // wprost do tego samego raportu — nie trzeba już generować dwóch osobnych dokumentów.
+    // jeśli ten audyt ma powiązany protokół M.1 (tworzony automatycznie przy pierwszym
+    // otwarciu "Utwórz raport", zob. wtOpenAuditReport), jego w pełni wypełnione dane
+    // (zalecane działanie/odpowiedzialny/termin) wchodzą teraz wprost do tego samego
+    // raportu — nie trzeba generować dwóch osobnych dokumentów.
     const linkedProtocol = allVersions.find(v=>v.registerType==='protokol_kontroli_wewnetrznej' && v.sourceAuditId===auditId);
     const host = document.getElementById('rj-print-host');
     try{
@@ -13648,59 +13768,6 @@ document.addEventListener('keydown', e=>{
       if(err && err.code==='declined') return;
       console.error(err);
       wtToast('Nie udało się wygenerować raportu: '+(err&&err.message?err.message:'nieznany błąd'), true);
-    }
-  };
-  /* ---------------- Prześlij niezgodności audytu do rejestru M.1 (Protokół / karta
-     wewnętrznej kontroli warunków pracy) — DODATKOWA, eksperymentalna opcja obok
-     dotychczasowego raportu dla klienta (nie zastępuje go). Pomysł: M.1 w Rejestrach
-     już ma dokładnie te pola, których w raporcie klienckim nie ma (odpowiedzialny,
-     termin realizacji) — zamiast budować trzeci, osobny format raportu, ten przycisk
-     tworzy nową wersję M.1 z góry wypełnioną listą niezgodności z audytu, a specjalista
-     tylko dopisuje odpowiedzialnego/termin w już istniejącym edytorze rejestru. Jeśli
-     się nie sprawdzi w praktyce — do usunięcia bez wpływu na resztę funkcji audytu. */
-  window.wtSendAuditToProtocol = async function(auditId){
-    const a = allChecklistSnapshots.find(x=>x.id===auditId);
-    if(!a) return;
-    if(!DB){ wtToast('Ta funkcja jest dostępna po otwarciu tego narzędzia jako strony na claude.ai.', true); return; }
-    const flagged = (a.results||[]).filter(r=>r.value==='NIE');
-    if(!flagged.length){ wtToast('Ten audyt nie ma żadnych niezgodności ("NIE") do przesłania.', true); return; }
-    const def = REGISTER_DEFS['protokol_kontroli_wewnetrznej'];
-    const rows = flagged.map(r=>{
-      const row = blankRow(def);
-      row.irregularity = r.text + (r.comment ? ' — uwaga: '+r.comment : '');
-      row.location = r.category || '';
-      return row;
-    });
-    const data = {
-      registerType: 'protokol_kontroli_wewnetrznej',
-      versionLabel: 'Kontrola z audytu — '+fmtWhen(a.createdAt),
-      projectId: a.projectId || '',
-      inspectionDate: new Date(a.createdAt).toISOString().slice(0,10),
-      area: '', inspector: '', accompanying: '',
-      rows,
-      sourceAuditId: auditId,
-      createdAt: Date.now(), updatedAt: Date.now()
-    };
-    try{
-      const ref = await DB.collection('register_versions').add(data);
-      wtToast('Utworzono protokół kontroli z '+flagged.length+' niezgodnościami — uzupełnij odpowiedzialnego i termin realizacji.');
-      rjBackToClientId = a.projectId || null;
-      showSection('rejestry');
-      // NIE przez wtRjOpenVersion(ref.id) — ta funkcja szuka wersji w lokalnym cache
-      // allVersions, który tuż po .add() może jeszcze nie zdążyć się zaktualizować
-      // (aktualizacja idzie przez osobny listener onSnapshot). Budujemy stan edytora
-      // wprost z danych, które już mamy — dokładnie ten sam wzorzec co wtRjNewVersion.
-      rjState.type = 'protokol_kontroli_wewnetrznej';
-      rjState.currentVersion = Object.assign({id: ref.id}, data);
-      rjState.view = 'editor';
-      document.getElementById('rjHub').style.display='none';
-      document.getElementById('rjList').style.display='none';
-      document.getElementById('rjEditor').style.display='';
-      document.getElementById('rjBackLabel').textContent = def.title;
-      renderRjEditor();
-    }catch(err){
-      console.error(err);
-      wtToast('Nie udało się utworzyć protokołu kontroli.', true);
     }
   };
   /* ---------------- Pulpit klientów — przekrój po WSZYSTKICH klientach naraz (ostatni
@@ -13899,7 +13966,7 @@ document.addEventListener('keydown', e=>{
       return '<option value="'+o[0]+'"'+(v===o[0]?' selected':'')+'>'+o[1]+'</option>';
     }).join('');
   }
-  function wtAuditItemHtml(r){
+  function wtAuditItemHtml(r, extraFieldsHtml){
     const meta = wtChecklistMetaMap()[r.text] || null;
     const prioClass = meta ? wtPrioClass(meta.prio) : '';
     const barColor = prioClass ? 'var(--'+prioClass+')' : 'var(--line-strong)';
@@ -13916,6 +13983,7 @@ document.addEventListener('keydown', e=>{
       +'</div>'
       + photosHtml
       +'<div class="wt-comment-wrap"><textarea class="wt-comment-input wt-audit-edit-comment" data-idx="'+r.idx+'" placeholder="Komentarz…">'+esc(r.comment||'')+'</textarea></div>'
+      + (extraFieldsHtml || '')
       +'</div></div>';
   }
   window.wtViewAudit = function(id){
@@ -15217,8 +15285,7 @@ document.addEventListener('keydown', e=>{
       if(btn.dataset.action==='openreg'){ rjBackToClientId=klienciCurrentId; showSection('rejestry'); window.wtRjOpenVersion(id); }
       else if(btn.dataset.action==='viewaudit') window.wtViewAudit(id);
       else if(btn.dataset.action==='delaudit') window.wtDeleteAudit(id);
-      else if(btn.dataset.action==='clientreport') window.wtClientReportOpen(id);
-      else if(btn.dataset.action==='sendtoprotocol') window.wtSendAuditToProtocol(id);
+      else if(btn.dataset.action==='auditreport') window.wtOpenAuditReport(id);
       else if(btn.dataset.action==='opennote'){ showSection('notatnik'); window.wtSelectNote(id); }
       else if(btn.dataset.action==='openrisk'){ showSection('oceny-ryzyka'); window.wtRyzOpen(id); }
       else if(btn.dataset.action==='openreview'){ showSection('terminy-kontroli'); window.wtPrzOpen(id); }
