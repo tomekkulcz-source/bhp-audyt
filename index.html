@@ -13634,6 +13634,15 @@ document.addEventListener('keydown', e=>{
     if(!ok) return;
     DB.doc('checklist_snapshots/'+id).delete().catch(()=>{ wtToast('Nie udało się usunąć audytu.', true); });
   };
+  /* Panel podglądu audytu pokazywał kiedyś WYŁĄCZNIE ocenione pozycje (reszta „tylko by
+     zaśmiecała widok"), bez możliwości edycji — użytkownik po miesiącach pracy z narzędziem
+     oczekiwał, że będzie mógł wrócić do zapisanego audytu, zobaczyć go w CAŁOŚCI (wszystkie
+     ~344 pozycje, nie tylko ocenione) i coś w nim po czasie doedytować/dokończyć — zapisany
+     audyt to dla niego wciąż "żywy" dokument, nie zamknięty archiwalny zrzut. Panel pokazuje
+     więc teraz KAŻDĄ pozycję z tamtej wizyty (select statusu + pole komentarza, edytowalne od
+     razu tutaj), a "Zapisz zmiany" nadpisuje results w tym samym dokumencie Firestore (update,
+     nie nowy snapshot) — zdjęcia zostają tylko podglądowe (dodawanie nowych zdjęć do już
+     zamkniętej wizyty zostaje poza zakresem tej poprawki). */
   window.wtViewAudit = function(id){
     const a = allChecklistSnapshots.find(x=>x.id===id);
     if(!a) return;
@@ -13641,31 +13650,57 @@ document.addEventListener('keydown', e=>{
     if(!card) return;
     const existing = card.querySelector('.wt-audit-panel');
     if(existing){ existing.remove(); return; }
-    // tylko punkty z wybranym statusem — reszta (nieoznaczone) tylko zaśmiecałaby widok klienta
-    const flagged = (a.results||[]).filter(r=>r.value);
+    const results = a.results || [];
     const groups = {}, order = [];
-    flagged.forEach(r=>{
+    results.forEach((r,idx)=>{
       const cat = r.category || 'Bez kategorii';
       if(!groups[cat]){ groups[cat]=[]; order.push(cat); }
-      groups[cat].push(r);
+      groups[cat].push(Object.assign({idx}, r));
     });
+    const statusOpt = (v)=>['',['TAK','TAK'],['NIE','NIE'],['N.D.','N.D.']].map(o=>{
+      if(!o) return '<option value=""'+(v?'':' selected')+'>—</option>';
+      return '<option value="'+o[0]+'"'+(v===o[0]?' selected':'')+'>'+o[1]+'</option>';
+    }).join('');
     const panel = document.createElement('div');
     panel.className = 'wt-audit-panel';
-    panel.style.cssText = 'flex-basis:100%;margin-top:12px;border-top:1px solid var(--line);padding-top:6px;max-height:420px;overflow-y:auto;';
-    panel.innerHTML = flagged.length ? order.map(cat=>{
+    panel.dataset.auditId = id;
+    panel.style.cssText = 'flex-basis:100%;margin-top:12px;border-top:1px solid var(--line);padding-top:6px;max-height:520px;overflow-y:auto;';
+    panel.innerHTML = (results.length ? order.map(cat=>{
       return '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin:14px 0 4px;">'
         +esc(cat)+' <span style="font-family:var(--font-mono);font-weight:400;">('+groups[cat].length+')</span></div>'
         + groups[cat].map(r=>{
           const photosHtml = (r.photos&&r.photos.length) ? '<div class="wt-photo-strip" style="margin-top:6px;">'
             +r.photos.map(u=>'<span class="wt-photo-thumb"><img src="'+u+'" alt=""></span>').join('')+'</div>' : '';
-          const commentHtml = r.comment ? '<div style="margin-top:6px;font-size:12.5px;color:var(--ink-soft);font-style:italic;">"'+esc(r.comment)+'"</div>' : '';
           return '<div style="padding:7px 0;border-bottom:1px solid var(--line);font-size:13px;">'
-            +'<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
-            +'<span>'+esc(r.text)+'</span><span class="status-select" data-v="'+esc(r.value)+'" style="pointer-events:none;flex:0 0 auto;">'+esc(r.value)+'</span></div>'
-            + commentHtml + photosHtml + '</div>';
+            +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">'
+            +'<span style="flex:1;min-width:0;">'+esc(r.text)+'</span>'
+            +'<select class="status-select wt-audit-edit-select" data-idx="'+r.idx+'" style="flex:0 0 auto;">'+statusOpt(r.value)+'</select></div>'
+            +'<textarea class="wt-input wt-audit-edit-comment" data-idx="'+r.idx+'" placeholder="Komentarz…" style="width:100%;margin-top:6px;min-height:36px;font-size:12.5px;resize:vertical;">'+esc(r.comment||'')+'</textarea>'
+            + photosHtml + '</div>';
         }).join('');
-    }).join('') : '<div class="wt-empty" style="margin-top:8px;">W tym audycie nie zaznaczono żadnego statusu.</div>';
+    }).join('') : '<div class="wt-empty" style="margin-top:8px;">Ten audyt nie zawiera żadnych pozycji.</div>')
+      + (results.length ? '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;position:sticky;bottom:0;background:var(--surface);padding-top:10px;">'
+        +'<button class="wt-btn" onclick="this.closest(\'.wt-audit-panel\').remove()">Zamknij</button>'
+        +'<button class="wt-btn primary" onclick="window.wtSaveAuditEdits(\''+id+'\')">Zapisz zmiany</button></div>' : '');
     card.appendChild(panel);
+  };
+  window.wtSaveAuditEdits = function(id){
+    const a = allChecklistSnapshots.find(x=>x.id===id);
+    const panel = document.querySelector('.wt-audit-panel[data-audit-id="'+id+'"]');
+    if(!a || !panel){ return; }
+    if(!DB){ wtToast('Zapis zmian jest dostępny po otwarciu tego narzędzia jako strony na claude.ai.', true); return; }
+    const results = (a.results||[]).map(r=>Object.assign({}, r));
+    panel.querySelectorAll('.wt-audit-edit-select').forEach(sel=>{
+      const idx = +sel.dataset.idx;
+      if(results[idx]) results[idx].value = sel.value;
+    });
+    panel.querySelectorAll('.wt-audit-edit-comment').forEach(ta=>{
+      const idx = +ta.dataset.idx;
+      if(results[idx]) results[idx].comment = ta.value;
+    });
+    DB.doc('checklist_snapshots/'+id).update({results, updatedAt: Date.now()})
+      .then(()=>{ wtToast('Zapisano zmiany w audycie.'); panel.remove(); })
+      .catch(()=>wtToast('Nie udało się zapisać zmian.', true));
   };
 
   /* ---------------- Zdjęcia i komentarze w checkliście i obchodzie zakładu ----------------
