@@ -6814,6 +6814,7 @@ window.__WT_FIREBASE_CONFIG__ = {
       Nowy klient
     </button>
   </div>
+  <div id="klienciDashboard"></div>
   <div id="klienciList"></div>
   <div id="klienciDetail" style="display:none;">
     <div class="wt-rj-back" onclick="wtKlienciShowList()">
@@ -6824,12 +6825,16 @@ window.__WT_FIREBASE_CONFIG__ = {
       <h3 id="klienciDetailName" style="margin:0;font-size:22px;"></h3>
       <button class="wt-btn danger ghost" id="klienciDeleteBtn" onclick="window.wtKlienciDeleteClient(klienciCurrentId)">Usuń klienta</button>
     </div>
-    <h3 class="subhead" style="margin-top:0;">Zadania</h3>
+    <h3 class="subhead" style="margin-top:0;">Umowa i zakres usług</h3>
+    <div id="klienciContract"></div>
+    <h3 class="subhead">Zadania</h3>
     <div id="klienciTasks"></div>
     <h3 class="subhead">Rejestry</h3>
     <div id="klienciRegisters"></div>
     <h3 class="subhead">Historia audytów checklisty</h3>
     <div id="klienciAudits"></div>
+    <h3 class="subhead">Powtarzające się uchybienia</h3>
+    <div id="klienciRecurring"></div>
     <h3 class="subhead">Notatki</h3>
     <div id="klienciNotes"></div>
     <h3 class="subhead">Oceny ryzyka zawodowego</h3>
@@ -13325,12 +13330,17 @@ document.addEventListener('keydown', e=>{
         +'<div class="wt-rj-actions">'+iconBtn('openreg','Otwórz','M9 6l6 6-6 6')+'</div></div>';
     }).join('') : '<div class="wt-empty">Brak wersji rejestrów przypisanych do tego klienta. Przypisz je w edytorze rejestru (pole „Klient”).</div>';
     const audits = allChecklistSnapshots.filter(a=>a.projectId===klienciCurrentId);
-    document.getElementById('klienciAudits').innerHTML = audits.length ? audits.map(a=>
-      '<div class="wt-rj-versioncard" data-id="'+a.id+'">'
+    document.getElementById('klienciAudits').innerHTML = audits.length ? audits.map(a=>{
+      const nieCount = a.results ? a.results.filter(r=>r.value==='NIE').length : 0;
+      return '<div class="wt-rj-versioncard" data-id="'+a.id+'">'
         +'<div class="info"><h4>Audyt z '+fmtWhen(a.createdAt)+'</h4>'
-        +'<div class="meta"><span>'+(a.results?a.results.filter(r=>r.value).length:0)+' ocenionych punktów</span></div></div>'
-        +'<div class="wt-rj-actions">'+iconBtn('viewaudit','Zobacz','M9 6l6 6-6 6')+iconBtn('delaudit','Usuń','M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13', true)+'</div></div>'
-    ).join('') : '<div class="wt-empty">Brak zapisanych audytów dla tego klienta. Zapisz wynik checklisty przyciskiem „Zapisz jako audyt klienta”.</div>';
+        +'<div class="meta"><span>'+(a.results?a.results.filter(r=>r.value).length:0)+' ocenionych punktów</span>'
+        +(nieCount ? '<span class="badge crit"><span class="dot" style="background:var(--crit)"></span>'+nieCount+' niezgodności</span>' : '')
+        +'</div></div>'
+        +'<div class="wt-rj-actions">'+iconBtn('clientreport','Raport dla klienta (PDF)','M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v4h4M9 13h6M9 17h6')+iconBtn('viewaudit','Zobacz','M9 6l6 6-6 6')+iconBtn('delaudit','Usuń','M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13', true)+'</div></div>';
+    }).join('') : '<div class="wt-empty">Brak zapisanych audytów dla tego klienta. Zapisz wynik checklisty przyciskiem „Zapisz jako audyt klienta”.</div>';
+    renderClientContract();
+    renderClientRecurringIssues();
     const notes = allNotes.filter(n=>n.projectId===klienciCurrentId).sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
     document.getElementById('klienciNotes').innerHTML = notes.length ? notes.map(n=>
       '<div class="wt-rj-versioncard" data-id="'+n.id+'">'
@@ -13370,6 +13380,155 @@ document.addEventListener('keydown', e=>{
         +'<div class="wt-rj-actions">'+iconBtn('openmachine','Otwórz','M9 6l6 6-6 6')+'</div></div>';
     }).join('') : '<div class="wt-empty">Brak maszyn przypisanych do tego klienta. Przypisz je w edytorze maszyny (pole „Klient”).</div>';
   }
+  /* ---------------- Umowa i zakres usług (art. 237(11) KP — formalne powierzenie zadań
+     służby BHP podmiotowi zewnętrznemu) ---------------- */
+  function renderClientContract(){
+    const el = document.getElementById('klienciContract');
+    if(!el) return;
+    const p = wtProjectById(klienciCurrentId);
+    if(!p) return;
+    const st = p.contractEnd ? wtPrzStatusFor(p.contractEnd) : null;
+    const badgeHtml = st
+      ? '<span class="badge '+st.cls+'"><span class="dot" style="background:var(--'+st.cls+')"></span>Umowa: '+esc(st.label)+'</span>'
+      : '<span class="wt-rj-computed-empty">brak daty końca umowy</span>';
+    el.innerHTML =
+      '<div class="wt-rj-fields">'
+      +'<div><label class="small" style="display:block;margin-bottom:6px;color:var(--ink-soft);">Początek umowy</label>'
+      +'<input type="date" class="wt-input" id="klienciContractStart" value="'+esc(p.contractStart||'')+'" style="width:100%;"></div>'
+      +'<div><label class="small" style="display:block;margin-bottom:6px;color:var(--ink-soft);">Koniec / odnowienie umowy</label>'
+      +'<input type="date" class="wt-input" id="klienciContractEnd" value="'+esc(p.contractEnd||'')+'" style="width:100%;"></div>'
+      +'<div><label class="small" style="display:block;margin-bottom:6px;color:var(--ink-soft);">Status</label>'+badgeHtml+'</div>'
+      +'</div>'
+      +'<label class="small" style="display:block;margin:14px 0 6px;color:var(--ink-soft);">Zakres usług</label>'
+      +'<textarea class="wt-input" id="klienciContractScope" placeholder="np. audyty kwartalne, szkolenia okresowe wstępne i okresowe, ocena ryzyka zawodowego, obsługa powypadkowa, udział w kontrolach PIP/SANEPID…" style="width:100%;min-height:84px;resize:vertical;">'+esc(p.contractScope||'')+'</textarea>'
+      +'<button class="wt-btn primary" style="margin-top:10px;" onclick="window.wtKlienciSaveContract()">Zapisz umowę</button>';
+  }
+  window.wtKlienciSaveContract = function(){
+    if(!klienciCurrentId){ return; }
+    if(!DB){ wtToast('Zapis umowy jest dostępny po otwarciu tego narzędzia jako strony na claude.ai.', true); return; }
+    const contractStart = document.getElementById('klienciContractStart').value;
+    const contractEnd = document.getElementById('klienciContractEnd').value;
+    const contractScope = document.getElementById('klienciContractScope').value;
+    DB.doc('client_projects/'+klienciCurrentId).update({contractStart, contractEnd, contractScope})
+      .then(()=>wtToast('Zapisano dane umowy.'))
+      .catch(()=>wtToast('Nie udało się zapisać umowy.', true));
+  };
+  /* ---------------- Powtarzające się uchybienia — porównanie kolejnych zapisanych
+     audytów tego klienta, żeby wychwycić to, co zgłaszane wielokrotnie nie zostaje
+     naprawione (tekst pytania jako klucz — jedyny stabilny identyfikator zapisany
+     w snapshotcie, zob. wtSaveChecklistAudit) ---------------- */
+  function renderClientRecurringIssues(){
+    const el = document.getElementById('klienciRecurring');
+    if(!el) return;
+    const audits = allChecklistSnapshots.filter(a=>a.projectId===klienciCurrentId).sort((a,b)=>a.createdAt-b.createdAt);
+    if(audits.length < 2){
+      el.innerHTML = '<div class="wt-empty">Potrzebne są co najmniej 2 zapisane audyty tego klienta, żeby wykryć powtarzające się uchybienia.</div>';
+      return;
+    }
+    const byText = {};
+    audits.forEach(a=>{
+      (a.results||[]).forEach(r=>{
+        if(r.value !== 'NIE' || !r.text) return;
+        if(!byText[r.text]) byText[r.text] = {text:r.text, category:r.category, dates:[]};
+        byText[r.text].dates.push(a.createdAt);
+      });
+    });
+    const recurring = Object.values(byText).filter(x=>x.dates.length>=2).sort((a,b)=>b.dates.length-a.dates.length);
+    el.innerHTML = recurring.length ? recurring.map(r=>
+      '<div class="wt-rj-versioncard">'
+      +'<div class="info"><h4>'+esc(r.text)+'</h4>'
+      +'<div class="meta"><span class="badge crit"><span class="dot" style="background:var(--crit)"></span>'+r.dates.length+'× „NIE”</span>'
+      +(r.category?'<span>'+esc(r.category)+'</span>':'')
+      +'<span>Od '+fmtWhen(Math.min.apply(null,r.dates))+' do '+fmtWhen(Math.max.apply(null,r.dates))+'</span></div></div></div>'
+    ).join('') : '<div class="wt-empty">Brak powtarzających się uchybień — żadna pozycja nie została oznaczona „NIE” w więcej niż jednym audycie.</div>';
+  }
+  /* ---------------- Raport dla klienta (PDF) — czytelne podsumowanie jednej wizyty do
+     przekazania klientowi, w odróżnieniu od roboczej checklisty (zob.
+     feedback_bhp_checklist_print_cleanup w pamięci projektu — to inny, osobny dokument,
+     nie kolejna wersja tego samego wydruku). Reużywa istniejący silnik eksportu PDF
+     (html2canvas + canvasToPdfBlob), ten sam co przy Eksportuj PDF w rejestrach. ---------------- */
+  function buildClientReportHtml(a, client){
+    const results = a.results || [];
+    const tak = results.filter(r=>r.value==='TAK').length;
+    const nie = results.filter(r=>r.value==='NIE').length;
+    const nd = results.filter(r=>r.value==='N.D.').length;
+    const flagged = results.filter(r=>r.value==='NIE');
+    const groups = {}, order = [];
+    flagged.forEach(r=>{
+      const cat = r.category || 'Bez kategorii';
+      if(!groups[cat]){ groups[cat]=[]; order.push(cat); }
+      groups[cat].push(r);
+    });
+    const rowsHtml = order.map(cat=>
+      '<tr><td colspan="2" style="background:#f2f2f2;font-weight:700;text-transform:uppercase;font-size:8px;letter-spacing:.02em;">'+esc(cat)+'</td></tr>'
+      + groups[cat].map(r=>
+        '<tr><td>'+esc(r.text)
+        +(r.comment ? '<div style="margin-top:5px;font-style:italic;color:#555;">Uwaga specjalisty: '+esc(r.comment)+'</div>' : '')
+        +'</td><td></td></tr>'
+      ).join('')
+    ).join('');
+    return '<div class="rp-title">Raport z audytu BHP</div>'
+      +'<div class="rp-sub">'+esc(client?client.name:'Klient nieprzypisany')+'</div>'
+      +'<div class="rp-basis">Data audytu: '+fmtWhen(a.createdAt)+' &nbsp;•&nbsp; Raport wygenerowany: '+fmtWhen(Date.now())+'</div>'
+      +'<div class="rp-meta"><span><b>Ocenionych punktów:</b> '+results.filter(r=>r.value).length+'</span><span><b>Zgodne:</b> '+tak+'</span><span><b>Niezgodne:</b> '+nie+'</span><span><b>Nie dotyczy:</b> '+nd+'</span></div>'
+      + (flagged.length
+        ? '<table><thead><tr><th>Stwierdzone niezgodności — wymagane działania</th><th style="width:22%;">Termin realizacji</th></tr></thead><tbody>'+rowsHtml+'</tbody></table>'
+        : '<p style="font-size:11px;color:#333;">Podczas audytu nie stwierdzono niezgodności w ocenionych punktach kontrolnych.</p>')
+      +'<div class="rp-footer">Raport wygenerowany automatycznie na podstawie checklisty audytowej BHP. Pełna dokumentacja robocza (wszystkie ocenione punkty, zdjęcia i komentarze) dostępna u audytora na życzenie.</div>';
+  }
+  window.wtClientReportExportPdf = async function(auditId){
+    const a = allChecklistSnapshots.find(x=>x.id===auditId);
+    if(!a) return;
+    const client = wtProjectById(a.projectId);
+    const host = document.getElementById('rj-print-host');
+    try{
+      await ensurePdfLibs();
+      host.innerHTML = buildClientReportHtml(a, client);
+      host.style.display='block'; host.style.position='fixed'; host.style.left='-10000px'; host.style.top='0'; host.style.width='800px';
+      await new Promise(r=>setTimeout(r,30));
+      const canvas = await html2canvas(host, {scale:2, backgroundColor:'#ffffff'});
+      const blob = canvasToPdfBlob(host, canvas, 'portrait');
+      host.style.display='none'; host.style.position=''; host.style.left=''; host.style.top=''; host.style.width='';
+      host.innerHTML='';
+      const fname = 'Raport_BHP_'+slug(client?client.name:'klient')+'_'+slug(fmtWhen(a.createdAt))+'.pdf';
+      await wtSaveFile(fname, blob);
+    }catch(err){
+      if(err && err.code==='declined') return;
+      console.error(err);
+      wtToast('Nie udało się wygenerować raportu: '+(err&&err.message?err.message:'nieznany błąd'), true);
+    }
+  };
+  /* ---------------- Pulpit klientów — przekrój po WSZYSTKICH klientach naraz (ostatni
+     audyt, najgorszy status przeglądów/maszyn, status umowy), żeby przy obsłudze wielu
+     firm nie trzeba było wchodzić w każdego klienta z osobna, żeby sprawdzić, co jest
+     pilne. Renderowany nad listą klientów, tylko w widoku listy (nie w widoku pojedynczego
+     klienta) — zob. wtKlienciShowList(). ---------------- */
+  function renderClientDashboard(){
+    const el = document.getElementById('klienciDashboard');
+    if(!el || document.getElementById('klienciDetail').style.display!=='none') return;
+    const clients = wtClientProjects();
+    if(!clients.length){ el.innerHTML=''; return; }
+    const rows = clients.map(p=>{
+      const audits = allChecklistSnapshots.filter(a=>a.projectId===p.id).sort((a,b)=>b.createdAt-a.createdAt);
+      const lastAudit = audits[0];
+      const lastAuditHtml = lastAudit
+        ? esc(fmtWhen(lastAudit.createdAt))+(lastAudit.results && lastAudit.results.filter(r=>r.value==='NIE').length
+            ? ' <span class="badge crit" style="margin-left:4px;"><span class="dot" style="background:var(--crit)"></span>'+lastAudit.results.filter(r=>r.value==='NIE').length+'</span>' : '')
+        : '<span class="wt-rj-computed-empty">brak</span>';
+      const reviewWorst = przWorstStatus((allReviewCards.filter(r=>r.projectId===p.id).flatMap(r=>r.rows||[])));
+      const reviewHtml = reviewWorst ? '<span class="badge '+reviewWorst.cls+'"><span class="dot" style="background:var(--'+reviewWorst.cls+')"></span>'+esc(reviewWorst.label)+'</span>' : '<span class="wt-rj-computed-empty">—</span>';
+      const contractSt = p.contractEnd ? wtPrzStatusFor(p.contractEnd) : null;
+      const contractHtml = contractSt ? '<span class="badge '+contractSt.cls+'"><span class="dot" style="background:var(--'+contractSt.cls+')"></span>'+esc(contractSt.label)+'</span>' : '<span class="wt-rj-computed-empty">brak umowy</span>';
+      return {p, lastAuditHtml, reviewHtml, contractHtml,
+        urgency: (contractSt?PRZ_BUCKET_RANK[contractSt.bucket]:0) + (reviewWorst?PRZ_BUCKET_RANK[reviewWorst.bucket]:0)};
+    }).sort((a,b)=>(b.urgency||0)-(a.urgency||0));
+    el.innerHTML = '<div class="wt-tablewrap"><table class="ref"><thead><tr>'
+      +'<th>Klient</th><th>Ostatni audyt</th><th>Przeglądy/kontrole</th><th>Umowa</th></tr></thead><tbody>'
+      + rows.map(r=>'<tr class="srow" style="cursor:pointer;" onclick="window.wtKlienciOpen(\''+r.p.id+'\')">'
+        +'<td><span class="wt-list-dot" style="background:'+r.p.color+';display:inline-block;margin-right:8px;"></span>'+esc(r.p.name)+'</td>'
+        +'<td>'+r.lastAuditHtml+'</td><td>'+r.reviewHtml+'</td><td>'+r.contractHtml+'</td></tr>').join('')
+      +'</tbody></table></div>';
+  }
   window.wtKlienciDeleteClient = async function(id){
     const p = wtProjectById(id);
     if(!p || !DB) return;
@@ -13406,6 +13565,7 @@ document.addEventListener('keydown', e=>{
     klienciDoneOpen = false;
     document.getElementById('klienciList').style.display='none';
     document.getElementById('klienciDetail').style.display='';
+    document.getElementById('klienciDashboard').style.display='none';
     renderClientView();
   };
   window.wtKlienciToggleDone = function(){
@@ -13424,7 +13584,9 @@ document.addEventListener('keydown', e=>{
     klienciCurrentId = null;
     document.getElementById('klienciList').style.display='';
     document.getElementById('klienciDetail').style.display='none';
+    document.getElementById('klienciDashboard').style.display='';
     renderClientListView();
+    renderClientDashboard();
   };
   window.wtKlienciCreate = function(){
     const input = document.getElementById('klienciNewInput');
@@ -14726,6 +14888,7 @@ document.addEventListener('keydown', e=>{
       if(btn.dataset.action==='openreg'){ rjBackToClientId=klienciCurrentId; showSection('rejestry'); window.wtRjOpenVersion(id); }
       else if(btn.dataset.action==='viewaudit') window.wtViewAudit(id);
       else if(btn.dataset.action==='delaudit') window.wtDeleteAudit(id);
+      else if(btn.dataset.action==='clientreport') window.wtClientReportExportPdf(id);
       else if(btn.dataset.action==='opennote'){ showSection('notatnik'); window.wtSelectNote(id); }
       else if(btn.dataset.action==='openrisk'){ showSection('oceny-ryzyka'); window.wtRyzOpen(id); }
       else if(btn.dataset.action==='openreview'){ showSection('terminy-kontroli'); window.wtPrzOpen(id); }
@@ -15096,7 +15259,7 @@ document.addEventListener('keydown', e=>{
       wtRefreshNotatnikFilterSelect();
       renderNotatnikList();
       wtMigrateLegacyProjects();
-      renderClientListView();
+      renderClientListView(); renderClientDashboard();
       renderClientView();
       wtRefreshAuditClientSelect();
       wtRefreshObchodClientSelect();
@@ -15107,7 +15270,7 @@ document.addEventListener('keydown', e=>{
       allTodos = snap.docs.map(d=>Object.assign({id:d.id}, d.data()));
       renderTodos();
       wtMigrateLegacyProjects();
-      renderClientListView();
+      renderClientListView(); renderClientDashboard();
       renderClientView();
       wtInvalidateSearchIndex();
     }, err=>console.error('todos', err));
@@ -15115,7 +15278,7 @@ document.addEventListener('keydown', e=>{
       allVersions = snap.docs.map(d=>Object.assign({id:d.id}, d.data()));
       renderRjHub();
       if(rjState.view==='list') renderRjList();
-      renderClientListView();
+      renderClientListView(); renderClientDashboard();
       renderClientView();
       renderCalendar();
       wtRenderOverdueRegPanel();
@@ -15125,14 +15288,14 @@ document.addEventListener('keydown', e=>{
     DB.collection('risk_assessments').orderBy('updatedAt','desc').onSnapshot(snap=>{
       allRiskAssessments = snap.docs.map(d=>Object.assign({id:d.id}, d.data()));
       if(ryzState.view==='list') renderRyzList();
-      renderClientListView();
+      renderClientListView(); renderClientDashboard();
       renderClientView();
       wtInvalidateSearchIndex();
     }, err=>console.error('risk_assessments', err));
     DB.collection('review_cards').orderBy('updatedAt','desc').onSnapshot(snap=>{
       allReviewCards = snap.docs.map(d=>Object.assign({id:d.id}, d.data()));
       if(przState.view==='list') renderPrzList();
-      renderClientListView();
+      renderClientListView(); renderClientDashboard();
       renderClientView();
       renderCalendar();
       wtRenderWeekPanel();
@@ -15141,7 +15304,7 @@ document.addEventListener('keydown', e=>{
     DB.collection('machines').orderBy('updatedAt','desc').onSnapshot(snap=>{
       allMachines = snap.docs.map(d=>Object.assign({id:d.id}, d.data()));
       if(maszState.view==='list') renderMaszList();
-      renderClientListView();
+      renderClientListView(); renderClientDashboard();
       renderClientView();
       renderCalendar();
       wtRenderWeekPanel();
@@ -15149,7 +15312,7 @@ document.addEventListener('keydown', e=>{
     }, err=>console.error('machines', err));
     DB.collection('checklist_snapshots').orderBy('createdAt','desc').onSnapshot(snap=>{
       allChecklistSnapshots = snap.docs.map(d=>Object.assign({id:d.id}, d.data()));
-      renderClientListView();
+      renderClientListView(); renderClientDashboard();
       renderClientView();
     }, err=>console.error('checklist_snapshots', err));
     DB.collection('item_photos').orderBy('createdAt','asc').onSnapshot(snap=>{
@@ -15164,7 +15327,7 @@ document.addEventListener('keydown', e=>{
     DB.collection('notes').orderBy('updatedAt','desc').onSnapshot(snap=>{
       allNotes = snap.docs.map(d=>Object.assign({id:d.id}, d.data()));
       renderNotatnikList();
-      renderClientListView();
+      renderClientListView(); renderClientDashboard();
       renderClientView();
       wtInvalidateSearchIndex();
     }, err=>console.error('notes', err));
