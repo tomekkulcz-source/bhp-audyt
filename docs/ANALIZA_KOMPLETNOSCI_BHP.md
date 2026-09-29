@@ -82,7 +82,7 @@ Moduł wypadków zbiera PESEL, adres, opis obrażeń, dane o trzeźwości; rejes
 
 **4.6. Wypadki przy pracy — uzupełnienie kreatora**
 - licznik **14 dni** na sporządzenie protokołu (§ 9 rozp. RM z 1.07.2009) i uzasadnienie przekroczenia terminu;
-- kwalifikacja **ciężki / śmiertelny / zbiorowy** → obowiązek niezwłocznego zawiadomienia PIP i prokuratury (art. 234 § 2 KP) — z generowaniem zawiadomienia (wzór C.11 jest, ale kreator go nie wywołuje);
+- przy kwalifikacji **ciężki / śmiertelny / zbiorowy** (pole „Skutki” w kreatorze istnieje) — pilnowanie niezwłocznego zawiadomienia PIP i prokuratury (art. 234 § 2 KP) z generowaniem zawiadomienia (wzór C.11 jest, ale kreator go nie wywołuje);
 - etap zapoznania poszkodowanego z protokołem (prawo do zgłoszenia zastrzeżeń, 5 dni roboczych na zatwierdzenie przez pracodawcę) z datami i przypomnieniami;
 - generowanie **Z-KW** z danych sprawy (dziś osobny wzór C.2 do ręcznego wypełnienia) i przypomnienie o terminie przekazania do GUS;
 - wariant dla **zleceniobiorcy / osoby niebędącej pracownikiem** (w sekcji referencyjnej opisany, w kreatorze brak — pole „Rodzaj zdarzenia” ma tylko dwie opcje);
@@ -164,3 +164,18 @@ Aplikacja ma już wszystkie dane: wyniki audytów i obchodów, sprawy wypadkowe,
 
 ---
 *Analiza na podstawie przeglądu kodu i treści aplikacji. Podstawy prawne podano według stanu znanego na dzień analizy — przed wdrożeniem konkretnych kalkulatorów terminów warto sprawdzić aktualne teksty jednolite w ISAP.*
+
+## 6. Stan wdrożenia (aktualizowany)
+
+| Etap | Zakres | Status |
+|---|---|---|
+| 1 | Profil klienta, wymagania z profilu, kartoteka pracowników (4.1, 4.2), pełna kopia zapasowa | ✅ wdrożone |
+| 2 | Rejestr zaleceń i kontroli, terminy wszystkich klientów, eksport .ics, powiadomienie dzienne, wstrzymanie pracy i wnioski (4.4, 4.11) | ✅ wdrożone |
+| 3 | RODO: umowa powierzenia, rejestr art. 30 ust. 2, retencja, zwrot i usunięcie danych (4.5) | ✅ wdrożone |
+| 4 | Wizyty, raport miesięczny, plan roczny, rozliczenia (4.3) | ✅ wdrożone |
+| 5 | Wypadki: terminy, zawiadomienia, Z-KW, wskaźniki; choroby zawodowe; near miss (4.6, 4.7) | ✅ wdrożone |
+| 6 | ORZ: PN-N-18002, szablony stanowisk, grupy szczególne, zapoznanie; kalkulator pomiarów (4.8, 4.10) | ✅ wdrożone |
+| 7 | Moduł szkoleń, generator rocznej analizy stanu BHP (4.9, 4.13) | ⏳ następny |
+| 8 | Brakujące wzory, komunikacja z klientem, aktualność prawa, wydajność (4.12, 4.14–4.17) | ⏳ |
+
+Poza zakresem pracy w samej aplikacji (wymagają serwera lub kont zewnętrznych): powiadomienia push/e-mail przy zamkniętej aplikacji, integracja z programem do faktur/KSeF, konta współpracowników z rolami.
