@@ -175,6 +175,7 @@ Aplikacja ma już wszystkie dane: wyniki audytów i obchodów, sprawy wypadkowe,
 | 4 | Wizyty, raport miesięczny, plan roczny, rozliczenia (4.3) | ✅ wdrożone |
 | 5 | Wypadki: terminy, zawiadomienia, Z-KW, wskaźniki; choroby zawodowe; near miss (4.6, 4.7) | ✅ wdrożone |
 | 6 | ORZ: PN-N-18002, szablony stanowisk, grupy szczególne, zapoznanie; kalkulator pomiarów (4.8, 4.10) | ✅ wdrożone |
+| 6a | Test wiedzy BHP przebudowany: pytania sytuacyjne zamiast pamięciowych (kody H, numery znaków), wyrównane dystraktory, poziomy pracownik/specjalista, uzasadnienie z podstawą prawną | ✅ wdrożone |
 | 7 | Moduł szkoleń, generator rocznej analizy stanu BHP (4.9, 4.13) | ⏳ następny |
 | 8 | Brakujące wzory, komunikacja z klientem, aktualność prawa, wydajność (4.12, 4.14–4.17) | ⏳ |
 
