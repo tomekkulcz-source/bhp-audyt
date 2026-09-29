@@ -19,4 +19,4 @@ service workera i wbudowane PDF-y kompendiów (limit 16 MB strony na claude.ai).
 `client_projects` (w tym `profile`, `reqState`), `todos`, `register_versions`, `checklist_snapshots`,
 `item_photos`, `item_comments`, `notes`, `calendar_events`, `app_settings`, `pdf_files` (tylko lokalnie),
 `risk_assessments`, `review_cards`, `machines`, `employee_permits_cards`, `custom_checklist_items`,
-`accident_cases`, `employees`.
+`accident_cases`, `employees`, `recommendations`.
