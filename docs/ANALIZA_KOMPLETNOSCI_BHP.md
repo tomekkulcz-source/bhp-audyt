@@ -176,7 +176,9 @@ Aplikacja ma już wszystkie dane: wyniki audytów i obchodów, sprawy wypadkowe,
 | 5 | Wypadki: terminy, zawiadomienia, Z-KW, wskaźniki; choroby zawodowe; near miss (4.6, 4.7) | ✅ wdrożone |
 | 6 | ORZ: PN-N-18002, szablony stanowisk, grupy szczególne, zapoznanie; kalkulator pomiarów (4.8, 4.10) | ✅ wdrożone |
 | 6a | Test wiedzy BHP przebudowany: pytania sytuacyjne zamiast pamięciowych (kody H, numery znaków), wyrównane dystraktory, poziomy pracownik/specjalista, uzasadnienie z podstawą prawną | ✅ wdrożone |
-| 7 | Moduł szkoleń, generator rocznej analizy stanu BHP (4.9, 4.13) | ⏳ następny |
-| 8 | Brakujące wzory, komunikacja z klientem, aktualność prawa, wydajność (4.12, 4.14–4.17) | ⏳ |
+| 7 | Moduł szkoleń (plan z kartoteki, lista A.6, egzamin, zaświadczenia z numeracją, zapis do kartoteki), generator rocznej analizy stanu BHP (4.9, 4.13) | ✅ wdrożone |
+| 8 | Wzory V.1–V.8 (konsultacje, odbiory, opiniowanie inwestycji, firmy zewnętrzne art. 208, LOTO, komisja BHP, korespondencja z urzędami, plan BIOZ); zestawienie stanu BHP dla klienta, wysyłanie plików z telefonu, podpisy na ekranie (szkolenia, zapoznanie z ORZ); dziennik zmian w przepisach z zadaniami u klientów; kalkulatory (IWA, osoby do pierwszej pomocy, posiłki i napoje); plakaty do wydruku; szybsze otwieranie aplikacji (4.12, 4.14–4.17) | ✅ wdrożone |
 
 Poza zakresem pracy w samej aplikacji (wymagają serwera lub kont zewnętrznych): powiadomienia push/e-mail przy zamkniętej aplikacji, integracja z programem do faktur/KSeF, konta współpracowników z rolami.
+
+Nie wdrożono (wymagają serwera albo zmiany sposobu wydawania): panel klienta online (zastąpiony zestawieniem PDF do wysłania), wydzielenie kompendiów (~14 MB) do osobnych plików — rozbiłoby to wersję lokalną jako jeden plik; zamiast tego aplikacja otwiera się z pamięci urządzenia i aktualizuje w tle. Instrukcje stanowiskowe typowych maszyn są w bibliotece instrukcji (E.1–E.92).

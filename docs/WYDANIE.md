@@ -19,4 +19,14 @@ service workera i wbudowane PDF-y kompendiów (limit 16 MB strony na claude.ai).
 `client_projects` (w tym `profile`, `reqState`), `todos`, `register_versions`, `checklist_snapshots`,
 `item_photos`, `item_comments`, `notes`, `calendar_events`, `app_settings`, `pdf_files` (tylko lokalnie),
 `risk_assessments`, `review_cards`, `machines`, `employee_permits_cards`, `custom_checklist_items`,
-`accident_cases`, `employees`, `recommendations`, `visits`, `occupational_diseases`.
+`accident_cases`, `employees`, `recommendations`, `visits`, `occupational_diseases`, `trainings`.
+
+## Aktualizacja aplikacji (service worker)
+`sw.js` (v3) otwiera `index.html` od razu z pamięci podręcznej i pobiera nową wersję w tle.
+Gdy przyjdzie inna wersja (inny ETag/Last-Modified), aplikacja pokazuje pasek
+„Dostępna nowa wersja — Odśwież”; kolejne uruchomienie startuje już z nowej wersji.
+Zmiana `CACHE_NAME` w `sw.js` czyści starą pamięć przy następnym uruchomieniu.
+
+## Ustawienia w `app_settings`
+Wpisy dziennika zmian w przepisach zapisują się jako dokumenty `app_settings` z `key:'law_change'`
+(bez nowej kolekcji).
