@@ -40,10 +40,16 @@ jobs:
           fi
           git config user.name "Biuletyn BHP (automat)"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add biuletyn.json
-          git commit -m "Biuletyn BHP: aktualizacja $(date -u +%Y-%m-%d)"
+          # zapis odporny na równoległe przebiegi: świeży plik nakładamy na najnowszy stan gałęzi
+          cp biuletyn.json "$RUNNER_TEMP/biuletyn.json"
           for i in 1 2 3; do
-            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            git fetch -q origin "${GITHUB_REF_NAME}"
+            git reset -q --hard "origin/${GITHUB_REF_NAME}"
+            cp "$RUNNER_TEMP/biuletyn.json" biuletyn.json
+            git add biuletyn.json
+            git diff --cached --quiet && { echo "Bez zmian"; exit 0; }
+            git commit -q -m "Biuletyn BHP: aktualizacja $(date -u +%Y-%m-%d)"
+            git push -q origin "HEAD:${GITHUB_REF_NAME}" && exit 0
             sleep $((i * 5))
           done
           exit 1
