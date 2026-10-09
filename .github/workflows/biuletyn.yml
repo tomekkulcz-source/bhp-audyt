@@ -1,0 +1,46 @@
+# Biuletyn BHP — codzienne zbieranie wiadomości z oficjalnych źródeł (bez AI).
+# Skrypt tools/biuletyn/zbierz.py zapisuje biuletyn.json; jeśli treść się zmieniła, workflow robi
+# commit, a GitHub Pages publikuje plik razem z aplikacją. Aplikacja czyta go w zakładce „Biuletyn BHP”.
+# Ręczne uruchomienie: GitHub → Actions → Biuletyn BHP → Run workflow.
+name: Biuletyn BHP
+
+on:
+  schedule:
+    - cron: '23 4 * * *'   # codziennie ok. 6:23 czasu polskiego (letniego)
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['tools/biuletyn/**', '.github/workflows/biuletyn.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: biuletyn-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  zbierz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Zbierz wiadomości
+        run: python3 tools/biuletyn/zbierz.py
+      - name: Zapisz zmiany
+        run: |
+          if git diff --quiet -- biuletyn.json && git ls-files --error-unmatch biuletyn.json >/dev/null 2>&1; then
+            echo "Bez zmian w biuletyn.json"; exit 0
+          fi
+          git config user.name "Biuletyn BHP (automat)"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add biuletyn.json
+          git commit -m "Biuletyn BHP: aktualizacja $(date -u +%Y-%m-%d)"
+          for i in 1 2 3; do
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
