@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generatedAt": "2026-10-09T19:53:52Z",
+ "generatedAt": "2026-10-09T19:55:34Z",
  "sources": [
   {
    "id": "du",
@@ -43,7 +43,7 @@
    "cat": "wiadomosci",
    "ok": true,
    "found": 3,
-   "new": 3,
+   "new": 0,
    "lastOk": "2026-10-09"
   },
   {
@@ -79,6 +79,83 @@
    "url": "https://www.pip.gov.pl/aktualnosci/uwaga-uvaga-3",
    "date": "2026-10-09",
    "seen": "2026-10-09"
+  },
+  {
+   "id": "7f46b2eb75cc",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "Już ponad pół tysiąca pozytywnych decyzji UDT dla urządzeń Baltic Power",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/juz-ponad-pol-tysiaca-pozytywnych-decyzji-udt-dla-urzadzen-baltic-power",
+   "date": "2026-10-09",
+   "seen": "2026-10-09",
+   "dateGuess": true
+  },
+  {
+   "id": "1e5cdf9f2485",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "Czy Twój serwis samochodowy miał inspekcję UDT przed sezonem letnim?",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/czy-twoj-serwis-samochodowy-mial-inspekcje-udt-przed-sezonem-letnim",
+   "date": "2026-10-09",
+   "seen": "2026-10-09",
+   "dateGuess": true
+  },
+  {
+   "id": "32dbdc2ed2e6",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "Wydanie specjalne magazynu UDT „INSPEKTOR”",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/wydanie-specjalne-magazynu-udt-inspektor",
+   "date": "2026-10-09",
+   "seen": "2026-10-09",
+   "dateGuess": true
+  },
+  {
+   "id": "b5e013180f1c",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "PCA potwierdza kompetencje UDT-CERT",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/pca-potwierdza-kompetencje-udt-cert",
+   "date": "2026-10-09",
+   "seen": "2026-10-09",
+   "dateGuess": true
+  },
+  {
+   "id": "cc3e3c664e31",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "Laboratorium Wzorcujące – nowy zakres akredytacji i poszerzenie zakresu usług",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/laboratorium-wzorcujace---nowy-zakres-akredytacji-i-poszerzenie-zakresu-uslug",
+   "date": "2026-10-09",
+   "seen": "2026-10-09",
+   "dateGuess": true
+  },
+  {
+   "id": "26fdb53e6c63",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "UDT z nową misją - będzie wspierać kluczowe sektory gospodarki w ochronie przed cyberzagrożeniami",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/udt-z-nowa-misja-bedzie-wspierac-kluczowe-sektory-gospodarki-w-ochronie-przed-cyberzagrozeniami",
+   "date": "2026-10-09",
+   "seen": "2026-10-09",
+   "dateGuess": true
+  },
+  {
+   "id": "17b1c590a293",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "„INSPEKTOR” UDT WYDANIE 1-2/2026",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/inspektor-udt-wydanie-1-2-2026",
+   "date": "2026-10-09",
+   "seen": "2026-10-09",
+   "dateGuess": true
   },
   {
    "id": "fb3b26077c30",
@@ -152,6 +229,16 @@
    "lead": "Zmienia się siedziba Oddziału Państwowej Inspekcji Pracy w Kłodzku, ale nie zmieniają się misja, cele i zadania Inspekcji. Niezmiennie pozostają nimi ochrona praw pracowniczych, bezpieczeństwo i higiena pracy oraz działania na rzecz przestrzegania prawa pracy. To ważny krok, który pozwoli jeszcze lepiej docierać z…",
    "url": "https://www.pip.gov.pl/aktualnosci/inspekcja-w-klodzku-ma-nowa-siedzibe",
    "date": "2026-10-05",
+   "seen": "2026-10-09"
+  },
+  {
+   "id": "b27f3df3895e",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "UDT przypomina przedsiębiorcom o ważnym obowiązku samorejstracji w wykazie Krajowego Systemu Cyberbezpieczeństwa",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/udt-przypomina-przedsiebiorcom-o-waznym-obowiazku-samorejstracji-w-wykazie-krajowego-systemu-cyberbezpieczenstwa",
+   "date": "2026-10-03",
    "seen": "2026-10-09"
   },
   {
@@ -307,13 +394,33 @@
    "seen": "2026-10-09"
   },
   {
-   "id": "215f1f6f8212",
-   "src": "mrpips",
+   "id": "22f785629e3b",
+   "src": "udt",
    "cat": "wiadomosci",
-   "title": "Jeszcze lepsza opieka nad najmłodszymi dziećmi staje się faktem",
-   "lead": "Ważne zmiany w opiece nad maluchami są już pewne. To m.in. lepsza ochrona dzieci w internecie, wyższe standardy żywienia żłobkach i klubach dziecięcych, obowiązkowe szkolenia dla opiekunów, a także bezpieczniejsze warunki zabawy.",
-   "url": "https://www.gov.pl/web/rodzina/jeszcze-lepsza-opieka-nad-najmlodszymi-dziecmi-staje-sie-faktem",
-   "date": "2026-08-21",
+   "title": "Ponad 1500 razy „tak” od UDT dla Baltic Power",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/ponad-1500-razy-tak-od-udt-dla-baltic-power",
+   "date": "2026-08-14",
+   "seen": "2026-10-09"
+  },
+  {
+   "id": "02803104307c",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "Masz lub planujesz klimatyzację? Sprawdź, kto może ją montować",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/masz-lub-planujesz-klimatyzacje-sprawdz-kto-moze-ja-montowac",
+   "date": "2026-08-14",
+   "seen": "2026-10-09"
+  },
+  {
+   "id": "0dbf9aff8d56",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "Komunikat – 14 sierpnia 2026 r. Urząd Dozoru Technicznego będzie nieczynny",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/komunikat---14-sierpnia-2026-r-urzad-dozoru-technicznego-bedzie-nieczynny",
+   "date": "2026-08-14",
    "seen": "2026-10-09"
   },
   {
@@ -329,26 +436,6 @@
    "type": "Ustawa",
    "kind": "zm",
    "inForce": "2026-11-05"
-  },
-  {
-   "id": "cc329e360f2d",
-   "src": "mrpips",
-   "cat": "wiadomosci",
-   "title": "Targi Pracy i Przedsiębiorczości 2026. Pracodawco - zgłoś się!",
-   "lead": "Szukasz pracownika do swojej firmy? Już dzisiaj zgłoś się na bezpłatne Targi Pracy i Przedsiębiorczości 2026 i rekrutuj kandydatów z krajów Unii Europejskiej lub Polaków wracających do kraju. Do 15 września br. masz czas na rejestrację. Chcesz wiedzieć więcej? Czytaj dalej!",
-   "url": "https://www.gov.pl/web/rodzina/targi-pracy-i-przedsiebiorczosci-2026-pracodawco--zglos-sie",
-   "date": "2026-08-03",
-   "seen": "2026-10-09"
-  },
-  {
-   "id": "932215b17613",
-   "src": "mrpips",
-   "cat": "wiadomosci",
-   "title": "Zawód psycholog",
-   "lead": "5 marca 2026 r. weszły w życie pierwsze przepisy nowej ustawy o zawodzie psychologa oraz samorządzie zawodowym psychologów. Ustawa porządkuje rynek świadczeń psychologicznych oraz zapewnia większą ochronę zarówno osobom ich udzielającym, jak i korzystającym ze wsparcia tych osób. Nowe przepisy powstały w Ministerstwie…",
-   "url": "https://www.gov.pl/web/rodzina/zawod-psycholog",
-   "date": "2026-08-03",
-   "seen": "2026-10-09"
   },
   {
    "id": "f61adf75d2c8",
@@ -377,6 +464,46 @@
    "type": "Rozporządzenie",
    "kind": "zm",
    "inForce": "2027-01-11"
+  },
+  {
+   "id": "de6559357e1d",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "Rozporządzenie Ministra Finansów i Gospodarki",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/rozporzadzenie-ministra-finansow-i-gospodarki",
+   "date": "2026-07-04",
+   "seen": "2026-10-09"
+  },
+  {
+   "id": "f0290de2bd13",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "Dzień Przedsiębiorcy z UDT – bezpłatne webinarium dla przedsiębiorców",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/dzien-przedsiebiorcy-z-udt---bezplatne-webinarium-dla-przedsiebiorcow",
+   "date": "2026-06-25",
+   "seen": "2026-10-09"
+  },
+  {
+   "id": "86e42a6d7667",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "Webinar TIC Council „Przełamywanie barier: bezpieczeństwo, standardy i infrastruktura rurociągów wodorowych”",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/webinar-tic-council-przelamywanie-barier-bezpieczenstwo-standardy-i-infrastruktura-rurociagow-wodorowych",
+   "date": "2026-06-22",
+   "seen": "2026-10-09"
+  },
+  {
+   "id": "42c4f0f3ed16",
+   "src": "udt",
+   "cat": "wiadomosci",
+   "title": "Przerwa techniczna w działaniu portalu eUDT",
+   "lead": "Urząd Dozoru Technicznego (UDT) jest państwową osobą prawną działającą w obszarze bezpieczeństwa urządzeń technicznych. WSPIERAMY ROZWÓJ. DBAMY O BEZPIECZEŃSTWO.",
+   "url": "https://www.udt.gov.pl/aktualnosci/przerwa-techniczna-w-dzialaniu-portalu-eudt",
+   "date": "2026-04-24",
+   "seen": "2026-10-09"
   }
  ],
  "skip": [
