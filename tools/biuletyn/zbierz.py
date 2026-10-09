@@ -327,6 +327,8 @@ def collect_web(src, conf, known, skip):
         if not cands:
             cands = from_html_list(src, text, base)
     log(f'   {len(cands)} linków ({via})')
+    bez = [w.lower() for w in conf.get('bez', [])]
+    first_run = not any(it['src'] == src['id'] for it in known.values())
     out, fetched = [], 0
     for c in cands:
         iid = item_id(c['url'])
@@ -350,10 +352,13 @@ def collect_web(src, conf, known, skip):
                 log(f'   ! {c["url"]}: {e}')
         if not c['title']:
             continue
-        if src.get('filter') and not matches(c['title'] + ' ' + c['lead'], words):
-            skip.add(iid)  # nie na temat BHP — zapamiętaj, żeby nie pobierać ponownie
+        if (src.get('filter') and not matches(c['title'] + ' ' + c['lead'], words)) or matches(c['title'], bez):
+            skip.add(iid)  # nie na temat BHP / ogłoszenie o pracy itp. — zapamiętaj, żeby nie pobierać ponownie
             continue
         guess = not c['date']
+        if guess and first_run:
+            skip.add(iid)  # pierwsze zbieranie: bez daty nie wiadomo, czy to nowość — pomijamy archiwum
+            continue
         it = {
             'id': iid, 'src': src['id'], 'cat': categorize(src, c['title'], c['lead']),
             'title': c['title'], 'lead': c['lead'] if c['lead'] and norm(c['lead']) != norm(c['title']) else '',
@@ -457,6 +462,8 @@ def main():
         s = by_id[it['src']]
         if s['type'] == 'eli':
             return eli_ok(it['title'], conf)
+        if matches(it['title'], [w.lower() for w in conf.get('bez', [])]):
+            return False
         if s.get('filter'):
             return matches(it['title'] + ' ' + it.get('lead', ''), [w.lower() for w in (s.get('only') or conf.get('slowa') or [])])
         return True
