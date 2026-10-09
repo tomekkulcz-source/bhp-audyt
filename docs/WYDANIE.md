@@ -30,3 +30,19 @@ Zmiana `CACHE_NAME` w `sw.js` czyści starą pamięć przy następnym uruchomien
 ## Ustawienia w `app_settings`
 Wpisy dziennika zmian w przepisach zapisują się jako dokumenty `app_settings` z `key:'law_change'`
 (bez nowej kolekcji).
+
+## Biuletyn BHP (zakładka „Biuletyn BHP”)
+Aktualizuje się sam, bez AI i bez kosztów:
+1. **GitHub Actions** (`.github/workflows/biuletyn.yml`) codziennie ok. 6:20 uruchamia `tools/biuletyn/zbierz.py`.
+2. Skrypt odwiedza źródła z `tools/biuletyn/zrodla.json` (Dziennik Ustaw przez API Sejmu, PIP, CIOP-PIB,
+   EU-OSHA i inne), bierze tytuł, zajawkę (meta description / RSS) i datę wprost ze strony źródła
+   i zapisuje `biuletyn.json` w katalogu głównym. Commit robi się tylko przy zmianie treści (albo co 3 dni).
+3. GitHub Pages publikuje plik razem z aplikacją; aplikacja czyta go przy otwarciu zakładki
+   (wersja lokalna i claude.ai — z `https://tomekkulcz-source.github.io/bhp-audyt/biuletyn.json`)
+   i zapamiętuje ostatnią wersję w `localStorage` (działa bez internetu).
+
+Wydanie = miesiąc kalendarzowy (numer `MM/RRRR`). „Nowe” = pozycje zebrane po poprzedniej wizycie w zakładce.
+Stan źródeł widać w zakładce (panel „Źródła”) i w logu workflow. Zmiana/dodanie źródła = edycja
+`zrodla.json` (typ `eli`, `rss` albo `html` z wyrażeniem `link` dla adresów artykułów; `filter: true` —
+tylko wiadomości ze słowami z listy `slowa`). Ręczne uruchomienie: GitHub → Actions → Biuletyn BHP → Run workflow.
+Test lokalny bez zapisu: `python3 tools/biuletyn/zbierz.py --dry-run`.

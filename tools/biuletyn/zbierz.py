@@ -364,8 +364,12 @@ def eli_kind(t):
     return 'new'
 
 
+def eli_ok(title, conf):
+    """Akt dotyczy BHP: słowo z eli_slowa w tytule i żadnego z eli_bez (sprawy organizacyjne służb itp.)."""
+    return matches(title, [w.lower() for w in conf.get('eli_slowa', [])]) and not matches(title, [w.lower() for w in conf.get('eli_bez', [])])
+
+
 def collect_eli(src, conf, known):
-    words = [w.lower() for w in conf.get('eli_slowa', [])]
     since = TODAY - dt.timedelta(days=src.get('days', 120))
     acts = []
     for y in sorted({since.year, TODAY.year}):
@@ -376,7 +380,7 @@ def collect_eli(src, conf, known):
     for a in acts:
         date = str(a.get('promulgation') or a.get('announcementDate') or '')[:10]
         title = a.get('title') or ''
-        if not date or date < since.isoformat() or not matches(title, words):
+        if not date or date < since.isoformat() or not eli_ok(title, conf):
             continue
         year, pos = a.get('year'), a.get('pos')
         addr = a.get('address') or f'WDU{year}{int(pos or 0):07d}'
@@ -437,7 +441,9 @@ def main():
 
     cutoff = (TODAY - dt.timedelta(days=KEEP_DAYS)).isoformat()
     ids = {s['id'] for s in conf['sources']}
-    lst = [it for it in items.values() if it['date'] >= cutoff and it['src'] in ids]
+    eli_ids = {s['id'] for s in conf['sources'] if s['type'] == 'eli'}
+    lst = [it for it in items.values() if it['date'] >= cutoff and it['src'] in ids
+           and (it['src'] not in eli_ids or eli_ok(it['title'], conf))]  # po zmianie słów kluczowych
     lst.sort(key=lambda it: (it['date'], it.get('seen', '')), reverse=True)
     lst = lst[:MAX_ITEMS]
 
