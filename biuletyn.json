@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generatedAt": "2026-10-09T19:40:14Z",
+ "generatedAt": "2026-10-09T19:49:20Z",
  "sources": [
   {
    "id": "du",
@@ -9,7 +9,7 @@
    "home": "https://dziennikustaw.gov.pl/",
    "cat": "przepisy",
    "ok": true,
-   "found": 14,
+   "found": 7,
    "new": 0,
    "lastOk": "2026-10-09"
   },
@@ -31,8 +31,8 @@
    "home": "https://www.ciop.pl/",
    "cat": "wiedza",
    "ok": true,
-   "found": 26,
-   "new": 15,
+   "found": 30,
+   "new": 8,
    "lastOk": "2026-10-09"
   },
   {
@@ -310,6 +310,50 @@
    "dateGuess": true
   },
   {
+   "id": "3947a86e5bb7",
+   "src": "ciop",
+   "cat": "wiedza",
+   "title": "Kampania 2014 \"Dobra KOMUNIKACJA elementem bezpiecznej pracy\"",
+   "lead": "Czynniki biologiczne",
+   "url": "https://www.ciop.pl/CIOPPortalWAR/appmanager/ciop/pl?_nfpb=true&_pageLabel=P22600196381397216765692&html_tresc_root_id=409&html_tresc_id=409&html_klucz=409&html_klucz_spis=",
+   "date": "2026-10-09",
+   "seen": "2026-10-09",
+   "dateGuess": true
+  },
+  {
+   "id": "3fa288da6cfb",
+   "src": "ciop",
+   "cat": "wiedza",
+   "title": "Kampania 2013 - \"Bezpieczna szkoła\"",
+   "lead": "Kampania Społeczna 2013 ZDROWA I BEZPIECZNA PRACA W SZKOLE",
+   "url": "https://www.ciop.pl/CIOPPortalWAR/appmanager/ciop/pl?_nfpb=true&_pageLabel=P640129441340352936100&html_tresc_root_id=13914&html_tresc_id=300001964&html_klucz=13914&html_klucz_spis=",
+   "date": "2026-10-09",
+   "seen": "2026-10-09",
+   "dateGuess": true
+  },
+  {
+   "id": "9fe9d699e5c5",
+   "src": "ciop",
+   "cat": "wiedza",
+   "title": "Kampania 2013 - \"Przez innowacje do bezpieczeństwa\"",
+   "lead": "Kampania Społeczna 2013 PRZEZ INNOWACJE DO BEZPIECZEŃSTWA",
+   "url": "https://www.ciop.pl/CIOPPortalWAR/appmanager/ciop/pl?_nfpb=true&_pageLabel=P640129441340352936100&html_tresc_root_id=13914&html_tresc_id=300001634&html_klucz=13914&html_klucz_spis=",
+   "date": "2026-10-09",
+   "seen": "2026-10-09",
+   "dateGuess": true
+  },
+  {
+   "id": "bacae4f3f768",
+   "src": "ciop",
+   "cat": "wiedza",
+   "title": "Kampania 2012-2013 - \"Partnerstwo dla Prewencji\"",
+   "lead": "Kampania 2012-2013 - Partnerstwo dla prewencji",
+   "url": "https://www.ciop.pl/CIOPPortalWAR/appmanager/ciop/pl?_nfpb=true&_pageLabel=P640129441340352936100&html_tresc_root_id=13914&html_tresc_id=300001631&html_klucz=13914&html_klucz_spis=",
+   "date": "2026-10-09",
+   "seen": "2026-10-09",
+   "dateGuess": true
+  },
+  {
    "id": "fb3b26077c30",
    "src": "pip",
    "cat": "pip",
@@ -536,20 +580,6 @@
    "seen": "2026-10-09"
   },
   {
-   "id": "91a92d51c3e8",
-   "src": "du",
-   "cat": "przepisy",
-   "title": "Rozporządzenie Ministra Spraw Wewnętrznych i Administracji z dnia 4 września 2026 r. w sprawie upoważnienia Dyrektora Centrum Naukowo-Badawczego Ochrony Przeciwpożarowej im. Józefa Tuliszkowskiego - Państwowego Instytutu Badawczego do rozpatrzenia wniosku o włączenie kwalifikacji sektorowej dotyczącej montażu i serwisowania zabezpieczeń przeciwpożarowych - oświetlenie awaryjne do Zintegrowanego Systemu Kwalifikacji oraz dokonywania jej przeglądu w przypadku włączenia do Zintegrowanego Systemu Kwalifikacji",
-   "lead": "",
-   "url": "https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU20260001194",
-   "date": "2026-09-10",
-   "seen": "2026-10-09",
-   "addr": "Dz.U. 2026 poz. 1194",
-   "type": "Rozporządzenie",
-   "kind": "new",
-   "inForce": "2026-09-25"
-  },
-  {
    "id": "58e5a9a4265f",
    "src": "osha",
    "cat": "ue",
@@ -558,20 +588,6 @@
    "url": "https://osha.europa.eu/en/oshnews/were-hiring-procurement-officer",
    "date": "2026-09-09",
    "seen": "2026-10-09"
-  },
-  {
-   "id": "256f77e714d6",
-   "src": "du",
-   "cat": "przepisy",
-   "title": "Rozporządzenie Ministra Obrony Narodowej z dnia 18 sierpnia 2026 r. zmieniające rozporządzenie w sprawie szczegółowego zakresu działania Wojskowego Dozoru Technicznego oraz jego organizacji",
-   "lead": "",
-   "url": "https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU20260001121",
-   "date": "2026-08-24",
-   "seen": "2026-10-09",
-   "addr": "Dz.U. 2026 poz. 1121",
-   "type": "Rozporządzenie",
-   "kind": "zm",
-   "inForce": "2026-09-08"
   },
   {
    "id": "6d35fab728ab",
@@ -632,34 +648,6 @@
    "inForce": "2026-08-23"
   },
   {
-   "id": "c0e0ea957ec9",
-   "src": "du",
-   "cat": "przepisy",
-   "title": "Rozporządzenie Ministra Spraw Wewnętrznych i Administracji z dnia 15 lipca 2026 r. w sprawie wysokości środków finansowych w 2026 r. dla jednostek ochrony przeciwpożarowej działających w ramach krajowego systemu ratowniczo-gaśniczego",
-   "lead": "",
-   "url": "https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU20260000975",
-   "date": "2026-07-21",
-   "seen": "2026-10-09",
-   "addr": "Dz.U. 2026 poz. 975",
-   "type": "Rozporządzenie",
-   "kind": "new",
-   "inForce": "2026-08-05"
-  },
-  {
-   "id": "303d42fe0a63",
-   "src": "du",
-   "cat": "przepisy",
-   "title": "Rozporządzenie Rady Ministrów z dnia 13 lipca 2026 r. w sprawie szczegółowej zawartości Programu Ochrony Ludności i Obrony Cywilnej",
-   "lead": "",
-   "url": "https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU20260000946",
-   "date": "2026-07-14",
-   "seen": "2026-10-09",
-   "addr": "Dz.U. 2026 poz. 946",
-   "type": "Rozporządzenie",
-   "kind": "new",
-   "inForce": "2026-07-15"
-  },
-  {
    "id": "787575d80b5d",
    "src": "du",
    "cat": "przepisy",
@@ -672,48 +660,6 @@
    "type": "Rozporządzenie",
    "kind": "zm",
    "inForce": "2027-01-11"
-  },
-  {
-   "id": "fb90c34b94f8",
-   "src": "du",
-   "cat": "przepisy",
-   "title": "Rozporządzenie Ministra Zdrowia z dnia 1 lipca 2026 r. zmieniające rozporządzenie w sprawie Systemu Wspomagania Dowodzenia Państwowego Ratownictwa Medycznego",
-   "lead": "",
-   "url": "https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU20260000911",
-   "date": "2026-07-07",
-   "seen": "2026-10-09",
-   "addr": "Dz.U. 2026 poz. 911",
-   "type": "Rozporządzenie",
-   "kind": "zm",
-   "inForce": "2026-07-22"
-  },
-  {
-   "id": "f98f42a6a61c",
-   "src": "du",
-   "cat": "przepisy",
-   "title": "Rozporządzenie Ministra Spraw Wewnętrznych i Administracji z dnia 23 czerwca 2026 r. w sprawie włączania jednostek ochrony przeciwpożarowej do krajowego systemu ratowniczo-gaśniczego i wyłączania ich z tego systemu",
-   "lead": "",
-   "url": "https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU20260000847",
-   "date": "2026-06-25",
-   "seen": "2026-10-09",
-   "addr": "Dz.U. 2026 poz. 847",
-   "type": "Rozporządzenie",
-   "kind": "new",
-   "inForce": "2026-07-01"
-  },
-  {
-   "id": "b768a149a2dc",
-   "src": "du",
-   "cat": "przepisy",
-   "title": "Rozporządzenie Ministra Finansów i Gospodarki z dnia 28 maja 2026 r. zmieniające rozporządzenie w sprawie wysokości opłat za czynności jednostek dozoru technicznego",
-   "lead": "",
-   "url": "https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU20260000806",
-   "date": "2026-06-19",
-   "seen": "2026-10-09",
-   "addr": "Dz.U. 2026 poz. 806",
-   "type": "Rozporządzenie",
-   "kind": "zm",
-   "inForce": "2026-07-04"
   }
  ],
  "skip": [
