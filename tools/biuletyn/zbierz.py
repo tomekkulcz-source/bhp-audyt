@@ -303,7 +303,7 @@ def categorize(src, title, lead):
     return cat
 
 
-def collect_web(src, conf, known, skip):
+def collect_web(src, conf, known, skip, first_run=False):
     """Źródło typu html/rss → lista pozycji (nowe + już znane, odświeżone)."""
     words = [w.lower() for w in (src.get('only') or conf.get('slowa') or [])]
     if src['type'] == 'rss':
@@ -328,12 +328,14 @@ def collect_web(src, conf, known, skip):
             cands = from_html_list(src, text, base)
     log(f'   {len(cands)} linków ({via})')
     bez = [w.lower() for w in conf.get('bez', [])]
-    first_run = not any(it['src'] == src['id'] for it in known.values())
     out, fetched = [], 0
     for c in cands:
         iid = item_id(c['url'])
         if iid in known:
-            out.append(known[iid])
+            if first_run and known[iid].get('dateGuess'):
+                skip.add(iid)
+            else:
+                out.append(known[iid])
             continue
         if iid in skip:
             continue
@@ -441,16 +443,20 @@ def main():
         st = {k: src.get(k) for k in ('id', 'name', 'full', 'home', 'cat')}
         prev = old_status.get(src['id'], {})
         try:
-            got = collect_eli(src, conf, known) if src['type'] == 'eli' else collect_web(src, conf, known, skip)
+            got = collect_eli(src, conf, known) if src['type'] == 'eli' else collect_web(src, conf, known, skip, first_run=not prev.get('primed'))
             new = [g for g in got if g['id'] not in known]
+            if src['type'] != 'eli' and not prev.get('primed'):
+                # pierwsze zbieranie: pozycje bez daty publikacji to archiwum, nie nowości
+                for k in [k for k, it in items.items() if it['src'] == src['id'] and it.get('dateGuess')]:
+                    del items[k]
             for g in got:
                 items[g['id']] = g
-            st.update(ok=True, found=len(got), new=len(new), lastOk=TODAY.isoformat())
+            st.update(ok=True, found=len(got), new=len(new), lastOk=TODAY.isoformat(), primed=True)
             log(f'   OK: {len(got)} pozycji, nowych {len(new)}')
             for g in new[:8]:
                 log(f'   + {g["date"]} {g["title"][:110]}')
         except Exception as e:
-            st.update(ok=False, error=f'{type(e).__name__}: {e}'[:300], lastOk=prev.get('lastOk'))
+            st.update(ok=False, error=f'{type(e).__name__}: {e}'[:300], lastOk=prev.get('lastOk'), primed=prev.get('primed', False))
             log(f'   BŁĄD: {st["error"]}')
         status.append(st)
 
