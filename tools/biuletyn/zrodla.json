@@ -1,5 +1,5 @@
 {
-  "_opis": "Źródła Biuletynu BHP. Skrypt tools/biuletyn/zbierz.py czyta tę listę codziennie (GitHub Actions) i zapisuje wynik do biuletyn.json. Typy: eli = API Dziennika Ustaw (api.sejm.gov.pl), html = strona z listą wiadomości (linki pasujące do wzorca 'link'), rss = kanał RSS/Atom. Przy typie html skrypt najpierw szuka kanału RSS na stronie i używa go, jeśli jest. filter=true — przyjmowane są tylko wiadomości ze słowami z listy 'slowa' (źródła ogólne, np. ministerstwo). Zepsute źródło nie blokuje pozostałych; jego stan widać w aplikacji (Biuletyn → Źródła).",
+  "_opis": "Źródła Biuletynu BHP. Skrypt tools/biuletyn/zbierz.py czyta tę listę codziennie (GitHub Actions) i zapisuje wynik do biuletyn.json. Typy: eli = API Dziennika Ustaw (api.sejm.gov.pl), html = strona z listą wiadomości (linki pasujące do wzorca 'link'), rss = kanał RSS/Atom. Przy typie html skrypt najpierw szuka kanału RSS na stronie i używa go, jeśli jest. filter=true — przyjmowane są tylko wiadomości ze słowami z listy 'slowa' (źródła ogólne, np. ministerstwo). Zepsute źródło nie blokuje pozostałych; jego stan widać w aplikacji (Biuletyn → Źródła). need_date=true — przyjmowane są tylko linki z datą obok na liście (odsiewa pozycje menu). strip_query=true — adres bez parametrów po '?'. Wyłączone po teście (październik 2026): CIOP-PIB (strona główna bez listy aktualności), RCL (blokuje połączenia spoza Polski), ECHA (403), GIS (lista ładowana skryptem).",
   "slowa": [
     "bhp",
     "bezpieczeństw",
@@ -133,36 +133,26 @@
       "cat": "pip"
     },
     {
-      "id": "ciop",
-      "name": "CIOP-PIB",
-      "full": "Centralny Instytut Ochrony Pracy — Państwowy Instytut Badawczy",
+      "id": "udt",
+      "name": "UDT",
+      "full": "Urząd Dozoru Technicznego",
       "type": "html",
-      "url": "https://www.ciop.pl/",
-      "home": "https://www.ciop.pl/",
-      "link": "^https://(www\\.)?ciop\\.pl/.*html_tresc_root_id=\\d+",
-      "cat": "wiedza"
-    },
-    {
-      "id": "rcl",
-      "name": "RCL",
-      "full": "Rządowe Centrum Legislacji — projekty aktów prawnych",
-      "type": "html",
-      "url": "https://legislacja.gov.pl/",
-      "home": "https://legislacja.gov.pl/",
-      "link": "^https://legislacja\\.gov\\.pl/projekt/\\d+",
-      "filter": true,
-      "cat": "projekty"
+      "url": "https://www.udt.gov.pl/",
+      "home": "https://www.udt.gov.pl/",
+      "link": "^https://www\\.udt\\.gov\\.pl/aktualnosci/[a-z0-9-]{8,}$",
+      "cat": "wiadomosci"
     },
     {
       "id": "mrpips",
       "name": "MRPiPS",
       "full": "Ministerstwo Rodziny, Pracy i Polityki Społecznej",
       "type": "html",
-      "url": "https://www.gov.pl/web/rodzina/wiadomosci",
+      "url": "https://www.gov.pl/web/rodzina",
       "home": "https://www.gov.pl/web/rodzina",
-      "link": "^https://www\\.gov\\.pl/web/rodzina/(?!wiadomosci|komunikaty|ministerstwo|kontakt|mapa|dostepnosc|deklaracja)[a-z0-9-]{12,}$",
+      "link": "^https://www\\.gov\\.pl/web/rodzina/[a-z0-9-]{12,}$",
       "filter": true,
-      "cat": "wiadomosci"
+      "cat": "wiadomosci",
+      "need_date": true
     },
     {
       "id": "zus",
@@ -171,32 +161,11 @@
       "type": "html",
       "url": "https://www.zus.pl/o-zus/aktualnosci",
       "home": "https://www.zus.pl/",
-      "link": "^https://www\\.zus\\.pl/.*/-/[a-z0-9-]{8,}",
+      "link": "^https://www\\.zus\\.pl/-/[^#]{8,}",
       "filter": true,
-      "cat": "wiadomosci"
-    },
-    {
-      "id": "gis",
-      "name": "GIS",
-      "full": "Główny Inspektorat Sanitarny",
-      "type": "html",
-      "url": "https://www.gov.pl/web/gis/wiadomosci",
-      "home": "https://www.gov.pl/web/gis",
-      "link": "^https://www\\.gov\\.pl/web/gis/(?!wiadomosci|komunikaty|ostrzezenia|kontakt|mapa|dostepnosc|deklaracja)[a-z0-9-]{12,}$",
-      "filter": true,
-      "only": [
-        "pracy",
-        "pracown",
-        "chemiczn",
-        "reach",
-        "clp",
-        "biocyd",
-        "upał",
-        "promieniow",
-        "azbest",
-        "rakotwórcz"
-      ],
-      "cat": "wiadomosci"
+      "cat": "wiadomosci",
+      "strip_query": true,
+      "need_date": true
     },
     {
       "id": "osha",
@@ -207,16 +176,6 @@
       "home": "https://osha.europa.eu/pl",
       "link": "^https://osha\\.europa\\.eu/(pl|en)/(oshnews|highlights)/[a-z0-9-]{8,}",
       "cat": "ue"
-    },
-    {
-      "id": "echa",
-      "name": "ECHA",
-      "full": "Europejska Agencja Chemikaliów",
-      "type": "html",
-      "url": "https://echa.europa.eu/pl/news-and-events/news-alerts/all-news",
-      "home": "https://echa.europa.eu/pl/",
-      "link": "^https://echa\\.europa\\.eu/(pl/|en/)?.*/-/[a-z0-9-]{8,}",
-      "cat": "chemia"
     }
   ]
 }

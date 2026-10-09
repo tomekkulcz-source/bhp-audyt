@@ -28,9 +28,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Diagnostyka (tymczasowo)
-        if: github.event_name == 'push'
-        run: python3 tools/biuletyn/diag.py || true
       - name: Zbierz wiadomości
         run: python3 tools/biuletyn/zbierz.py
       - name: Zapisz zmiany

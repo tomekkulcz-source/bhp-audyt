@@ -255,13 +255,15 @@ def from_html_list(src, text, base):
     for a in p.links:
         href = urllib.parse.urljoin(base, html.unescape(a['href'].strip()))
         href = href.split('#')[0]
+        if src.get('strip_query'):
+            href = href.split('?')[0]
         if not rx.search(href):
             continue
         title = clean(a['text']) or clean(a['title'])
         if len(title) < 15:
             title = ''  # np. "Czytaj więcej" — tytuł weźmiemy ze strony artykułu
         # data często stoi tuż przy linku na liście — bierzemy najbliższą (bez tagów HTML)
-        date = None
+        date, listed = None, False
         if href not in seen:
             seen.add(href)
             i = text.find(a['href'])
@@ -269,15 +271,21 @@ def from_html_list(src, text, base):
                 before = re.sub(r'<[^>]+>', ' ', text[max(0, i - 400): i])
                 after = re.sub(r'<[^>]+>', ' ', text[i: i + 800])
                 date = find_date(before + after, near=len(before))
-        out.append({'url': href, 'title': title, 'lead': '', 'date': date})
+                # "na liście" = data tuż przed linkiem albo zaraz za nim (pozycje menu tego nie mają)
+                listed = bool(find_date(before[-250:]) or find_date(after[:160]))
+        out.append({'url': href, 'title': title, 'lead': '', 'date': date, 'listed': listed if date else False})
     # ten sam artykuł bywa podlinkowany kilka razy (obrazek + tytuł) — zostaw wersję z tytułem
     best = {}
     for it in out:
         b = best.get(it['url'])
         if b is None:
             best[it['url']] = it
-        elif not b['title'] and it['title']:
-            b['title'] = it['title']
+        else:
+            if not b['title'] and it['title']:
+                b['title'] = it['title']
+            b['listed'] = b['listed'] or it['listed']
+    if src.get('need_date'):  # pozycje menu nie mają daty na liście — artykuły mają
+        best = {u: it for u, it in best.items() if it['listed']}
     return list(best.values())[:30]
 
 
