@@ -221,6 +221,8 @@ def article_meta(url):
         body = re.sub(r'<(script|style)[\s\S]*?</\1>', ' ', text, flags=re.I)
         i = body.lower().find('<h1')
         date = find_date(clean(body[i:i + 6000] if i >= 0 else body[:20000]))
+        if date == TODAY.isoformat():
+            date = None  # wiele stron pokazuje w nagłówku dzisiejszą datę — to nie jest data publikacji
     return {'title': title, 'lead': cut(lead), 'date': date, 'url': final}
 
 
@@ -449,9 +451,16 @@ def main():
 
     cutoff = (TODAY - dt.timedelta(days=KEEP_DAYS)).isoformat()
     ids = {s['id'] for s in conf['sources']}
-    eli_ids = {s['id'] for s in conf['sources'] if s['type'] == 'eli'}
-    lst = [it for it in items.values() if it['date'] >= cutoff and it['src'] in ids
-           and (it['src'] not in eli_ids or eli_ok(it['title'], conf))]  # po zmianie słów kluczowych
+    by_id = {s['id']: s for s in conf['sources']}
+
+    def still_ok(it):  # po zmianie słów kluczowych stare pozycje też muszą spełniać filtr
+        s = by_id[it['src']]
+        if s['type'] == 'eli':
+            return eli_ok(it['title'], conf)
+        if s.get('filter'):
+            return matches(it['title'] + ' ' + it.get('lead', ''), [w.lower() for w in (s.get('only') or conf.get('slowa') or [])])
+        return True
+    lst = [it for it in items.values() if it['date'] >= cutoff and it['src'] in ids and still_ok(it)]
     lst.sort(key=lambda it: (it['date'], it.get('seen', '')), reverse=True)
     lst = lst[:MAX_ITEMS]
 

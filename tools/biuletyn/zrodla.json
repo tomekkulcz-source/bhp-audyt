@@ -152,7 +152,29 @@
       "link": "^https://www\\.gov\\.pl/web/rodzina/[a-z0-9-]{12,}$",
       "filter": true,
       "cat": "wiadomosci",
-      "need_date": true
+      "need_date": true,
+      "only": [
+        "bhp",
+        "bezpieczeństwa i higieny",
+        "higieny pracy",
+        "wypadk",
+        "inspekc",
+        "kodeks pracy",
+        "kodeksu pracy",
+        "warunki pracy",
+        "warunków pracy",
+        "ochrony pracy",
+        "ochronie pracy",
+        "czas pracy",
+        "czasu pracy",
+        "pracy zdalnej",
+        "praca zdalna",
+        "ryzyka zawodowego",
+        "chorob zawodow",
+        "chorób zawodow",
+        "prewencj",
+        "upał"
+      ]
     },
     {
       "id": "zus",
@@ -165,7 +187,19 @@
       "filter": true,
       "cat": "wiadomosci",
       "strip_query": true,
-      "need_date": true
+      "need_date": true,
+      "only": [
+        "wypadk",
+        "prewencj",
+        "bhp",
+        "bezpieczn",
+        "chorob zawodow",
+        "chorób zawodow",
+        "zdolności do pracy",
+        "dofinansowan",
+        "warunków pracy",
+        "warunki pracy"
+      ]
     },
     {
       "id": "osha",
