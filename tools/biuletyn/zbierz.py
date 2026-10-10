@@ -275,6 +275,10 @@ def from_html_list(src, text, base):
                 date = find_date(before + after, near=len(before))
                 # "na liście" = data tuż przed linkiem albo zaraz za nim (pozycje menu tego nie mają)
                 listed = bool(find_date(before[-250:]) or find_date(after[:160]))
+            if not date:  # data w nazwie pliku, np. Newsletter-bhp-20260130.pdf
+                m = re.search(r'(?<!\d)(20\d\d)(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(?!\d)', href)
+                date = valid_date(int(m[1]), int(m[2]), int(m[3])) if m else None
+                listed = bool(date)
         out.append({'url': href, 'title': title, 'lead': '', 'date': date, 'listed': listed if date else False})
     # ten sam artykuł bywa podlinkowany kilka razy (obrazek + tytuł) — zostaw wersję z tytułem
     best = {}
@@ -341,7 +345,7 @@ def collect_web(src, conf, known, skip, first_run=False):
             continue
         if fetched >= NEW_PER_SOURCE:
             continue
-        if not c['title'] or not c['lead'] or not c['date']:
+        if (not c['title'] or not c['lead'] or not c['date']) and not c['url'].lower().endswith('.pdf'):
             fetched += 1
             try:
                 m = article_meta(c['url'])

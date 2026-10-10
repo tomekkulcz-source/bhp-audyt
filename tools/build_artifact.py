@@ -9,10 +9,12 @@ Wersja na claude.ai to ten sam kod, ale:
     własną bazę — window.claude.use('db') — i sam dokłada szkielet dokumentu),
   - bez rejestracji service workera,
   - bez wbudowanych PDF-ów kompendiów (~14 MB), żeby zmieścić się w limicie rozmiaru
-    strony — w ich miejscu pojawia się informacja o wersji lokalnej.
+    strony — w ich miejscu pojawia się informacja o wersji lokalnej,
+  - z wklejonym stanem Biuletynu BHP (biuletyn.json) — claude.ai nie pozwala go pobrać z internetu.
 
 Użycie:  python3 tools/build_artifact.py [wyjście]   (domyślnie dist/bhp-audyt-claude.html)
 """
+import json
 import re
 import sys
 from pathlib import Path
@@ -43,6 +45,17 @@ def build(s: str) -> str:
                    r'[^>]*data-src="data:application/pdf;base64,[^"]*">Otwórz</button></div>', CLOUD_NOTE, s)
     if n == 0:
         raise SystemExit('Nie znaleziono PDF-ów kompendiów — sprawdź strukturę sekcji sec-kompendia.')
+    # 5) Biuletyn BHP: claude.ai blokuje pobieranie biuletyn.json z internetu, więc wklejamy jego
+    #    bieżący stan (aktualny na dzień budowania; codzienne nowości są tylko w aplikacji PWA).
+    bt = ROOT / 'biuletyn.json'
+    if bt.exists():
+        data = json.loads(bt.read_text(encoding='utf-8'))
+        data.pop('skip', None)
+        snap = json.dumps(data, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
+        marker = '<script>\n/* ---------------- Biuletyn BHP ----------------'
+        if marker not in s:
+            raise SystemExit('Nie znaleziono modułu Biuletynu BHP w index.html.')
+        s = s.replace(marker, '<script>window.WT_BT_SNAPSHOT=' + snap + ';</script>\n' + marker, 1)
     return s
 
 

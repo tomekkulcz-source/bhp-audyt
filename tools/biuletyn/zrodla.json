@@ -1,5 +1,5 @@
 {
-  "_opis": "Źródła Biuletynu BHP. Skrypt tools/biuletyn/zbierz.py czyta tę listę codziennie (GitHub Actions) i zapisuje wynik do biuletyn.json. Typy: eli = API Dziennika Ustaw (api.sejm.gov.pl), html = strona z listą wiadomości (linki pasujące do wzorca 'link'), rss = kanał RSS/Atom. Przy typie html skrypt najpierw szuka kanału RSS na stronie i używa go, jeśli jest. filter=true — przyjmowane są tylko wiadomości ze słowami z listy 'slowa' (źródła ogólne, np. ministerstwo). Zepsute źródło nie blokuje pozostałych; jego stan widać w aplikacji (Biuletyn → Źródła). need_date=true — przyjmowane są tylko linki z datą obok na liście (odsiewa pozycje menu). strip_query=true — adres bez parametrów po '?'. Wyłączone po teście (październik 2026): CIOP-PIB (strona główna bez listy aktualności), RCL (blokuje połączenia spoza Polski), ECHA (403), GIS (lista ładowana skryptem).",
+  "_opis": "Źródła Biuletynu BHP. Skrypt tools/biuletyn/zbierz.py czyta tę listę codziennie (GitHub Actions) i zapisuje wynik do biuletyn.json. Typy: eli = API Dziennika Ustaw (api.sejm.gov.pl), html = strona z listą wiadomości (linki pasujące do wzorca 'link'), rss = kanał RSS/Atom. Przy typie html skrypt najpierw szuka kanału RSS na stronie i używa go, jeśli jest. filter=true — przyjmowane są tylko wiadomości ze słowami z listy 'slowa' (źródła ogólne, np. ministerstwo). Zepsute źródło nie blokuje pozostałych; jego stan widać w aplikacji (Biuletyn → Źródła). need_date=true — przyjmowane są tylko linki z datą obok na liście (odsiewa pozycje menu). strip_query=true — adres bez parametrów po '?'. Wyłączone po teście (październik 2026): CIOP-PIB — strona główna (bez listy aktualności; zamiast niej strona newslettera), RCL (blokuje połączenia spoza Polski), ECHA (403), GIS (lista ładowana skryptem).",
   "slowa": [
     "bhp",
     "bezpieczeństw",
@@ -148,6 +148,17 @@
       "home": "https://www.pip.gov.pl/",
       "link": "^https://(www\\.)?pip\\.gov\\.pl/aktualnosci/(?!page|strona|kategori|\\?)[^?#]{6,}$",
       "cat": "pip"
+    },
+    {
+      "id": "ciop",
+      "name": "CIOP-PIB",
+      "full": "CIOP-PIB — newsletter „Bezpieczeństwo i zdrowie w pracy”",
+      "type": "html",
+      "url": "https://www.ciop.pl/newsletter-bhp",
+      "home": "https://www.ciop.pl/newsletter-bhp",
+      "link": "^https://(www\\.)?ciop\\.pl/CIOPPortalWAR/file/\\d+/[^?#]*newsletter[^?#]*\\.pdf$",
+      "need_date": true,
+      "cat": "wiedza"
     },
     {
       "id": "udt",
