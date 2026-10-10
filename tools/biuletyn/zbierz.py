@@ -9,6 +9,7 @@ Zasady:
   - źródła i słowa kluczowe są w tools/biuletyn/zrodla.json (zmiana źródła = edycja tego pliku),
   - tytuł i zajawka pochodzą wprost ze strony źródła (tytuł linku, meta description) — skrypt
     niczego nie streszcza ani nie dopisuje; każda pozycja ma link do oryginału,
+  - typy źródeł: eli (Dziennik Ustaw), html, rss, ciopnl (newslettery CIOP-PIB, artykuły z wydań), rcl (projekty w RCL),
   - błąd jednego źródła nie zatrzymuje pozostałych — trafia do sekcji "sources" w biuletyn.json,
   - plik zapisuje się tylko wtedy, gdy zmieniła się treść albo minęły 3 dni od ostatniego zapisu
     (żeby nie tworzyć codziennie pustych commitów).
@@ -223,6 +224,8 @@ def article_meta(url):
         date = find_date(clean(body[i:i + 6000] if i >= 0 else body[:20000]))
         if date == TODAY.isoformat():
             date = None  # wiele stron pokazuje w nagłówku dzisiejszą datę — to nie jest data publikacji
+    if re.match(r'(?i)\s*(witamy na stronie|strona główna|oficjalna strona)', lead or ''):
+        lead = ''  # ogólny opis serwisu, nie zajawka artykułu
     return {'title': title, 'lead': cut(lead), 'date': date, 'url': final}
 
 
@@ -428,6 +431,119 @@ def collect_eli(src, conf, known):
     return out
 
 
+ABBR = {'r', 'ds', 'ul', 'ust', 'pkt', 'tj', 'np', 'nr', 'ok', 'godz', 'tzw', 'itp', 'itd', 'm.in', 'in', 'prof', 'dr', 'hab', 'inż', 'mgr', 'poz', 'zm', 'ww', 'wg', 'tel', 'św', 'al', 'pl', 'art', 'par', 'rozp', 'dz', 'u', 'tys', 'mln', 'mld', 'zł', 'proc', 'pn', 'tzn'}
+
+
+def first_sentence(text):
+    """Pierwsze zdanie — bez cięcia po skrótach (ds., r., ust., m.in.) i liczbach porządkowych („7. numer”)."""
+    for m in re.finditer(r'[.!?](?=\s+[A-ZĄĆĘŁŃÓŚŹŻ„"])', text):
+        word = re.search(r'([\w.]+)$', text[:m.start()])
+        w = (word.group(1) if word else '').lower()
+        if m.group(0) == '.' and (w in ABBR or w.isdigit() or len(w) == 1):
+            continue
+        return text[:m.end()]
+    return text
+
+
+def collect_ciopnl(src, conf, known):
+    """Newsletter CIOP-PIB (wydania HTML, zwykle co miesiąc): strona z listą wydań → kilka najnowszych wydań →
+    każdy artykuł (nagłówek <h1>, akapit msg-news, link „Więcej”) jako osobna pozycja z datą wydania."""
+    text, base = fetch(src['url'])
+    rx = re.compile(src['issue'], re.I)
+    issues = {}
+    for m in re.finditer(r'href="([^"]+)"', text):
+        u = urllib.parse.urljoin(base, html.unescape(m.group(1)))
+        mm = rx.search(u)
+        if mm:
+            issues[u] = (int(mm.group('y')), int(mm.group('m')))
+    latest = sorted(issues.items(), key=lambda kv: kv[1], reverse=True)[:src.get('issues', 3)]
+    log(f'   {len(issues)} wydań na liście, pobieram {len(latest)}')
+    out = []
+    for iu, (y, mo) in latest:
+        try:
+            body, _ = fetch(iu)
+        except Exception as e:
+            log(f'   ! wydanie {iu}: {e}')
+            continue
+        label = f'{src.get("label", "Newsletter CIOP-PIB")} {mo}/{y}'
+        body = re.sub(r'<!--[\s\S]*?-->', ' ', body)  # warunkowe bloki Outlooka zawierają fałszywe </p>
+        toks = [(m.start(), 'h', m.group(1)) for m in re.finditer(r'<h1[^>]*>([\s\S]*?)</h1>', body)]
+        toks += [(m.start(), 'p', m.group(1)) for m in re.finditer(r'<p[^>]*class="msg-news"[^>]*>([\s\S]*?)</p>', body)]
+        toks.sort()
+        head, used = '', True
+        for pos, kind, val in toks:
+            if kind == 'h':
+                head, used = clean(re.sub(r'<[^>]+>', ' ', val)), False
+                continue
+            para = clean(re.sub(r'<[^>]+>', ' ', re.sub(r'<img[^>]*>', ' ', val)))
+            para = re.sub(r'\s+([,.;:!?)])', r'\1', re.sub(r'([(„])\s+', r'\1', para))
+            if len(para) < 30:
+                continue
+            if src.get('sections'):  # nagłówek = dział wydania, tytuł z pogrubienia albo pierwszego zdania
+                sent = first_sentence(para)
+                title = cut(sent, 150)
+                section = head
+                if len(sent) <= 150:
+                    para = para[len(sent):].strip()  # opis = reszta akapitu, bez powtórzenia tytułu
+            else:
+                if used or not head:
+                    continue
+                title, section, used = head, '', True
+            am = re.search(r'<a[^>]+href="([^"]+)"', body[pos:pos + 4000])
+            link = html.unescape(am.group(1)) if am else iu
+            iid = item_id(iu + '#' + norm(title)[:80])
+            if iid in known:
+                out.append(known[iid])
+                continue
+            if matches(title, [w.lower() for w in conf.get('bez', [])]):
+                continue
+            out.append({'id': iid, 'src': src['id'], 'cat': 'chemia' if src.get('cat') == 'chemia' else categorize(src, title, ''),
+                        'title': title, 'lead': cut(para) if para and norm(para) != norm(title) else '', 'url': link,
+                        'issue': label + (' · ' + section if section else ''), 'issueUrl': iu,
+                        'date': f'{y:04d}-{mo:02d}-01', 'seen': TODAY.isoformat()})
+        time.sleep(0.5)
+    return out
+
+
+def collect_rcl(src, conf, known):
+    """Projekty aktów w RCL (legislacja.gov.pl): wyszukiwanie po słowach w tytule, lista posortowana od najnowszych."""
+    since = (TODAY - dt.timedelta(days=src.get('days', 240))).isoformat()
+    seen, out = set(), []
+    for q in src['queries']:
+        try:
+            text, base = fetch(src['url'] + urllib.parse.quote(q))
+        except Exception as e:
+            log(f'   ! {q}: {e}')
+            continue
+        for row in re.findall(r'<tr[^>]*>([\s\S]*?)</tr\s*>', text):
+            pm = re.search(r'href="(/projekt/\d+)"[^>]*>([\s\S]*?)</a>', row)
+            dates = re.findall(r'(\d{2})-(\d{2})-(20\d\d)', row)
+            if not pm or not dates:
+                continue
+            url = urllib.parse.urljoin(base, pm.group(1))
+            if url in seen:
+                continue
+            seen.add(url)
+            created = f'{dates[0][2]}-{dates[0][1]}-{dates[0][0]}'
+            modified = f'{dates[-1][2]}-{dates[-1][1]}-{dates[-1][0]}'
+            if created < since:
+                continue
+            title = clean(re.sub(r'<[^>]+>', ' ', pm.group(2)))
+            if not eli_ok(title, conf):
+                continue
+            am = re.search(r'href="/lista\?applicantId=\d+"[^>]*>([\s\S]*?)</a>', row)
+            applicant = clean(re.sub(r'<[^>]+>', ' ', am.group(1))) if am else ''
+            iid = item_id(url)
+            it = dict(known.get(iid) or {'seen': TODAY.isoformat()})
+            it.update({'id': iid, 'src': src['id'], 'cat': 'projekty', 'title': title,
+                       'lead': ('Wnioskodawca: ' + applicant + '. ' if applicant else '') + 'Utworzony ' + created[8:10] + '.' + created[5:7] + '.' + created[:4]
+                               + ('; ostatnia zmiana ' + modified[8:10] + '.' + modified[5:7] + '.' + modified[:4] if modified != created else '') + '.',
+                       'url': url, 'date': created, 'modified': modified})
+            out.append(it)
+        time.sleep(0.5)
+    return out
+
+
 def main():
     dry = '--dry-run' in sys.argv
     conf = json.loads(CONF.read_text(encoding='utf-8'))
@@ -447,7 +563,14 @@ def main():
         st = {k: src.get(k) for k in ('id', 'name', 'full', 'home', 'cat')}
         prev = old_status.get(src['id'], {})
         try:
-            got = collect_eli(src, conf, known) if src['type'] == 'eli' else collect_web(src, conf, known, skip, first_run=not prev.get('primed'))
+            if src['type'] == 'eli':
+                got = collect_eli(src, conf, known)
+            elif src['type'] == 'ciopnl':
+                got = collect_ciopnl(src, conf, known)
+            elif src['type'] == 'rcl':
+                got = collect_rcl(src, conf, known)
+            else:
+                got = collect_web(src, conf, known, skip, first_run=not prev.get('primed'))
             new = [g for g in got if g['id'] not in known]
             if src['type'] != 'eli' and not prev.get('primed'):
                 # pierwsze zbieranie: pozycje bez daty publikacji to archiwum, nie nowości
@@ -472,6 +595,8 @@ def main():
         s = by_id[it['src']]
         if s['type'] == 'eli':
             return eli_ok(it['title'], conf)
+        if s['type'] in ('ciopnl', 'rcl'):
+            return not matches(it['title'], [w.lower() for w in conf.get('bez', [])])
         if matches(it['title'], [w.lower() for w in conf.get('bez', [])]):
             return False
         if s.get('filter'):
