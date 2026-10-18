@@ -1348,6 +1348,16 @@ html[data-theme="dark"] .wt-modesw button[aria-pressed="true"]{color:#140806;}
 .wt-masz-actf>span{font-size:11.5px;color:var(--ink-soft);font-weight:550;}
 .wt-masz-actchk{display:flex;flex-direction:column;gap:4px;font-size:13px;justify-content:center;}
 .wt-masz-assess{margin:14px 0 6px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);}
+.wt-masz-sub{margin:14px 0 8px;font-size:14px;}
+.wt-masz-inc{padding:10px 12px;border:1px dashed var(--line-strong);border-radius:var(--r-sm);}
+.wt-masz-inc.open{border:1px solid var(--crit);border-left-width:4px;}
+.wt-masz-opst{grid-column:1/-1;display:flex;flex-direction:column;gap:3px;}
+.wt-masz-opst:empty{display:none;}
+.wt-masz-opline{display:flex;gap:7px;align-items:baseline;font-size:12.5px;color:var(--ink-soft);}
+.wt-masz-opline .dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--ink-faint);transform:translateY(1px);}
+.wt-masz-opline.crit{color:var(--crit);font-weight:600;}.wt-masz-opline.crit .dot{background:var(--crit);}
+.wt-masz-opline.high .dot{background:var(--high);}.wt-masz-opline.med .dot{background:var(--med);}
+.wt-masz-opline.low .dot{background:var(--low);}.wt-masz-opline.blue .dot{background:var(--accent);}
 .wt-masz-wsi{margin:6px 0 8px;padding:10px 12px;border:1px dashed var(--line-strong);border-radius:var(--r-sm);}
 .wt-masz-hint{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:var(--r-sm);font-size:13px;}
 .wt-masz-hint span{flex:1 1 320px;min-width:0;}
@@ -1357,6 +1367,7 @@ html[data-theme="dark"] .wt-modesw button[aria-pressed="true"]{color:#140806;}
 #rj-print-host table.wt-masz-pt{table-layout:auto;}
 #rj-print-host table.wt-masz-pt th:first-child,#rj-print-host table.wt-masz-pt td:first-child{width:auto;text-align:left;}
 #rj-print-host table.wt-masz-pt td:last-child{white-space:nowrap;}
+#rj-print-host table.wt-masz-pt td.wt-masz-wrap{white-space:normal;width:48%;}
 .wt-masz-signrow{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:28px;font-size:10.5px;text-align:center;}
 .wt-masz-signrow>div{border-top:1px solid #999;padding-top:6px;}
 .wt-masz-signrow span{color:#777;font-size:9.5px;}
@@ -9714,6 +9725,10 @@ window.__WT_FIREBASE_CONFIG__ = {
     <p class="small" style="margin:0 0 12px;color:var(--ink-faint);">Dotyczy każdej maszyny, także sprzed 2003 r. Pracodawca udostępnia pracownikom do stałego korzystania aktualne instrukcje bhp dotyczące obsługi maszyn (§ 41 ust. 1 pkt 2 rozp. MPiPS z 26.09.1997 r.) i zapewnia dostęp do pisemnych instrukcji użytkowania maszyn, zrozumiałych dla pracowników (§ 30 rozp. MG z 30.10.2002 r.).</p>
     <div id="maszInstr"></div>
 
+    <h3 style="margin:26px 0 4px;font-size:17px;">Dozór techniczny (UDT)</h3>
+    <p class="small" style="margin:0 0 12px;color:var(--ink-faint);">Rodzaj urządzenia podpowiada formę dozoru, terminy badań i przeglądów konserwacyjnych oraz wymagane zaświadczenie operatora. Terminy trafiają do terminarza i do „Terminów przeglądów” klienta.</p>
+    <div id="maszUdt"></div>
+
     <h3 style="margin:26px 0 4px;font-size:17px;">Dokumentacja maszyny</h3>
     <p class="small" style="margin:0 0 12px;color:var(--ink-faint);">Dotyczy maszyn wprowadzanych do obrotu po spełnieniu zasadniczych wymagań (dyrektywa maszynowa / rozp. MG z 21.10.2008 r.). Sprawdź, czy dokumentacja dostarczona z maszyną jest kompletna.</p>
     <div class="wt-wyp-defcard" style="margin:0 0 16px;">
@@ -9743,6 +9758,7 @@ window.__WT_FIREBASE_CONFIG__ = {
     <div id="maszAttachments" style="margin-bottom:20px;"></div>
 
     <h3 style="margin:22px 0 10px;font-size:17px;">Osoby upoważnione do obsługi</h3>
+    <div id="maszReqPermit"></div>
     <div id="maszAuthorizedOperators" style="margin-bottom:10px;"></div>
     <button class="wt-btn" onclick="window.wtMaszAddRow('authorizedOperators')" style="margin-bottom:20px;">+ Dodaj osobę</button>
 
@@ -16029,6 +16045,12 @@ document.addEventListener('keydown', e=>{
         out.push({date:a.due, kind:'review', tag:'z Maszyn', title:'Usunięcie niezgodności: '+(mm.name||'maszyna')+sfx+(a.action?' — '+a.action:''), color:client?client.color:null, pid:client?client.id:null, nav:{section:'maszyny', openFn:'wtMaszOpen', id:mm.id}}); });
       if((mm.instrAnswers||{}).wsi==='TAK' && mm.wsi && mm.wsi.review)
         out.push({date:mm.wsi.review, kind:'review', tag:'z Maszyn', title:'Przegląd instrukcji stanowiskowej: '+(mm.name||'maszyna')+sfx, color:client?client.color:null, pid:client?client.id:null, nav:{section:'maszyny', openFn:'wtMaszOpen', id:mm.id}});
+      const u = mm.udt||{}, nav = {section:'maszyny', openFn:'wtMaszOpen', id:mm.id}, base = {kind:'review', tag:'z Maszyn', color:client?client.color:null, pid:client?client.id:null, nav};
+      if(u.on){
+        if(u.form!=='U' && u.nextExam) out.push(Object.assign({date:u.nextExam, title:'Badanie UDT: '+(mm.name||'urządzenie')+sfx}, base));
+        const nm = udtNextMaint(mm); if(nm.next) out.push(Object.assign({date:nm.next, title:'Przegląd konserwacyjny UDT: '+(mm.name||'urządzenie')+sfx}, base));
+        if(u.maintValid) out.push(Object.assign({date:u.maintValid, title:'Koniec ważności zaświadczenia konserwatora: '+(mm.name||'urządzenie')+sfx}, base));
+      }
     });
     return out;
   }
@@ -17157,6 +17179,14 @@ document.addEventListener('keydown', e=>{
           +'<span class="title">'+esc(cat.label)+' — z modułu PPOŻ</span><span class="count">'+(nChecked?nChecked+' ręcznie':'PPOŻ')+'</span></div>'
           +'<div class="cat-body wt-ryz-catbody">'+window.wtPrzPpozPanel((przState.current&&przState.current.projectId)||'')+legacy+'</div></div>';
       }
+      /* badania UDT są prowadzone w teczkach maszyn (sekcja „Dozór techniczny”) — tu ich stan */
+      if(cat.id==='udt' && window.wtPrzUdtPanel){
+        const legacy = cat.items.filter(it=>checkedIds.has(it.id)).map(it=>'<label class="wt-ryz-item"><input type="checkbox" data-przitem="'+it.id+'" checked><span><b>'+esc(it.n)+'</b><small>wpisane ręcznie na tej karcie — odznacz po wpisaniu urządzenia w Maszynach</small></span></label>').join('');
+        return '<div class="cat" data-cat="'+esc(cat.label)+'"><div class="cat-head" onclick="toggleCat(this)">'
+          +'<span class="chev"><svg class="ic" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>'
+          +'<span class="title">'+esc(cat.label)+' — z teczek maszyn</span><span class="count">'+(nChecked?nChecked+' ręcznie':'Maszyny')+'</span></div>'
+          +'<div class="cat-body wt-ryz-catbody">'+window.wtPrzUdtPanel((przState.current&&przState.current.projectId)||'')+legacy+'</div></div>';
+      }
       const itemsHtml = cat.items.map(it=>
         '<label class="wt-ryz-item">'
         +'<input type="checkbox" data-przitem="'+it.id+'"'+(checkedIds.has(it.id)?' checked':'')+'>'
@@ -17458,7 +17488,7 @@ document.addEventListener('keydown', e=>{
       initialControlDate:'', initialControlResult:'', controlFrequency:'', lastControlDate:'', nextControlDate:'',
       specialControlNotes:'', notes:'', mwAnswers:{}, docAnswers:{},
       faultHistory:[], maintenanceLog:[], authorizedOperators:[], attachments:[],
-      inventoryNumber:'', location:'', instrAnswers:{}, wsi:{}, mwActions:{}, assessDate:'', assessTeam:'', assessResult:'',
+      inventoryNumber:'', location:'', instrAnswers:{}, wsi:{}, mwActions:{}, udt:{}, requiredPermit:'', assessDate:'', assessTeam:'', assessResult:'',
       createdAt:Date.now(), updatedAt:Date.now()};
     DB.collection('machines').add(data).then(ref=>{
       maszState.current = Object.assign({id:ref.id}, data);
@@ -17483,6 +17513,7 @@ document.addEventListener('keydown', e=>{
     maszState.current.instrAnswers = maszState.current.instrAnswers||{};
     maszState.current.wsi = maszState.current.wsi||{};
     maszState.current.mwActions = maszState.current.mwActions||{};
+    maszState.current.udt = maszState.current.udt||{};
     maszState.view='editor';
     document.getElementById('maszList').style.display='none';
     document.getElementById('maszEditor').style.display='';
@@ -17556,6 +17587,7 @@ document.addEventListener('keydown', e=>{
     }
     if(typedKey==='nextControlDate') maszState.current.nextAuto = false;
     if(typedKey==='yearBuilt' || typedKey==='dateAcquired') renderMaszLegacyHint();
+    if(typedKey==='projectId'){ renderMaszRowLists(); renderMaszOpPermit(); setTimeout(renderMaszWarnings, 0); }
     if(typedKey==='assessResult' || typedKey==='lastControlDate' || typedKey==='nextControlDate' || typedKey==='controlFrequency') setTimeout(renderMaszWarnings, 0);
     if(key==='nextControlDate'){
       const pill = document.getElementById('maszCtrlPill');
@@ -17613,6 +17645,11 @@ document.addEventListener('keydown', e=>{
     const row = (maszState.current[field]||[]).find(r=>r.id===rowId);
     if(!row) return;
     row[key] = value;
+    if(field==='authorizedOperators' && key==='name'){
+      if(row.empId){ const e = allEmployees.find(x=>x.id===row.empId); if(!e || !wtEmpNameKeys(e).includes(wtNormName(value))) delete row.empId; }
+      const st = document.querySelector('.wt-masz-opst[data-op="'+rowId+'"]'); if(st) st.innerHTML = maszOpStatusHtml(maszState.current, row);
+      renderMaszWarnings();
+    }
     scheduleSaveMasz();
   };
   function maszRowListHtml(field, columns){
@@ -17635,6 +17672,7 @@ document.addEventListener('keydown', e=>{
             : '<input class="wt-input" style="width:100%;" type="'+(c.type==='date'?'date':'text')+'"'+(field==='authorizedOperators'&&c.key==='name'?' list="wtMaszEmpList" placeholder="Wybierz z kartoteki lub wpisz"':'')+' value="'+esc(val)+'" oninput="window.wtMaszRowField(\''+field+'\',\''+row.id+'\',\''+c.key+'\',this.value)">';
           return '<div><label class="small" style="display:block;margin-bottom:4px;color:var(--ink-soft);">'+esc(c.label)+'</label>'+inputHtml+'</div>';
         }).join('')
+      + (field==='authorizedOperators' ? '<div class="wt-masz-opst" data-op="'+row.id+'">'+maszOpStatusHtml(maszState.current, row)+'</div>' : '')
       + '</div>'
     ).join('');
   }
@@ -17802,6 +17840,8 @@ document.addEventListener('keydown', e=>{
     document.getElementById('maszSaveStatus').className='wt-rj-status';
     renderMaszChecklists();
     renderMaszInstr();
+    renderMaszUdt();
+    renderMaszOpPermit();
     renderMaszRowLists();
     renderMaszAttachments();
     renderMaszPhotos();
@@ -17848,6 +17888,295 @@ document.addEventListener('keydown', e=>{
       + '<div class="wt-pz-actions" style="justify-content:flex-start"><button class="wt-btn" type="button" onclick="wtRjDownloadTemplate(\'e2_3_instrukcja_stanowiskowa\')">Pobierz wzór instrukcji stanowiskowej (E.2–E.3)</button></div>';
   }
   window.wtMaszWsi = function(k, v){ const m = maszState.current; if(!m) return; m.wsi = Object.assign({}, m.wsi||{}, {[k]: v}); scheduleSaveMasz(); renderMaszWarnings(); };
+  /* ===== Dozór techniczny (UDT) w teczce maszyny =====
+     Rodzaje, forma dozoru i terminy badań — rozp. MPiT z 30.10.2018 r. w sprawie warunków technicznych dozoru
+     technicznego w zakresie eksploatacji urządzeń transportu bliskiego (Dz.U. 2018 poz. 2176), zał. 1 (forma dozoru,
+     badania okresowe przy dozorze pełnym / kontrolne doraźne przy ograniczonym) i zał. 2 (przeglądy konserwacyjne).
+     f: P = pełny, O = ograniczony, U = uproszczony; ex = badanie co ile miesięcy (0 = brak badań); mt = przegląd
+     konserwacyjny co ile dni (0 = wg DTR); op = kategoria zaświadczenia operatora (rozp. MPiT z 21.05.2019 r.,
+     Dz.U. 2019 poz. 1008, zał. 3 tab. 1), kw = słowa do dopasowania uprawnień z kartoteki. */
+  const UDT_TYPES = [
+    {k:'u1', n:'Urządzenie transportu bliskiego w wykonaniu przeciwwybuchowym', f:'P', ex:12, mt:30},
+    {k:'u2', n:'UTB o udźwigu do 250 kg (bez dźwigów i urządzeń do przemieszczania osób)', f:'U', ex:0, mt:0},
+    {k:'u3', n:'Wciągnik / wciągarka ogólnego przeznaczenia, ręczne, do 2000 kg', f:'U', ex:0, mt:90},
+    {k:'u4', n:'Wciągnik / wciągarka ogólnego przeznaczenia, ręczne, powyżej 2000 kg', f:'O', ex:36, mt:90, op:'UDT — wciągniki i wciągarki', kw:['wciag','suwnic']},
+    {k:'u5', n:'Wciągnik / wciągarka ogólnego przeznaczenia z napędem mechanicznym', f:'O', ex:24, mt:30, op:'UDT — wciągniki i wciągarki', kw:['wciag','suwnic']},
+    {k:'u6', n:'Wciągnik elektryczny jednofazowy do 1000 kg', f:'U', ex:0, mt:0},
+    {k:'u7', n:'Wciągnik / wciągarka specjalnego przeznaczenia', f:'P', ex:12, mt:30, op:'UDT — wciągniki i wciągarki specjalnego przeznaczenia', kw:['wciag','suwnic'], scope:'specjal'},
+    {k:'u8', n:'Przeciągarka pojazdów szynowych', f:'P', ex:12, mt:30},
+    {k:'u9', n:'Suwnica ręczna', f:'O', ex:24, mt:90, op:'UDT — suwnice', kw:['suwnic']},
+    {k:'u10', n:'Suwnica ogólnego przeznaczenia z napędem mechanicznym', f:'P', ex:24, mt:30, op:'UDT — suwnice', kw:['suwnic']},
+    {k:'u11', n:'Suwnica specjalnego przeznaczenia', f:'P', ex:12, mt:30, op:'UDT — suwnice specjalnego przeznaczenia', kw:['suwnic'], scope:'specjal'},
+    {k:'u12', n:'Żuraw ręczny do 2000 kg', f:'U', ex:0, mt:90},
+    {k:'u13', n:'Żuraw ręczny powyżej 2000 kg', f:'O', ex:36, mt:90, op:'UDT — żurawie', kw:['zuraw']},
+    {k:'u14', n:'Żuraw samojezdny, wieżowy, szybkomontujący, szynowy lub przenośny powyżej 3200 kg', f:'P', ex:12, mt:30, op:'UDT — żurawie', kw:['zuraw']},
+    {k:'u15', n:'Żuraw przenośny (pozostały), przewoźny lub stacjonarny', f:'O', ex:24, mt:60, op:'UDT — żurawie', kw:['zuraw']},
+    {k:'u16', n:'Układnica magazynowa', f:'P', ex:12, mt:30, op:'UDT — układnice', kw:['ukladnic']},
+    {k:'u17', n:'Wyciąg towarowy', f:'O', ex:24, mt:90, op:'UDT — wyciągi towarowe', kw:['wyciag','dzwig']},
+    {k:'u18', n:'Podest ruchomy przejezdny', f:'P', ex:12, mt:30, op:'UDT — podesty ruchome przejezdne', kw:['podest'], scope:'przejezd'},
+    {k:'u19', n:'Podest ruchomy wiszący', f:'P', ex:12, mt:30, op:'UDT — podesty ruchome wiszące', kw:['podest']},
+    {k:'u20', n:'Podest ruchomy masztowy', f:'P', ex:12, mt:30, op:'UDT — podesty ruchome masztowe', kw:['podest']},
+    {k:'u21', n:'Podest ruchomy stacjonarny', f:'O', ex:24, mt:60, op:'UDT — podesty ruchome stacjonarne', kw:['podest']},
+    {k:'u22', n:'Podest załadowczy (rampa)', f:'O', ex:36, mt:180},
+    {k:'u23', n:'Urządzenie do transportu osób niepełnosprawnych', f:'P', ex:24, mt:30},
+    {k:'u24', n:'Schody lub chodnik ruchomy', f:'P', ex:12, mt:30},
+    {k:'u25', n:'Przenośnik okrężny', f:'P', ex:12, mt:30},
+    {k:'u26', n:'Dźwig osobowy lub towarowy', f:'P', ex:12, mt:30},
+    {k:'u27', n:'Dźwig towarowy mały', f:'P', ex:36, mt:60},
+    {k:'u28', n:'Dźwig budowlany towarowo-osobowy', f:'P', ex:12, mt:30, op:'UDT — dźwigi budowlane', kw:['dzwig']},
+    {k:'u29', n:'Dźwig budowlany towarowy', f:'O', ex:24, mt:30, op:'UDT — dźwigi budowlane', kw:['dzwig']},
+    {k:'u30', n:'Dźwignica linotorowa', f:'P', ex:12, mt:30, op:'UDT — dźwignice linotorowe', kw:['linotor']},
+    {k:'u31', n:'Urządzenie do przemieszczania kontenerów', f:'P', ex:12, mt:30, op:'UDT — urządzenia do kontenerów', kw:['kontener']},
+    {k:'u32', n:'Dźwignik, pod którym mogą przebywać osoby (np. podnośnik samochodowy)', f:'P', ex:12, mt:90},
+    {k:'u33', n:'Dźwignik stały lub przewoźny / przenośny do podnoszenia całych pojazdów', f:'O', ex:24, mt:180},
+    {k:'u34', n:'Dźwignik przenośny (pozostały) powyżej 2 t', f:'O', ex:36, mt:180},
+    {k:'u35', n:'Dźwignik przenośny (pozostały) do 2 t', f:'U', ex:0, mt:180},
+    {k:'u36', n:'Wózek jezdniowy podnośnikowy z wysięgnikiem', f:'P', ex:12, mt:30, op:'UDT — wózki jezdniowe podnośnikowe z wysięgnikiem', kw:['wozk'], scope:'wysieg'},
+    {k:'u37', n:'Wózek jezdniowy podnośnikowy z osobą obsługującą podnoszoną wraz z ładunkiem', f:'P', ex:12, mt:30, op:'UDT — wózki jezdniowe podnośnikowe z osobą podnoszoną', kw:['wozk'], scope:'wysieg|podnoszon'},
+    {k:'u38', n:'Wózek jezdniowy podnośnikowy (widłowy) podestowy lub z siedziskiem', f:'P', ex:12, mt:30, op:'UDT — wózki jezdniowe podnośnikowe', kw:['wozk']},
+    {k:'u39', n:'Wózek jezdniowy podnośnikowy prowadzony lub zdalnie sterowany', f:'O', ex:24, mt:60, op:'UDT — wózki jezdniowe podnośnikowe', kw:['wozk']},
+    {k:'u40', n:'Przenośnik kabinowy / krzesełkowy / platformowy do celów rekreacyjnych', f:'P', ex:12, mt:30},
+    {k:'cisn', n:'Urządzenie ciśnieniowe (zbiornik sprężarki, kocioł, butla, autoklaw)', f:'', ex:0, mt:0},
+    {k:'inne', n:'Inne urządzenie pod dozorem (wpisz terminy z decyzji)', f:'', ex:0, mt:0}
+  ];
+  const UDT_FORMS = {P:'pełny', O:'ograniczony', U:'uproszczony'};
+  window.UDT_TYPES = UDT_TYPES;
+  const udtType = k=>UDT_TYPES.find(t=>t.k===k) || null;
+  const udtAddDays = (iso, days)=>{ const d = new Date(iso+'T00:00:00'); if(!iso || isNaN(d) || !days) return ''; d.setDate(d.getDate()+days); return calIso(d.getFullYear(), d.getMonth(), d.getDate()); };
+  const udtAddMonths = (iso, months)=>{ const d = new Date(iso+'T00:00:00'); if(!iso || isNaN(d) || !months) return ''; d.setMonth(d.getMonth()+months); return calIso(d.getFullYear(), d.getMonth(), d.getDate()); };
+  /* kolejny przegląd konserwacyjny: z ostatniego wpisu konserwacji (lub pola udt.lastMaint) + okres z zał. 2 */
+  function udtNextMaint(m){
+    const u = m.udt||{}, t = udtType(u.type); const days = +u.maintDays || (t && t.mt) || 0;
+    const last = [u.lastMaint].concat((m.maintenanceLog||[]).map(r=>r.date)).filter(Boolean).sort().pop() || '';
+    return {last, days, next: last && days ? udtAddDays(last, days) : ''};
+  }
+  window.wtUdtNextMaint = udtNextMaint;
+  function udtIssues(m){
+    const u = m.udt||{}; if(!u.on) return [];
+    const out = [], today = wtTodayIso(), soon = udtAddDays(today, 30);
+    const inc = u.incident||{};
+    if(inc.date && !inc.readmitDate){
+      out.push({cls:'crit', key:'udtinc', text:'Zdarzenie z '+fmtDatePL(inc.date)+(inc.notified?'':' — zawiadom UDT niezwłocznie (art. 19 ust. 1 ustawy o dozorze technicznym)')+'; urządzenie nie wróciło do eksploatacji'});
+    }
+    if(!u.type) out.push({cls:'med', key:'udttype', text:'Dozór UDT: wybierz rodzaj urządzenia'});
+    if((u.form==='P' || u.form==='O') && !u.decNo && !u.decDate) out.push({cls:'crit', key:'udtdec', text:'Brak decyzji UDT zezwalającej na eksploatację (dozór '+UDT_FORMS[u.form]+' — art. 14 ust. 1 ustawy o dozorze technicznym)'});
+    if(u.form!=='U' && u.nextExam){
+      if(u.nextExam < today) out.push({cls:'crit', key:'udtexam', text:'Badanie UDT po terminie ('+fmtDatePL(u.nextExam)+')'});
+      else if(u.nextExam <= soon) out.push({cls:'high', key:'udtexam', text:'Badanie UDT do '+fmtDatePL(u.nextExam)+' — umów inspektora'});
+    } else if((u.form==='P' || u.form==='O') && !u.nextExam) out.push({cls:'med', key:'udtexam', text:'Dozór UDT: brak terminu następnego badania'});
+    const nm = udtNextMaint(m);
+    if(nm.next && nm.next < today) out.push({cls:'high', key:'udtmaint', text:'Przegląd konserwacyjny po terminie (ostatni '+fmtDatePL(nm.last)+', co '+nm.days+' dni)'});
+    if(u.form && u.form!=='U' && !nm.last) out.push({cls:'med', key:'udtmaint', text:'Brak daty ostatniego przeglądu konserwacyjnego'});
+    if(u.maintValid && u.maintValid < today) out.push({cls:'high', key:'udtmcert', text:'Upłynęła ważność zaświadczenia konserwatora ('+fmtDatePL(u.maintValid)+')'});
+    return out;
+  }
+  window.wtUdtIssues = udtIssues;
+  function renderMaszUdt(){
+    const el = document.getElementById('maszUdt'); const m = maszState.current; if(!el || !m) return;
+    const u = m.udt || {}, t = udtType(u.type), nm = udtNextMaint(m);
+    const fi = (k, label, type, ph, extra)=>'<div><label>'+label+'</label>'+(type==='date'
+      ? '<span class="wt-date-wrap"><input class="wt-input" type="date" data-udt="'+k+'" value="'+esc(u[k]||'')+'" oninput="window.wtMaszUdt(\''+k+'\',this.value)"><button type="button" class="wt-date-clear" title="Wyczyść datę" onclick="window.wtClearDateInput(this)">×</button></span>'
+      : '<input class="wt-input" style="width:100%;" data-udt="'+k+'" value="'+esc(u[k]||'')+'" placeholder="'+esc(ph||'')+'" oninput="window.wtMaszUdt(\''+k+'\',this.value)">')+(extra||'')+'</div>';
+    let h = '<div class="wt-masz-flags"><label><input type="checkbox" '+(u.on?'checked ':'')+'onchange="window.wtMaszUdt(\'on\',this.checked)"> Urządzenie podlega dozorowi technicznemu (UDT, TDT lub WDT)</label></div>';
+    if(!u.on){ el.innerHTML = h + '<p class="small" style="margin:0 0 6px;color:var(--ink-faint);">Zaznacz dla wózków widłowych, suwnic, wciągników, żurawi, podestów ruchomych, dźwigów, podnośników samochodowych, zbiorników ciśnieniowych itp.</p>'; return; }
+    const groups = [['Urządzenia transportu bliskiego', UDT_TYPES.filter(x=>/^u/.test(x.k))], ['Pozostałe', UDT_TYPES.filter(x=>!/^u/.test(x.k))]];
+    h += '<div class="wt-rj-fields">'
+      + '<div style="grid-column:1/-1"><label>Rodzaj urządzenia</label><select class="status-select" style="width:100%;" onchange="window.wtMaszUdt(\'type\',this.value)"><option value="">— wybierz —</option>'
+      + groups.map(([g, L])=>'<optgroup label="'+esc(g)+'">'+L.map(x=>'<option value="'+x.k+'"'+(x.k===u.type?' selected':'')+'>'+esc(x.n)+'</option>').join('')+'</optgroup>').join('')+'</select></div>'
+      + '<div><label>Forma dozoru</label><select class="status-select" style="width:100%;" onchange="window.wtMaszUdt(\'form\',this.value)"><option value="">— wybierz —</option>'
+      + Object.keys(UDT_FORMS).map(f=>'<option value="'+f+'"'+(f===u.form?' selected':'')+'>'+UDT_FORMS[f]+'</option>').join('')+'</select></div>'
+      + fi('regNo', 'Numer ewidencyjny UDT', 'text', 'z tabliczki / decyzji')
+      + '</div>';
+    if(t && /^u/.test(t.k)){
+      h += '<div class="wt-masz-hint" style="margin:0 0 10px"><span>Wg zał. 1 i 2 rozp. MPiT z 30.10.2018 r. (Dz.U. poz. 2176): dozór <b>'+UDT_FORMS[t.f]+'</b>'
+        + (t.ex ? ', badanie '+(t.f==='P'?'okresowe':'doraźne kontrolne')+' co <b>'+(t.ex%12?t.ex+' mies.':(t.ex/12===1?'rok':t.ex/12+' lata'))+'</b>' : ', bez badań UDT')
+        + (t.mt ? ', przegląd konserwacyjny co <b>'+t.mt+' dni</b>' : ', przeglądy konserwacyjne wg DTR producenta')
+        + '. UDT może decyzją skrócić te terminy — jeśli protokół lub decyzja podaje inną datę, wpisz ją ręcznie.</span></div>';
+    } else if(u.type==='cisn' || u.type==='inne'){
+      h += '<div class="wt-masz-hint" style="margin:0 0 10px"><span>Formę dozoru i terminy badań dla tego urządzenia określa decyzja i protokół UDT — wpisz je z dokumentów.</span></div>';
+    }
+    if(u.form==='U'){
+      h += '<p class="small" style="margin:0 0 10px;color:var(--ink-faint);">Dozór uproszczony: urządzenie nie wymaga decyzji zezwalającej na eksploatację ani badań UDT (art. 15 ust. 1 ustawy o dozorze technicznym) — wymaga dokumentacji, oznakowania i konserwacji wg DTR.</p>';
+    } else {
+      h += '<h4 class="wt-masz-sub">Decyzja i badania</h4><div class="wt-rj-fields">'
+        + fi('decNo', 'Nr decyzji zezwalającej na eksploatację', 'text', 'np. N-1234/2024')
+        + fi('decDate', 'Data decyzji', 'date')
+        + fi('lastExam', 'Data ostatniego badania UDT', 'date')
+        + '<div><label>Rodzaj ostatniego badania</label><select class="status-select" style="width:100%;" onchange="window.wtMaszUdt(\'lastExamType\',this.value)"><option value="">— wybierz —</option>'
+        + ['odbiorcze','okresowe','doraźne kontrolne','doraźne eksploatacyjne','doraźne powypadkowe / poawaryjne'].map(x=>'<option'+(x===u.lastExamType?' selected':'')+'>'+x+'</option>').join('')+'</select></div>'
+        + fi('nextExam', 'Termin następnego badania', 'date', '', '<div class="small" style="margin-top:4px;color:var(--ink-faint);">'+(u.nextAuto && u.nextExam ? 'Wyliczone z rodzaju urządzenia — zmień, jeśli UDT wyznaczył inny termin.' : 'Z protokołu badania lub decyzji UDT.')+'</div>')
+        + fi('bookPlace', 'Księga rewizyjna — gdzie przechowywana', 'text', 'np. dział techniczny, segregator UDT')
+        + '</div><p class="small" style="margin:0 0 10px;color:var(--ink-faint);">Księga rewizyjna to zbiór protokołów UDT dla urządzenia (art. 33 ust. 3 ustawy o dozorze technicznym). Naprawa lub modernizacja urządzenia pod dozorem pełnym lub ograniczonym wymaga wcześniejszego uzgodnienia z UDT (art. 17 ust. 1).</p>';
+    }
+    h += '<h4 class="wt-masz-sub">Konserwacja</h4><div class="wt-rj-fields">'
+      + fi('maintainer', 'Konserwujący (firma lub osoba)', 'text')
+      + fi('maintCert', 'Nr zaświadczenia kwalifikacyjnego konserwatora', 'text')
+      + fi('maintValid', 'Zaświadczenie konserwatora ważne do', 'date')
+      + fi('lastMaint', 'Ostatni przegląd konserwacyjny', 'date', '', '<div class="small" style="margin-top:4px;color:var(--ink-faint);">Albo wpisz go niżej w „Historii konserwacji” — liczy się najnowsza data.</div>')
+      + fi('maintDays', 'Przegląd konserwacyjny co (dni)', 'text', t && t.mt ? String(t.mt) : 'wg DTR')
+      + '<div><label>Następny przegląd konserwacyjny</label><div style="padding:8px 0">'+(nm.next ? wtPrzStatusPillHtml(nm.next) : '<span class="small" style="color:var(--ink-faint)">wpisz datę ostatniego przeglądu</span>')+'</div></div>'
+      + '</div><p class="small" style="margin:0 0 10px;color:var(--ink-faint);">Dziennik konserwacji prowadzi konserwujący — może być elektroniczny (§ 7 ust. 2 rozp. MPiT z 30.10.2018 r.).</p>';
+    const inc = u.incident || {};
+    h += '<h4 class="wt-masz-sub">Niebezpieczne uszkodzenie lub wypadek</h4>'
+      + '<div class="wt-masz-inc'+(inc.date && !inc.readmitDate?' open':'')+'"><div class="wt-rj-fields">'
+      + '<div><label>Data zdarzenia</label><span class="wt-date-wrap"><input class="wt-input" type="date" value="'+esc(inc.date||'')+'" oninput="window.wtMaszUdtInc(\'date\',this.value)"><button type="button" class="wt-date-clear" title="Wyczyść datę" onclick="window.wtClearDateInput(this)">×</button></span></div>'
+      + '<div style="grid-column:span 2"><label>Opis (co się stało, skutki)</label><input class="wt-input" style="width:100%;" value="'+esc(inc.desc||'')+'" oninput="window.wtMaszUdtInc(\'desc\',this.value)"></div>'
+      + '<div><label>Zawiadomienie UDT</label><label class="small" style="display:flex;gap:6px;align-items:center;padding:8px 0"><input type="checkbox" '+(inc.notified?'checked ':'')+'onchange="window.wtMaszUdtInc(\'notified\',this.checked)"> zawiadomiono'+(inc.notifiedDate?' '+esc(fmtDatePL(inc.notifiedDate)):'')+'</label></div>'
+      + '<div><label>Ponowne dopuszczenie do eksploatacji</label><span class="wt-date-wrap"><input class="wt-input" type="date" value="'+esc(inc.readmitDate||'')+'" oninput="window.wtMaszUdtInc(\'readmitDate\',this.value)"><button type="button" class="wt-date-clear" title="Wyczyść datę" onclick="window.wtClearDateInput(this)">×</button></span></div>'
+      + '</div><p class="small" style="margin:0 0 8px;">Każde niebezpieczne uszkodzenie urządzenia lub nieszczęśliwy wypadek przy jego eksploatacji zgłasza się <b>niezwłocznie</b> do UDT (art. 19 ust. 1 ustawy o dozorze technicznym). Do czasu oceny inspektora (badanie doraźne poawaryjne lub powypadkowe, § 12 rozp. MPiT z 30.10.2018 r.) nie używaj urządzenia; jego naprawa wymaga uzgodnienia z UDT (art. 17 ust. 1). Wypadek pracownika prowadź też jako sprawę wypadkową.</p>'
+      + '<div class="wt-pz-actions" style="justify-content:flex-start;margin:0">'+(m.projectId?'<button class="wt-btn" type="button" onclick="window.wtWypNewCase(\''+esc(m.projectId)+'\')">Otwórz sprawę wypadkową</button>':'')+'<button class="wt-btn" type="button" onclick="window.wtMaszUdtIncToLog()">Dopisz do historii usterek</button></div></div>';
+    el.innerHTML = h;
+  }
+  window.wtMaszUdt = function(k, v){
+    const m = maszState.current; if(!m) return;
+    const u = m.udt = Object.assign({}, m.udt||{});
+    u[k] = v;
+    let rerender = (k==='on' || k==='type' || k==='form' || k==='lastMaint' || k==='maintDays');
+    if(k==='type'){
+      const t = udtType(v);
+      if(t && t.f) u.form = t.f;
+      if(t && t.op && !m.requiredPermit){ m.requiredPermit = t.op; renderMaszOpPermit(); }
+      if(t && !m.isLifting && /^u/.test(t.k)){ m.isLifting = true; const cb = document.getElementById('maszIsLifting'); if(cb) cb.checked = true; renderMaszChecklists(); }
+    }
+    if(k==='nextExam') u.nextAuto = false;
+    if((k==='lastExam' || k==='type' || k==='form') && u.lastExam && (!u.nextExam || u.nextAuto)){
+      const t = udtType(u.type);
+      const next = t && t.ex && u.form===t.f ? udtAddMonths(u.lastExam, t.ex) : '';
+      if(next){ u.nextExam = next; u.nextAuto = true; rerender = true; }
+    }
+    scheduleSaveMasz();
+    if(rerender) renderMaszUdt();
+    renderMaszWarnings();
+  };
+  window.wtMaszUdtInc = function(k, v){
+    const m = maszState.current; if(!m) return;
+    const u = m.udt = Object.assign({}, m.udt||{});
+    u.incident = Object.assign({}, u.incident||{}, {[k]: v});
+    if(k==='notified') u.incident.notifiedDate = v ? wtTodayIso() : '';
+    scheduleSaveMasz();
+    if(k==='notified' || k==='date' || k==='readmitDate') renderMaszUdt();
+    renderMaszWarnings();
+  };
+  window.wtMaszUdtIncToLog = function(){
+    const m = maszState.current; if(!m) return;
+    const inc = (m.udt||{}).incident||{};
+    if(!inc.date && !inc.desc){ wtToast('Najpierw wpisz datę i opis zdarzenia.', true); return; }
+    m.faultHistory = m.faultHistory||[];
+    const row = maszBlankRow(); MASZ_FAULT_COLUMNS.forEach(c=>{ row[c.key] = ''; });
+    const dk = (MASZ_FAULT_COLUMNS.find(c=>c.type==='date')||{}).key, tk = (MASZ_FAULT_COLUMNS.find(c=>c.type!=='date')||{}).key;
+    if(dk) row[dk] = inc.date||''; if(tk) row[tk] = 'Niebezpieczne uszkodzenie / wypadek (dozór UDT): '+(inc.desc||'')+(inc.notified?' — zawiadomiono UDT':'');
+    m.faultHistory.push(row); scheduleSaveMasz(); renderMaszRowLists(); wtToast('Dopisano do historii usterek.');
+  };
+  /* ===== Osoby upoważnione: stan z kartoteki (uprawnienia i badania czyta się, nie edytuje) ===== */
+  function udtReqKw(req){
+    const n = wtNormName(req); if(!n) return null;
+    const t = UDT_TYPES.find(x=>x.op && wtNormName(x.op)===n);
+    if(t) return {kw:t.kw, scope:t.scope||''};
+    const fam = ['wozk','suwnic','wciag','zuraw','podest','ukladnic','wyciag','dzwig','linotor','kontener'].find(k=>n.includes(k));
+    return fam ? {kw:[fam], scope:''} : null;
+  }
+  function maszOpEmp(m, row){
+    if(row.empId){ const e = allEmployees.find(x=>x.id===row.empId); if(e) return e; }
+    return wtFindEmpByName(m.projectId, row.name);
+  }
+  function maszOpStatus(m, row){
+    const out = [];
+    if(!String(row.name||'').trim()) return out;
+    const e = maszOpEmp(m, row);
+    if(!e){ out.push({cls:'med', text:m.projectId ? 'Spoza kartoteki klienta — uprawnień i badań nie da się sprawdzić' : 'Przypisz maszynę do klienta, aby sprawdzić osobę w kartotece'}); return out; }
+    if(!wtEmpActive(e)) out.push({cls:'high', text:'Pracownik oznaczony w kartotece jako nieaktywny'});
+    const st = wtEmpStatus(e);
+    if(st.medical) out.push({cls:st.medical.cls, text:'Badania lekarskie: '+st.medical.label+(st.medical.date?' ('+fmtDatePL(st.medical.date)+')':'')});
+    const req = String(m.requiredPermit||'').trim();
+    const today = wtTodayIso();
+    if(req){
+      const rk = udtReqKw(req), nreq = wtNormName(req);
+      const L = (e.permits||[]).filter(p=>p && p.type).filter(p=>{
+        const n = wtNormName(p.type);
+        return rk ? rk.kw.some(k=>n.includes(k)) : (n===nreq || n.includes(nreq) || nreq.includes(n));
+      }).sort((a,b)=>String(b.validUntil||'9999').localeCompare(String(a.validUntil||'9999')));
+      if(!L.length) out.push({cls:'crit', text:'Brak wymaganego uprawnienia w kartotece: '+req});
+      else {
+        const p = L[0], isUdt = /udt|tdt|wdt/.test(wtNormName(p.type)) || !!rk;
+        const label = p.type+(p.number?' nr '+p.number:'');
+        if(!p.validUntil){
+          out.push(isUdt
+            ? {cls:'crit', text:label+' — bez daty ważności: zaświadczenia UDT wydane bezterminowo straciły ważność 1.01.2024 r. Wpisz datę z nowego zaświadczenia albo skieruj na egzamin.'}
+            : {cls:'med', text:label+' — uzupełnij w kartotece datę ważności'});
+        } else if(p.validUntil < today){
+          out.push({cls:'crit', text:label+' — nieważne od '+fmtDatePL(p.validUntil)});
+        } else {
+          const ext = udtAddMonths(p.validUntil, -3);
+          if(isUdt && ext < today) out.push({cls:'high', text:label+' — ważne do '+fmtDatePL(p.validUntil)+'; minął termin wniosku o bezpłatne przedłużenie ('+fmtDatePL(ext)+', art. 23 ust. 2c ustawy o dozorze technicznym) — potrzebny ponowny egzamin UDT'});
+          else if(isUdt && udtAddMonths(today, 3) >= ext) out.push({cls:'high', text:label+' — ważne do '+fmtDatePL(p.validUntil)+'; wniosek o przedłużenie złóż do '+fmtDatePL(ext)+' (min. 3 mies. przed upływem, art. 23 ust. 2c)'});
+          else { const s = wtPrzStatusFor(p.validUntil) || {cls:'low'}; out.push({cls:s.cls==='crit'?'crit':(s.cls==='high'?'high':'low'), text:label+' — ważne do '+fmtDatePL(p.validUntil)}); }
+          if(rk && rk.scope && !new RegExp(rk.scope).test(wtNormName(p.type))) out.push({cls:'blue', text:'Sprawdź zakres zaświadczenia — dla tego urządzenia wymagana jest kategoria: '+req});
+        }
+      }
+    } else {
+      (st.permits||[]).forEach(p=>out.push({cls:p.cls==='blue'?'blue':p.cls, text:p.type+': '+p.label+(p.date?' ('+fmtDatePL(p.date)+')':'')}));
+    }
+    return out;
+  }
+  window.wtMaszOpStatus = maszOpStatus;
+  function maszOpStatusHtml(m, row){
+    const L = maszOpStatus(m, row);
+    return L.map(x=>'<div class="wt-masz-opline '+x.cls+'"><span class="dot"></span>'+esc(x.text)+'</div>').join('');
+  }
+  function renderMaszOpPermit(){
+    const el = document.getElementById('maszReqPermit'); const m = maszState.current; if(!el || !m) return;
+    const t = udtType((m.udt||{}).type);
+    const cid = m.projectId;
+    const have = new Set((m.authorizedOperators||[]).map(o=>o.empId).filter(Boolean));
+    const keysHave = new Set((m.authorizedOperators||[]).map(o=>wtNormName(o.name)));
+    const emps = cid ? allEmployees.filter(e=>e.projectId===cid && wtEmpActive(e) && !have.has(e.id) && !wtEmpNameKeys(e).some(k=>keysHave.has(k))) : [];
+    el.innerHTML = '<div class="wt-rj-fields">'
+      + '<div><label>Wymagane uprawnienie do obsługi</label><input class="wt-input" style="width:100%;" list="wtEmpPermitTypesMasz" value="'+esc(m.requiredPermit||'')+'" placeholder="np. UDT — wózki jezdniowe podnośnikowe" onchange="window.wtMaszReqPermit(this.value)">'
+      + '<div class="small" style="margin-top:4px;color:var(--ink-faint);">'+(t && t.op ? 'Dla tego urządzenia operator musi mieć zaświadczenie kwalifikacyjne UDT (rozp. MPiT z 21.05.2019 r., zał. 3).' : 'Zostaw puste, jeśli wystarcza przeszkolenie stanowiskowe.')+'</div></div>'
+      + '<div><label>Dodaj osobę z kartoteki</label><select class="status-select" style="width:100%;" onchange="window.wtMaszAddEmp(this.value)"'+(cid?'':' disabled')+'><option value="">'+(cid ? (emps.length?'— wybierz pracownika —':'wszyscy pracownicy są już na liście') : 'najpierw przypisz klienta')+'</option>'
+      + emps.map(e=>'<option value="'+e.id+'">'+esc(wtEmpName(e)+(e.position?' — '+e.position:''))+'</option>').join('')+'</select>'
+      + '<div class="small" style="margin-top:4px;color:var(--ink-faint);">Uprawnienia i badania czytane są z kartoteki pracowników — tam je aktualizujesz.</div></div>'
+      + '</div><datalist id="wtEmpPermitTypesMasz">'+Array.from(new Set(UDT_TYPES.filter(x=>x.op).map(x=>x.op).concat(['SEP — eksploatacja (E) do 1 kV','Uprawnienia spawalnicze']))).map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist>';
+  }
+  window.wtPrzUdtPanel = function(cid){
+    const intro = '<p class="small" style="margin:0 0 8px">Badania UDT, decyzje i przeglądy konserwacyjne wpisujesz w teczce urządzenia (Maszyny → sekcja „Dozór techniczny”). Tu widać ich stan, a terminy trafiają do terminarza.</p>';
+    const add = '<button type="button" class="wt-btn" onclick="showSection(\'maszyny\')">Przejdź do Maszyn</button>';
+    if(!cid) return '<div class="wt-prz-ppoz">'+intro+'<p class="small">Przypisz kartę do klienta, aby zobaczyć urządzenia pod dozorem.</p></div>';
+    const L = allMachines.filter(mm=>mm.projectId===cid && (mm.udt||{}).on);
+    if(!L.length) return '<div class="wt-prz-ppoz">'+intro+'<p class="small">Ten klient nie ma jeszcze urządzeń oznaczonych jako podlegające dozorowi technicznemu.</p>'+add+'</div>';
+    const today = wtTodayIso(), soon = udtAddDays(today, 30), badge = (cls, txt)=>'<span class="badge '+cls+'"><span class="dot"></span>'+esc(txt)+'</span>';
+    const st = d=>!d ? badge('med','Brak daty') : d<today ? badge('crit','Po terminie '+fmtDatePL(d)) : d<=soon ? badge('high','Do '+fmtDatePL(d)) : badge('low','Do '+fmtDatePL(d));
+    let bad = 0;
+    const rows = L.map(mm=>{
+      const u = mm.udt||{}, t = udtType(u.type), nm = udtNextMaint(mm), inc = u.incident||{};
+      const parts = [];
+      if(u.form!=='U') parts.push('<span>Badanie UDT '+st(u.nextExam)+'</span>');
+      if(nm.days) parts.push('<span>Konserwacja '+st(nm.next)+'</span>');
+      if(inc.date && !inc.readmitDate) parts.push(badge('crit','Wyłączone — zdarzenie '+fmtDatePL(inc.date)));
+      if(udtIssues(mm).some(x=>x.cls==='crit'||x.cls==='high')) bad++;
+      return '<li><span><a href="#" onclick="event.preventDefault();showSection(\'maszyny\');window.wtMaszOpen(\''+mm.id+'\')">'+esc(mm.name||'urządzenie')+'</a> <span class="small">· '+esc(t?t.n:'rodzaj nieokreślony')+(u.form?' · dozór '+UDT_FORMS[u.form]:'')+'</span></span><span style="display:flex;gap:6px;flex-wrap:wrap">'+parts.join('')+'</span></li>';
+    }).join('');
+    return '<div class="wt-prz-ppoz">'+intro+'<p class="small"><b>'+L.length+'</b> '+wtPl(L.length,'urządzenie','urządzenia','urządzeń')+' pod dozorem'+(bad?' · <b>'+bad+' wymaga uwagi</b>':' · wszystkie terminy aktualne')+'</p><ul class="wt-prz-ppozlist">'+rows+'</ul>'+add+'</div>';
+  };
+  window.wtMaszReqPermit = function(v){ const m = maszState.current; if(!m) return; m.requiredPermit = v; scheduleSaveMasz(); renderMaszRowLists(); renderMaszWarnings(); };
+  window.wtMaszAddEmp = function(id){
+    const m = maszState.current; if(!m || !id) return;
+    const e = allEmployees.find(x=>x.id===id); if(!e) return;
+    m.authorizedOperators = m.authorizedOperators||[];
+    const row = maszBlankRow(); row.name = wtEmpName(e); row.empId = e.id; row.trainingDate = ''; row.notes = '';
+    m.authorizedOperators.push(row);
+    scheduleSaveMasz(); renderMaszRowLists(); renderMaszOpPermit(); renderMaszWarnings();
+  };
+  function maszOpIssues(m){
+    const ops = (m.authorizedOperators||[]).filter(o=>String(o.name||'').trim());
+    let bad = 0, warn = 0;
+    ops.forEach(o=>{ const L = maszOpStatus(m, o); if(L.some(x=>x.cls==='crit')) bad++; else if(L.some(x=>x.cls==='high')) warn++; });
+    const out = [];
+    if(bad) out.push({cls:'crit', key:'ops', text:bad+' '+wtPl(bad,'osoba upoważniona','osoby upoważnione','osób upoważnionych')+' bez ważnych uprawnień lub badań lekarskich'});
+    if(warn) out.push({cls:'high', key:'opswarn', text:warn+' '+wtPl(warn,'osoba upoważniona wymaga','osoby upoważnione wymagają','osób upoważnionych wymaga')+' uwagi (kończące się uprawnienia lub badania)'});
+    if(m.requiredPermit && !ops.length) out.push({cls:'med', key:'noops', text:'Brak osób upoważnionych do obsługi'});
+    return out;
+  }
   /* podpowiedź: maszyna sprzed 2003 r. */
   function maszLooksLegacy(m){
     const y = parseInt(String(m.yearBuilt||'').match(/\d{4}/) ? String(m.yearBuilt).match(/\d{4}/)[0] : '', 10);
@@ -17877,7 +18206,7 @@ document.addEventListener('keydown', e=>{
     if(ia.wsi==='NIE') out.push({cls:'high', key:'wsi', text:'Brak instrukcji stanowiskowej BHP'});
     if(ia.wsi==='TAK' && m.wsi && m.wsi.review && m.wsi.review < today) out.push({cls:'high', key:'wsireview', text:'Minął termin przeglądu instrukcji stanowiskowej'});
     if(m.nextControlDate && m.nextControlDate < today) out.push({cls:'crit', key:'ctrl', text:'Kontrola okresowa po terminie ('+fmtDatePL(m.nextControlDate)+')'});
-    return out;
+    return out.concat(udtIssues(m), maszOpIssues(m));
   }
   window.wtMaszIssues = wtMaszIssues;
   function renderMaszWarnings(){
@@ -17989,7 +18318,11 @@ document.addEventListener('keydown', e=>{
       {label:'Data oddania do eksploatacji', key:'dateAcquired', type:'date'},
       {label:'Ostatnia kontrola okresowa', key:'lastControlDate', type:'date'},
       {label:'Kolejna kontrola okresowa', key:'nextControlDate', type:'date'},
-      {label:'Status terminu', render: m=>{ const st=wtPrzStatusFor(m.nextControlDate); return st?st.label:''; }}
+      {label:'Status terminu', render: m=>{ const st=wtPrzStatusFor(m.nextControlDate); return st?st.label:''; }},
+      {label:'Dozór UDT', render: m=>{ const u=m.udt||{}; return u.on ? (UDT_FORMS[u.form]||'tak') : ''; }},
+      {label:'Nr ewidencyjny UDT', render: m=>(m.udt||{}).on ? ((m.udt||{}).regNo||'') : ''},
+      {label:'Następne badanie UDT', render: m=>{ const u=m.udt||{}; return u.on && u.form!=='U' ? fmtDatePL(u.nextExam||'') : ''; }},
+      {label:'Następny przegląd konserwacyjny', render: m=>(m.udt||{}).on ? fmtDatePL(udtNextMaint(m).next||'') : ''}
     ];
   }
   async function buildMaszXlsx(rows, opts){
@@ -18040,19 +18373,34 @@ document.addEventListener('keydown', e=>{
         + MASZ_INSTR_ITEMS.map(it=>'<tr><td>'+esc(it.q)+'</td><td>'+esc((m.instrAnswers||{})[it.id]||'—')+'</td></tr>').join('')
         + ((m.instrAnswers||{}).wsi==='TAK' ? '<tr><td colspan="2">Instrukcja stanowiskowa: '+esc([(m.wsi||{}).no, (m.wsi||{}).date?'z '+fmtDatePL(m.wsi.date):'', (m.wsi||{}).author?'oprac. '+m.wsi.author:'', (m.wsi||{}).review?'przegląd do '+fmtDatePL(m.wsi.review):''].filter(Boolean).join(', ')||'—')+'</td></tr>' : '')
       +'</tbody></table>'
+      + maszUdtPrintHtml(m)
       +(m.isLegacy
         ? '<p style="font-size:10.5px;color:#777;margin-top:10px;">Maszyna wprowadzona do obrotu przed 1.01.2003 r. — nie podlega zasadniczym wymaganiom (CE/deklaracja zgodności/tabliczka wg dyrektywy maszynowej), o ile nie była później istotnie zmodernizowana.</p>'
         : '<table style="margin-top:10px;"><thead><tr><th>Dokumentacja maszyny (zasadnicze wymagania)</th><th>Odpowiedź</th></tr></thead>'
           +'<tbody>'+rowsFor(DOC_CATEGORIES, m.docAnswers||{})+'</tbody></table>')
       + maszSimpleLogTableHtml('Historia usterek i napraw', m.faultHistory, MASZ_FAULT_COLUMNS, true)
       + maszSimpleLogTableHtml('Konserwacje', m.maintenanceLog, MASZ_MAINT_COLUMNS, true)
-      + maszSimpleLogTableHtml('Osoby upoważnione do obsługi', m.authorizedOperators, MASZ_OPERATOR_COLUMNS)
+      + maszSimpleLogTableHtml('Osoby upoważnione do obsługi'+(m.requiredPermit?' — wymagane: '+m.requiredPermit:''), (m.authorizedOperators||[]).map(o=>Object.assign({}, o, {kart: maszOpStatus(m, o).map(x=>x.text).join('; ')})), MASZ_OPERATOR_COLUMNS.concat([{key:'kart', label:'Uprawnienia i badania (z kartoteki)', wrap:true}]))
       + ((m.attachments||[]).length ? '<div style="margin-top:10px;font-size:10.5px;"><b>Załączniki:</b> '
           +(m.attachments||[]).map(a=>esc(a.name)).join(', ')+' (dostępne do pobrania w aplikacji)</div>' : '')
       +'<div class="wt-masz-signrow"><div>Kartę sporządził<br><span>imię, nazwisko, data</span></div><div>Podpis</div><div>Zatwierdził (pracodawca)<br><span>data, podpis</span></div></div>'
       +'<div class="rp-footer">Wygenerowano w narzędziu BHP Audyt — '+fmtWhen(Date.now())+'. Wyniki kontroli maszyn przechowuje się przez 5 lat (§ 28 rozp. MG z 30.10.2002 r.).</div>';
     /* tabele karty nie mają kolumny „Lp.” — bez tej klasy wspólny styl wydruku ściskał pierwszą kolumnę do 20 px (dziesiątki stron) */
     host.querySelectorAll('table').forEach(t=>t.classList.add('wt-masz-pt'));
+  }
+  function maszUdtPrintHtml(m){
+    const u = m.udt||{}; if(!u.on) return '';
+    const t = udtType(u.type), nm = udtNextMaint(m), inc = u.incident||{};
+    const r = (k, v)=>v ? '<tr><td>'+esc(k)+'</td><td>'+esc(v)+'</td></tr>' : '';
+    return '<table style="margin-top:10px;"><thead><tr><th colspan="2">Dozór techniczny (UDT)</th></tr></thead><tbody>'
+      + r('Rodzaj urządzenia', t ? t.n : '—') + r('Forma dozoru', UDT_FORMS[u.form]||'—') + r('Nr ewidencyjny UDT', u.regNo)
+      + r('Decyzja zezwalająca na eksploatację', [u.decNo, u.decDate?'z '+fmtDatePL(u.decDate):''].filter(Boolean).join(' '))
+      + r('Ostatnie badanie UDT', [fmtDatePL(u.lastExam), u.lastExamType].filter(Boolean).join(' — ')) + r('Następne badanie UDT', fmtDatePL(u.nextExam))
+      + r('Księga rewizyjna', u.bookPlace)
+      + r('Konserwujący', [u.maintainer, u.maintCert?'zaśw. nr '+u.maintCert:'', u.maintValid?'ważne do '+fmtDatePL(u.maintValid):''].filter(Boolean).join(', '))
+      + r('Przegląd konserwacyjny', nm.last ? 'ostatni '+fmtDatePL(nm.last)+(nm.next?', następny '+fmtDatePL(nm.next)+' (co '+nm.days+' dni)':'') : '')
+      + (inc.date ? r('Niebezpieczne uszkodzenie / wypadek', fmtDatePL(inc.date)+(inc.desc?' — '+inc.desc:'')+(inc.notified?'; zawiadomiono UDT':'; UDT nie zawiadomiony')+(inc.readmitDate?'; ponownie dopuszczone '+fmtDatePL(inc.readmitDate):'; nie dopuszczone do eksploatacji')) : '')
+      + '</tbody></table>';
   }
   /* tabela niezgodności z oceny minimalnych wymagań — z rubryką na podpis po usunięciu */
   function maszNonconfTableHtml(m){
@@ -18069,7 +18417,7 @@ document.addEventListener('keydown', e=>{
     if(!rows.length) return '';
     return '<table style="margin-top:10px;"><thead><tr><th colspan="'+(columns.length+(sign?1:0))+'">'+esc(title)+'</th></tr>'
       + '<tr>'+columns.map(c=>'<th>'+esc(c.label)+'</th>').join('')+(sign?'<th>Podpis</th>':'')+'</tr></thead>'
-      + '<tbody>'+rows.map(r=>'<tr>'+columns.map(c=>'<td>'+esc((c.type==='date'?fmtDatePL(r[c.key]):r[c.key])||'—')+'</td>').join('')+(sign?'<td style="min-width:90px"></td>':'')+'</tr>').join('')
+      + '<tbody>'+rows.map(r=>'<tr>'+columns.map(c=>'<td'+(c.wrap?' class="wt-masz-wrap"':'')+'>'+esc((c.type==='date'?fmtDatePL(r[c.key]):r[c.key])||'—')+'</td>').join('')+(sign?'<td style="min-width:90px"></td>':'')+'</tr>').join('')
       + '</tbody></table>';
   }
   window.wtMaszPrint = function(){
@@ -19109,7 +19457,7 @@ document.addEventListener('keydown', e=>{
         +'<div class="wt-emp-permits">'+(permitsHtml||'<div class="small">Brak uprawnień.</div>')+'</div>'
         +'<button class="wt-btn ghost" style="margin-top:8px;" onclick="window.wtEmpPermitAdd()">+ Dodaj uprawnienie</button>'
         +'<div class="small" style="color:var(--ink-faint);margin-top:6px;">Uprawnienia zapisują się też w „Terminach uprawnień i pozwoleń” tego klienta — nie trzeba ich tam wpisywać ponownie.</div>'
-        +(()=>{ const keys = wtEmpNameKeys(e); const ms = allMachines.filter(m=>m.projectId===e.projectId && (m.authorizedOperators||[]).some(o=>keys.includes(wtNormName(o.name)))); return ms.length ? '<div class="wt-emp-machines"><b>Upoważniony do obsługi maszyn:</b> '+ms.map(m=>esc(m.name||'maszyna bez nazwy')).join(', ')+'</div>' : ''; })()
+        +(()=>{ const keys = wtEmpNameKeys(e); const ms = allMachines.filter(m=>m.projectId===e.projectId && (m.authorizedOperators||[]).some(o=>o.empId===e.id || keys.includes(wtNormName(o.name)))); return ms.length ? '<div class="wt-emp-machines"><b>Upoważniony do obsługi maszyn:</b> '+ms.map(m=>esc(m.name||'maszyna bez nazwy')).join(', ')+'</div>' : ''; })()
         +'<datalist id="wtEmpPermitTypes"><option value="UDT — wózki jezdniowe podnośnikowe"><option value="UDT — suwnice"><option value="UDT — podesty ruchome"><option value="SEP — eksploatacja (E) do 1 kV"><option value="SEP — dozór (D) do 1 kV"><option value="Badania do pracy na wysokości powyżej 3 m"><option value="Uprawnienia spawalnicze"><option value="Prawo jazdy kat. C / świadectwo kwalifikacji"><option value="Szkolenie ADR"><option value="Szkolenie z pierwszej pomocy"></datalist>'
         +'<div class="wt-emp-sec">Uwagi</div>'
         +'<textarea class="wt-input" data-ef="notes" rows="2" style="width:100%;">'+esc(e.notes||'')+'</textarea>'
