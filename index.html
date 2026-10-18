@@ -17454,6 +17454,7 @@ document.addEventListener('keydown', e=>{
       : '<div class="wt-empty">Brak maszyn — kliknij „+ Dodaj maszynę” powyżej.</div>';
     const exportBtn = machinesArr.length
       ? '<span class="wt-iconbtn" title="Eksportuj Excel — wszystkie maszyny tej grupy" onclick="event.stopPropagation(); window.wtMaszGroupExportXlsx('+(clientId?"'"+clientId+"'":'null')+')"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="1.5" stroke="currentColor" stroke-width="1.5"></rect><path d="M4 9.5h16M4 14.5h16M10 4v16" stroke="currentColor" stroke-width="1.2"></path></svg></span>'
+      + '<span class="wt-iconbtn" title="Raport „Park maszynowy” (PDF) — stan wszystkich maszyn tej grupy" onclick="event.stopPropagation(); window.wtMaszParkPdf('+(clientId?"'"+clientId+"'":'null')+')"><svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13H7z M14 3v5h5 M10 13h6 M10 17h6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"></path></svg></span>'
       + '<span class="wt-iconbtn" title="Wyślij na Dysk Google — wszystkie maszyny tej grupy" onclick="event.stopPropagation(); window.wtMaszGroupSendToDrive('+(clientId?"'"+clientId+"'":'null')+')"><svg viewBox="0 0 24 24" fill="none"><path d="M8 3h8l5 9-4 8H7l-4-8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg></span>'
       : '';
     return '<div class="wt-rj-cathead'+(collapsed?' wt-rj-collapsed':'')+'" data-groupkey="'+esc(key)+'" onclick="window.wtMaszGroupToggle(this)">'
@@ -28380,13 +28381,14 @@ document.addEventListener('keydown', e=>{
     };
   }
   /* ===== Gotowość do kontroli PIP — automatyczna ocena klienta z danych w aplikacji =====
-     7 obszarów z wagami (suma 100). Każdy problem ma cel nawigacji (js) — klik przenosi do
+     8 obszarów z wagami (suma 100). Każdy problem ma cel nawigacji (js) — klik przenosi do
      miejsca, w którym się go usuwa. Obszar: frac 0..1 → punkty = waga × frac. */
   const WT_PIP_AREAS = [
     {key:'docs', w:25, title:'Dokumenty i rejestry wymagane u klienta', basis:'Wymagania wyliczone z profilu klienta (KP, rozporządzenia)'},
-    {key:'emp', w:25, title:'Pracownicy — szkolenia, badania, uprawnienia', basis:'Art. 229 § 4, art. 237³ i art. 226 KP'},
+    {key:'emp', w:20, title:'Pracownicy — szkolenia, badania, uprawnienia', basis:'Art. 229 § 4, art. 237³ i art. 226 KP'},
     {key:'orz', w:15, title:'Ocena ryzyka zawodowego', basis:'Art. 226 KP; § 39a rozp. MPiPS z 26.09.1997 r.'},
-    {key:'dl', w:15, title:'Terminy przeglądów, pomiarów i kontroli', basis:'Terminy z rejestrów, maszyn, przeglądów i uprawnień'},
+    {key:'dl', w:10, title:'Terminy przeglądów, pomiarów i kontroli', basis:'Terminy z rejestrów, przeglądów i uprawnień'},
+    {key:'masz', w:10, title:'Maszyny i urządzenia techniczne (UDT)', basis:'Rozp. MG z 30.10.2002 r. (minimalne wymagania, kontrole); art. 14 i 19 ustawy o dozorze technicznym; § 41 rozp. MPiPS z 26.09.1997 r. (instrukcje)'},
     {key:'rec', w:10, title:'Zalecenia, nakazy i działania korygujące', basis:'Rejestry M.1, M.3, M.6, polecenia powypadkowe'},
     {key:'wyp', w:5, title:'Wypadki przy pracy', basis:'Art. 234 KP; § 9 ust. 1 i § 13 ust. 1 rozp. RM z 1.07.2009 r. (protokół do 14 dni, zatwierdzenie do 5 dni)'},
     {key:'aud', w:5, title:'Kontrole wewnętrzne (audyty, obchody)', basis:'§ 2 ust. 1 pkt 1 rozp. RM z 2.09.1997 r. w sprawie służby bhp — kontrola warunków pracy'}
@@ -28456,7 +28458,7 @@ document.addEventListener('keydown', e=>{
     {
       const bk = wtCollectUrgentDeadlines();
       /* źródła liczone we własnych obszarach (B, C, E, F) — bez dublowania; uprawnienia osób z kartoteki są już w B */
-      const OWN = ['z Kartoteki pracowników','z Oceny ryzyka','Sprawa wypadkowa','z Rejestru zaleceń','Umowa z klientem'];
+      const OWN = ['z Kartoteki pracowników','z Oceny ryzyka','Sprawa wypadkowa','z Rejestru zaleceń','Umowa z klientem','z Maszyn'];
       const empNames = emps.map(e=>wtNormName(wtEmpName(e))).filter(Boolean);
       const evs = [].concat(bk.overdue, bk.crit).filter(e=>e.pid===p.id && !OWN.includes(e.tag) && e.kind!=='todo' && e.kind!=='note'
         && !(e.tag==='z Terminów uprawnień' && empNames.some(n=>wtNormName(e.title).includes(n))));
@@ -28470,6 +28472,19 @@ document.addEventListener('keydown', e=>{
       });
       areas.dl.frac = Math.max(0, 1-pen/5);
       areas.dl.summary = evs.length ? bk.overdue.filter(e=>evs.includes(e)).length+' po terminie, '+bk.crit.filter(e=>evs.includes(e)).length+' w ciągu 7 dni' : 'Brak zaległych terminów';
+    }
+    /* M. Maszyny — teczki (terminy maszyn liczone tu, nie w D; niezgodności z oceny min. wymagań — w E) */
+    {
+      const ms = (typeof allMachines!=='undefined' ? allMachines : []).filter(m=>m.projectId===p.id);
+      let good = 0;
+      ms.forEach(m=>{
+        const I = (window.wtMaszIssues ? window.wtMaszIssues(m) : []).filter(x=>x.key!=='overdue' && x.key!=='noplan');
+        const crit = I.filter(x=>x.cls==='crit'), high = I.filter(x=>x.cls==='high');
+        if(!crit.length && !high.length){ good++; return; }
+        add('masz', crit.length?'crit':'warn', (m.name||'Maszyna')+' — '+crit.concat(high).map(x=>x.text).join('; '), "showSection('maszyny');window.wtMaszOpen('"+m.id+"')");
+      });
+      areas.masz.frac = ms.length ? good/ms.length : 1;
+      areas.masz.summary = ms.length ? good+' z '+ms.length+' '+wtPl(ms.length,'maszyny','maszyn','maszyn')+' bez zastrzeżeń' : 'Brak maszyn w rejestrze';
     }
     /* E. Zalecenia */
     {
@@ -28553,7 +28568,7 @@ document.addEventListener('keydown', e=>{
         +'<span class="badge '+stCls[a.st]+'"><span class="dot"></span>'+stLbl[a.st]+(a.issues.length?' · '+a.issues.length:'')+'</span></button>'
         +(a.issues.length?'<ul class="wt-pip-list">'+items+'</ul>':'')+'</div>';
     }).join('');
-    box.innerHTML = '<div class="wt-pip-head"><div><h3>Gotowość klienta do kontroli</h3><p class="small">Liczona automatycznie z danych w aplikacji: wymagania z profilu, kartoteka pracowników, oceny ryzyka, terminy, zalecenia, wypadki i audyty. Kliknij problem, aby przejść do miejsca, w którym go usuniesz.</p></div>'+sel+'</div>'
+    box.innerHTML = '<div class="wt-pip-head"><div><h3>Gotowość klienta do kontroli</h3><p class="small">Liczona automatycznie z danych w aplikacji: wymagania z profilu, kartoteka pracowników, oceny ryzyka, terminy, maszyny i UDT, zalecenia, wypadki i audyty. Kliknij problem, aby przejść do miejsca, w którym go usuniesz.</p></div>'+sel+'</div>'
       +'<div class="wt-pip-score"><div class="wt-pip-num '+R.verdict.cls+'"><b>'+R.score+'</b><span>/100</span></div><div class="wt-pip-verdict"><span class="badge '+R.verdict.cls+'"><span class="dot"></span>'+R.verdict.label+'</span>'
       +'<span class="small">'+(R.crit ? R.crit+' '+wtPl(R.crit,'pilny problem','pilne problemy','pilnych problemów')+' do usunięcia przed kontrolą' : 'Brak pilnych problemów')+'</span></div>'
       +'<button class="wt-btn" type="button" onclick="window.wtPipPdf()">Raport gotowości (PDF)</button></div>'
@@ -30725,6 +30740,54 @@ document.addEventListener('keydown', e=>{
         wtRpcSection('Wynik', 'Wynik oceny', wtRpcText(resLbl) + sign)],
       footer:'Wyniki kontroli maszyn rejestruje się i przechowuje przez 5 lat (§ 28 rozp. MG z 30.10.2002 r.).', brand:client?client.name:''});
     wtRpcExport(html, 'Protokol_oceny_'+rpcSlug(m.name||'maszyna')+'.pdf');
+  };
+  /* „Park maszynowy” — zbiorczy raport klienta: zestawienie maszyn, braki, dozór UDT, operatorzy, terminy 90 dni */
+  window.wtMaszParkPdf = function(cid){
+    const client = cid ? wtProjectById(cid) : null;
+    const L = allMachines.filter(m=>cid ? m.projectId===cid : !m.projectId).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''), 'pl'));
+    if(!L.length){ wtToast('Brak maszyn do zestawienia.', true); return; }
+    const today = wtTodayIso(), lim = (()=>{ const x = new Date(); x.setDate(x.getDate()+90); return calIso(x.getFullYear(), x.getMonth(), x.getDate()); })();
+    const sev = m=>{ const I = wtMaszIssues(m); return I.some(x=>x.cls==='crit') ? 'bad' : I.some(x=>x.cls==='high') ? 'warn' : 'ok'; };
+    const S = L.map(m=>({m, s:sev(m), I:wtMaszIssues(m)}));
+    const ok = S.filter(x=>x.s==='ok').length, warn = S.filter(x=>x.s==='warn').length, bad = S.filter(x=>x.s==='bad').length;
+    const udt = L.filter(m=>(m.udt||{}).on);
+    const RES = {zgodna:'spełnia min. wymagania', warunkowo:'dopuszczona warunkowo', wylaczona:'wyłączona z eksploatacji'};
+    const d = v=>v ? fmtDatePL(v) : 'brak daty';
+    const rows = S.map(({m, s})=>{
+      const u = m.udt||{}, nm = window.wtUdtNextMaint(m);
+      const note = [[m.inventoryNumber?'nr '+m.inventoryNumber:'', m.location].filter(Boolean).join(' · '),
+        'Kontrola okresowa: '+d(m.nextControlDate),
+        u.on && u.form!=='U' ? 'Badanie UDT: '+d(u.nextExam) : '',
+        u.on && nm.days ? 'Konserwacja: '+d(nm.next) : '',
+        m.assessDate || m.assessResult ? 'Ocena min. wymagań: '+[fmtDatePL(m.assessDate), RES[m.assessResult]||''].filter(Boolean).join(', ') : (m.isLegacy ? 'Ocena min. wymagań: brak' : '')].filter(Boolean).join(' · ');
+      return {text:m.name||'Maszyna bez nazwy', note, status:{ok:'OK', warn:'Uwaga', bad:'Pilne'}[s], cls:s};
+    });
+    const cards = [];
+    S.filter(x=>x.s!=='ok').forEach(({m, I})=>I.filter(x=>x.cls==='crit'||x.cls==='high').forEach(x=>cards.push({question:(m.name||'Maszyna')+' — '+x.text, comment:'', action:'', owner:'', due:'', pill:x.cls==='crit'?'PILNE':'UWAGA', pillCls:x.cls==='crit'?'':'warn'})));
+    const udtRows = udt.map(m=>{
+      const u = m.udt||{}, t = (window.UDT_TYPES||[]).find(x=>x.k===u.type), F = {P:'pełny', O:'ograniczony', U:'uproszczony'};
+      const I = window.wtUdtIssues(m), s = I.some(x=>x.cls==='crit') ? 'bad' : I.some(x=>x.cls==='high') ? 'warn' : 'ok';
+      return {text:(m.name||'Urządzenie')+(t?' — '+t.n:''), note:['dozór '+(F[u.form]||'—'), u.regNo?'nr UDT '+u.regNo:'', u.form!=='U' ? (u.decNo||u.decDate ? 'decyzja '+[u.decNo, u.decDate?fmtDatePL(u.decDate):''].filter(Boolean).join(' z ') : 'brak decyzji') : '', u.maintainer?'konserwator: '+u.maintainer+(u.maintValid?' (zaśw. do '+fmtDatePL(u.maintValid)+')':''):''].filter(Boolean).join(' · '), status:{ok:'OK', warn:'Uwaga', bad:'Pilne'}[s], cls:s};
+    });
+    const opRows = [];
+    L.forEach(m=>(m.authorizedOperators||[]).filter(o=>String(o.name||'').trim()).forEach(o=>{
+      const st = window.wtMaszOpStatus(m, o), s = st.some(x=>x.cls==='crit') ? 'bad' : st.some(x=>x.cls==='high') ? 'warn' : 'ok';
+      opRows.push({text:o.name+' — '+(m.name||'maszyna'), note:st.map(x=>x.text).join(' · ') || (m.requiredPermit?'':'bez wymaganego uprawnienia'), status:{ok:'OK', warn:'Uwaga', bad:'Brak'}[s], cls:s});
+    }));
+    const ids = new Set(L.map(m=>m.id));
+    const evs = wtCollectMachineDatesInRange('0000-01-01', lim).filter(e=>e.nav && ids.has(e.nav.id)).sort((a,b)=>a.date.localeCompare(b.date));
+    const evRows = evs.map(e=>({text:String(e.title||'').replace(client?' ('+client.name+')':'\u0000', ''), note:'', status:fmtDatePL(e.date), cls:e.date<today?'bad':'warn'}));
+    const html = wtRpcReport({pills:['Park maszynowy — stan maszyn i urządzeń technicznych'], title:client?client.name:'Maszyny bez przypisania', subtitle:'Zestawienie z '+fmtDatePL(today),
+      meta:[{lbl:'Maszyn', val:String(L.length)},{lbl:'Pod dozorem UDT', val:String(udt.length)},{lbl:'Osób upoważnionych', val:String(opRows.length)},{lbl:'Data', val:fmtDatePL(today)}],
+      ring:{pct:Math.round(ok/L.length*100), label:'Bez zastrzeżeń', sub:ok+' z '+L.length+' maszyn'},
+      stats:[{label:'Maszyn', num:L.length},{label:'Bez zastrzeżeń', num:ok, cls:'ok'},{label:'Wymaga uwagi', num:warn, cls:'warn'},{label:'Pilne', num:bad, cls:'bad'}],
+      sections:[wtRpcSection('Zestawienie', 'Maszyny i ich stan', wtRpcRows(rows), 'blue'),
+        wtRpcSection('Do usunięcia', 'Braki i ostrzeżenia z teczek maszyn', wtRpcCards(cards), 'red')]
+        .concat(udtRows.length ? [wtRpcSection('Dozór techniczny', 'Urządzenia pod dozorem UDT', wtRpcRows(udtRows))] : [])
+        .concat(opRows.length ? [wtRpcSection('Obsługa', 'Osoby upoważnione — uprawnienia i badania z kartoteki', wtRpcRows(opRows))] : [])
+        .concat([wtRpcSection('Terminy', 'Zaległe i najbliższe 90 dni', evRows.length ? wtRpcRows(evRows) : wtRpcText('Brak terminów w najbliższych 90 dniach.'))]),
+      footer:'Podstawy: rozp. MG z 30.10.2002 r. (Dz.U. Nr 191, poz. 1596 ze zm.) — kontrole maszyn, wyniki przechowywane 5 lat (§ 28); ustawa o dozorze technicznym (t.j. Dz.U. 2024 poz. 1194); rozp. MPiT z 30.10.2018 r. (Dz.U. poz. 2176) — UTB.', brand:client?client.name:''});
+    wtRpcExport(html, 'Park_maszynowy_'+rpcSlug(client?client.name:'bez_klienta')+'.pdf');
   };
   window.wtPpozDataChanged = function(){ wtPpozRerender(); };
   /* Nawigacja do sekcji z drążeniem (Klienci: lista/szczegóły klienta; Rejestry: hub/lista/edytor)
