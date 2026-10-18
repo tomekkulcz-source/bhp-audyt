@@ -1341,6 +1341,25 @@ html[data-theme="dark"] .wt-modesw button[aria-pressed="true"]{color:#140806;}
 .rp-client-report .wt-rpc-sign{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:40px;text-align:center;font-size:9pt;color:#5d5a55 !important;}
 @media print{ .wt-pdf-break{break-before:page;page-break-before:always;height:0;} }
 @media print{.wt-modesw{display:none;}}
+.wt-masz-item:has(.wt-masz-act){flex-wrap:wrap;}
+.wt-masz-item .wt-masz-q{flex:1 1 0;min-width:0;}
+.wt-masz-act{flex:1 1 100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 12px;margin:8px 0 4px;padding:10px 12px;border-left:3px solid var(--crit);background:var(--surface-2, var(--surface));border-radius:0 var(--r-sm) var(--r-sm) 0;}
+.wt-masz-actf{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.wt-masz-actf>span{font-size:11.5px;color:var(--ink-soft);font-weight:550;}
+.wt-masz-actchk{display:flex;flex-direction:column;gap:4px;font-size:13px;justify-content:center;}
+.wt-masz-assess{margin:14px 0 6px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);}
+.wt-masz-wsi{margin:6px 0 8px;padding:10px 12px;border:1px dashed var(--line-strong);border-radius:var(--r-sm);}
+.wt-masz-hint{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:var(--r-sm);font-size:13px;}
+.wt-masz-hint span{flex:1 1 320px;min-width:0;}
+.wt-masz-warn{margin:0 0 14px;padding:10px 14px;border:1px solid var(--line);border-left:4px solid var(--high);border-radius:var(--r-sm);background:var(--surface);font-size:13px;}
+.wt-masz-warn ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:2px;}
+.wt-masz-warn li.crit{color:var(--crit);font-weight:600;}
+#rj-print-host table.wt-masz-pt{table-layout:auto;}
+#rj-print-host table.wt-masz-pt th:first-child,#rj-print-host table.wt-masz-pt td:first-child{width:auto;text-align:left;}
+#rj-print-host table.wt-masz-pt td:last-child{white-space:nowrap;}
+.wt-masz-signrow{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:28px;font-size:10.5px;text-align:center;}
+.wt-masz-signrow>div{border-top:1px solid #999;padding-top:6px;}
+.wt-masz-signrow span{color:#777;font-size:9.5px;}
 .wt-ch-pics{display:flex;gap:3px;flex-wrap:wrap;}
 .wt-ch-pic{display:block;flex:none;}
 .wt-ch-pictxt{font:600 10px/1 var(--font-mono, monospace);padding:3px 4px;border:1px solid var(--line);border-radius:4px;}
@@ -9610,8 +9629,18 @@ window.__WT_FIREBASE_CONFIG__ = {
         <label>Data oddania do eksploatacji u klienta</label>
         <span class="wt-date-wrap"><input class="wt-input" type="date" id="maszDateAcquired" oninput="wtMaszField('dateAcquired', this.value)"><button type="button" class="wt-date-clear" title="Wyczyść datę" onclick="window.wtClearDateInput(this)">×</button></span>
       </div>
+      <div>
+        <label>Numer ewidencyjny (w rejestrze zakładu)</label>
+        <input class="wt-input" style="width:100%;" id="maszInventoryNumber" placeholder="np. M-014" oninput="wtMaszField('inventoryNumber', this.value)">
+      </div>
+      <div>
+        <label>Lokalizacja (wydział, hala, stanowisko)</label>
+        <input class="wt-input" style="width:100%;" id="maszLocation" placeholder="np. Hala A, stanowisko 3" oninput="wtMaszField('location', this.value)">
+      </div>
     </div>
     <p class="small" id="maszCategoryHint" style="margin:-8px 0 14px;color:var(--ink-faint);"></p>
+    <div id="maszLegacyHint"></div>
+    <div id="maszWarnings"></div>
     <div class="wt-masz-flags">
       <label><input type="checkbox" id="maszIsMobile" onchange="wtMaszToggleFlag('isMobile', this.checked)"> Maszyna ruchoma (samobieżna lub niesamobieżna)</label>
       <label><input type="checkbox" id="maszIsLifting" onchange="wtMaszToggleFlag('isLifting', this.checked)"> Maszyna / urządzenie do podnoszenia ładunków</label>
@@ -9670,6 +9699,20 @@ window.__WT_FIREBASE_CONFIG__ = {
       <button class="wt-btn" type="button" onclick="collapseAllCats('#maszMwChecklist')">Zwiń wszystkie</button>
     </div>
     <div id="maszMwChecklist"></div>
+    <div class="wt-masz-assess" id="maszAssess">
+      <h4 style="margin:0 0 6px;font-size:14.5px;">Protokół oceny dostosowania do minimalnych wymagań</h4>
+      <p class="small" style="margin:0 0 10px;color:var(--ink-faint);">Przy każdej odpowiedzi NIE wpisz działanie naprawcze, termin i odpowiedzialnego. Niezgodności trafiają do Rejestru zaleceń i kontroli oraz do terminarza. Maszyny nabyte przed 1.01.2003 r. należało dostosować do tych wymagań do 1.01.2006 r. (§ 34 rozp. MG z 30.10.2002 r.).</p>
+      <div class="wt-rj-fields">
+        <div><label>Data oceny</label><span class="wt-date-wrap"><input class="wt-input" type="date" id="maszAssessDate" oninput="wtMaszField('assessDate', this.value)"><button type="button" class="wt-date-clear" title="Wyczyść datę" onclick="window.wtClearDateInput(this)">×</button></span></div>
+        <div><label>Zespół oceniający (imiona, nazwiska, funkcje)</label><input class="wt-input" style="width:100%;" id="maszAssessTeam" placeholder="np. J. Kowalski — specjalista BHP; A. Nowak — mechanik" oninput="wtMaszField('assessTeam', this.value)"></div>
+        <div><label>Wynik oceny</label><select class="status-select" style="width:100%;" id="maszAssessResult" onchange="wtMaszField('assessResult', this.value)"><option value="">— wybierz —</option><option value="zgodna">Spełnia minimalne wymagania — dopuszczona do eksploatacji</option><option value="warunkowo">Dopuszczona warunkowo — do usunięcia niezgodności w terminach</option><option value="wylaczona">Wyłączona z eksploatacji do usunięcia niezgodności</option></select></div>
+      </div>
+      <div class="wt-pz-actions" style="justify-content:flex-start"><button class="wt-btn" type="button" onclick="window.wtMaszProtocolPdf()">Protokół oceny (PDF)</button></div>
+    </div>
+
+    <h3 style="margin:26px 0 4px;font-size:17px;">Instrukcje na stanowisku pracy</h3>
+    <p class="small" style="margin:0 0 12px;color:var(--ink-faint);">Dotyczy każdej maszyny, także sprzed 2003 r. Pracodawca udostępnia pracownikom do stałego korzystania aktualne instrukcje bhp dotyczące obsługi maszyn (§ 41 ust. 1 pkt 2 rozp. MPiPS z 26.09.1997 r.) i zapewnia dostęp do pisemnych instrukcji użytkowania maszyn, zrozumiałych dla pracowników (§ 30 rozp. MG z 30.10.2002 r.).</p>
+    <div id="maszInstr"></div>
 
     <h3 style="margin:26px 0 4px;font-size:17px;">Dokumentacja maszyny</h3>
     <p class="small" style="margin:0 0 12px;color:var(--ink-faint);">Dotyczy maszyn wprowadzanych do obrotu po spełnieniu zasadniczych wymagań (dyrektywa maszynowa / rozp. MG z 21.10.2008 r.). Sprawdź, czy dokumentacja dostarczona z maszyną jest kompletna.</p>
@@ -14167,8 +14210,16 @@ document.addEventListener('keydown', e=>{
     const opts = ['', 'TAK', 'NIE', 'ND'].map(v=>'<option value="'+v+'"'+(value===v?' selected':'')+'>'+(v===''?'—':(v==='ND'?'N.D.':v))+'</option>').join('');
     return '<select class="status-select" data-group="'+group+'" data-item="'+itemId+'">'+opts+'</select>';
   }
+  /* Instrukcje na stanowisku — dotyczą każdej maszyny (także sprzed 2003 r.); zweryfikowane 2026-10-18:
+     zał. nr 1 pkt 1.7.4 rozp. MG z 21.10.2008 r., § 30 rozp. MG z 30.10.2002 r., § 41 rozp. MPiPS z 26.09.1997 r. */
+  const MASZ_INSTR_ITEMS = [
+    {id:'manualPl', q:'Instrukcja obsługi producenta w języku polskim — „Instrukcja oryginalna” albo „Tłumaczenie instrukcji oryginalnej”', hint:'Maszyny z CE: zał. nr 1 pkt 1.7.4 rozp. MG z 21.10.2008 r. Maszyny sprzed 2003 r.: pisemna instrukcja użytkowania zrozumiała dla pracowników (§ 30 rozp. MG z 30.10.2002 r.).'},
+    {id:'manualAt', q:'Instrukcja obsługi dostępna dla operatora przy maszynie (na stanowisku pracy)', hint:'§ 30 rozp. MG z 30.10.2002 r.; instrukcje do stałego korzystania — § 41 ust. 1 rozp. MPiPS z 26.09.1997 r.'},
+    {id:'wsi', q:'Instrukcja stanowiskowa BHP obsługi maszyny opracowana i udostępniona na stanowisku', hint:'§ 41 ust. 1 pkt 2 i ust. 2 rozp. MPiPS z 26.09.1997 r.: czynności przed rozpoczęciem pracy, zasady i sposoby bezpiecznego wykonywania pracy, czynności po jej zakończeniu, postępowanie w sytuacjach awaryjnych.'}
+  ];
   function wtMachineComplianceSummary(m){
     let tak=0, nie=0, nd=0, total=0;
+    MASZ_INSTR_ITEMS.forEach(it=>{ const v=(m.instrAnswers||{})[it.id]; total++; if(v==='TAK') tak++; else if(v==='NIE') nie++; else if(v==='ND') nd++; });
     MW_CATEGORIES.forEach(cat=>{
       if(cat.conditional==='mobile' && !m.isMobile) return;
       if(cat.conditional==='lifting' && !m.isLifting) return;
@@ -15956,7 +16007,7 @@ document.addEventListener('keydown', e=>{
   /* Terminy kolejnej kontroli maszyn (moduł Maszyny) — ten sam wzorzec co daty kart
      przeglądów powyżej, jedno pole (nextControlDate) na maszynę. */
   function wtCollectMachineDatesForMonth(y, m){
-    const out = [];
+    const out = wtMaszExtraDates().filter(e=>{ const d = new Date(e.date+'T00:00:00'); return !isNaN(d.getTime()) && d.getFullYear()===y && d.getMonth()===m; });
     allMachines.forEach(mm=>{
       const val = mm.nextControlDate;
       if(!val) return;
@@ -15968,8 +16019,21 @@ document.addEventListener('keydown', e=>{
     });
     return out;
   }
-  function wtCollectMachineDatesInRange(startIso, endIso){
+  /* terminy z teczek maszyn: usunięcie niezgodności, przegląd instrukcji stanowiskowej */
+  function wtMaszExtraDates(){
     const out = [];
+    allMachines.forEach(mm=>{
+      const client = mm.projectId ? wtProjectById(mm.projectId) : null, sfx = client?' ('+client.name+')':'';
+      const ans = mm.mwAnswers||{}, acts = mm.mwActions||{};
+      Object.keys(acts).forEach(id=>{ const a = acts[id]; if(!a || !a.due || a.done || ans[id]!=='NIE') return;
+        out.push({date:a.due, kind:'review', tag:'z Maszyn', title:'Usunięcie niezgodności: '+(mm.name||'maszyna')+sfx+(a.action?' — '+a.action:''), color:client?client.color:null, pid:client?client.id:null, nav:{section:'maszyny', openFn:'wtMaszOpen', id:mm.id}}); });
+      if((mm.instrAnswers||{}).wsi==='TAK' && mm.wsi && mm.wsi.review)
+        out.push({date:mm.wsi.review, kind:'review', tag:'z Maszyn', title:'Przegląd instrukcji stanowiskowej: '+(mm.name||'maszyna')+sfx, color:client?client.color:null, pid:client?client.id:null, nav:{section:'maszyny', openFn:'wtMaszOpen', id:mm.id}});
+    });
+    return out;
+  }
+  function wtCollectMachineDatesInRange(startIso, endIso){
+    const out = wtMaszExtraDates().filter(e=>e.date>=startIso && e.date<=endIso);
     allMachines.forEach(mm=>{
       const val = mm.nextControlDate;
       if(!val || val<startIso || val>endIso) return;
@@ -17317,7 +17381,11 @@ document.addEventListener('keydown', e=>{
     const cat = MACHINE_CATEGORIES.find(c=>c.id===m.categoryId);
     const ctrlSt = wtPrzStatusFor(m.nextControlDate);
     const ctrlHtml = ctrlSt ? '<span class="badge '+ctrlSt.cls+'"><span class="dot" style="background:var(--'+ctrlSt.cls+')"></span>kontrola: '+esc(ctrlSt.label)+'</span>' : '';
-    const metaSpans = (cat?('<span>'+esc(cat.label)+'</span>'):'');
+    const idParts = [m.inventoryNumber?'nr '+m.inventoryNumber:'', m.location||''].filter(Boolean).join(' · ');
+    const iss = wtMaszIssues(m), stop = iss.find(x=>x.key==='stop'), rest = iss.filter(x=>x.key!=='stop' && x.key!=='ctrl');
+    const metaSpans = (idParts?('<span>'+esc(idParts)+'</span>'):'')+(cat?('<span>'+esc(cat.label)+'</span>'):'')
+      +(stop?'<span class="badge crit"><span class="dot" style="background:var(--crit)"></span>wyłączona z eksploatacji</span>':'')
+      +(rest.length?'<span class="badge high" title="'+esc(rest.map(x=>x.text).join('; '))+'"><span class="dot" style="background:var(--high)"></span>'+rest.length+' '+wtPl(rest.length,'brak','braki','braków')+' w teczce</span>':'');
     return '<div class="wt-rj-versioncard" data-id="'+m.id+'">'
       +'<div class="info"><h4>'+esc(m.name||'Bez nazwy maszyny')+'</h4>'
       +'<div class="meta">'+metaSpans+wtMachineOverallBadge(m)+ctrlHtml+'<span>Zaktualizowano '+fmtWhen(m.updatedAt)+'</span></div></div>'
@@ -17390,6 +17458,7 @@ document.addEventListener('keydown', e=>{
       initialControlDate:'', initialControlResult:'', controlFrequency:'', lastControlDate:'', nextControlDate:'',
       specialControlNotes:'', notes:'', mwAnswers:{}, docAnswers:{},
       faultHistory:[], maintenanceLog:[], authorizedOperators:[], attachments:[],
+      inventoryNumber:'', location:'', instrAnswers:{}, wsi:{}, mwActions:{}, assessDate:'', assessTeam:'', assessResult:'',
       createdAt:Date.now(), updatedAt:Date.now()};
     DB.collection('machines').add(data).then(ref=>{
       maszState.current = Object.assign({id:ref.id}, data);
@@ -17411,6 +17480,9 @@ document.addEventListener('keydown', e=>{
     maszState.current.maintenanceLog = maszState.current.maintenanceLog||[];
     maszState.current.authorizedOperators = maszState.current.authorizedOperators||[];
     maszState.current.attachments = maszState.current.attachments||[];
+    maszState.current.instrAnswers = maszState.current.instrAnswers||{};
+    maszState.current.wsi = maszState.current.wsi||{};
+    maszState.current.mwActions = maszState.current.mwActions||{};
     maszState.view='editor';
     document.getElementById('maszList').style.display='none';
     document.getElementById('maszEditor').style.display='';
@@ -17483,6 +17555,8 @@ document.addEventListener('keydown', e=>{
       }
     }
     if(typedKey==='nextControlDate') maszState.current.nextAuto = false;
+    if(typedKey==='yearBuilt' || typedKey==='dateAcquired') renderMaszLegacyHint();
+    if(typedKey==='assessResult' || typedKey==='lastControlDate' || typedKey==='nextControlDate' || typedKey==='controlFrequency') setTimeout(renderMaszWarnings, 0);
     if(key==='nextControlDate'){
       const pill = document.getElementById('maszCtrlPill');
       if(pill) pill.innerHTML = wtPrzStatusPillHtml(value);
@@ -17493,6 +17567,8 @@ document.addEventListener('keydown', e=>{
     maszState.current[key] = checked;
     scheduleSaveMasz();
     renderMaszChecklists();
+    if(key==='isLegacy'){ const cb = document.getElementById('maszIsLegacy'); if(cb) cb.checked = !!checked; renderMaszLegacyHint(); }
+    renderMaszWarnings();
   };
   /* Trzy proste, dopisywalne listy w "teczce maszyny" (historia usterek, konserwacje, osoby
      upoważnione do obsługi) — jedna, wspólna implementacja zamiast trzech prawie identycznych,
@@ -17677,6 +17753,7 @@ document.addEventListener('keydown', e=>{
     }
     el.innerHTML = maszAttachmentGroupHtml('ce', 'Deklaracja zgodności CE (skan)')
       + maszAttachmentGroupHtml('dtr', 'Instrukcja obsługi / DTR (plik)')
+      + maszAttachmentGroupHtml('wsi', 'Instrukcja stanowiskowa BHP (plik)')
       + maszAttachmentGroupHtml('other', 'Inne dokumenty');
   }
   function renderMaszCategoryHint(){
@@ -17694,6 +17771,11 @@ document.addEventListener('keydown', e=>{
     document.getElementById('maszSerialNumber').value = m.serialNumber||'';
     document.getElementById('maszYearBuilt').value = m.yearBuilt||'';
     document.getElementById('maszDateAcquired').value = m.dateAcquired||'';
+    document.getElementById('maszInventoryNumber').value = m.inventoryNumber||'';
+    document.getElementById('maszLocation').value = m.location||'';
+    document.getElementById('maszAssessDate').value = m.assessDate||'';
+    document.getElementById('maszAssessTeam').value = m.assessTeam||'';
+    document.getElementById('maszAssessResult').value = m.assessResult||'';
     document.getElementById('maszIsMobile').checked = !!m.isMobile;
     document.getElementById('maszIsLifting').checked = !!m.isLifting;
     document.getElementById('maszIsLegacy').checked = !!m.isLegacy;
@@ -17719,14 +17801,89 @@ document.addEventListener('keydown', e=>{
     document.getElementById('maszSaveStatus').textContent='';
     document.getElementById('maszSaveStatus').className='wt-rj-status';
     renderMaszChecklists();
+    renderMaszInstr();
     renderMaszRowLists();
     renderMaszAttachments();
     renderMaszPhotos();
+    renderMaszLegacyHint();
+    renderMaszWarnings();
   }
   function maszItemRowHtml(group, it, value){
     return '<div class="wt-masz-item"><div class="wt-masz-q"><b>'+esc(it.q)+'</b>'
       +(it.hint?('<small>'+esc(it.hint)+'</small>'):'')+'</div>'
-      +'<div class="wt-masz-a">'+wtMachineStatusSelect(group, it.id, value)+'</div></div>';
+      +'<div class="wt-masz-a">'+wtMachineStatusSelect(group, it.id, value)+'</div>'
+      +(group==='mw' ? maszActBoxHtml(it.id, value) : '')+'</div>';
+  }
+  /* niezgodność z oceny minimalnych wymagań: działanie, termin, odpowiedzialny, pilność, wyłączenie z eksploatacji */
+  function maszActBoxHtml(id, value){
+    const a = ((maszState.current && maszState.current.mwActions)||{})[id] || {};
+    const f = (k, label, type, ph)=>'<label class="wt-masz-actf"><span>'+label+'</span>'+(type==='date'
+      ? '<span class="wt-date-wrap"><input class="wt-input" type="date" value="'+esc(a[k]||'')+'" oninput="window.wtMaszAct(\''+id+'\',\''+k+'\',this.value)"><button type="button" class="wt-date-clear" title="Wyczyść datę" onclick="window.wtClearDateInput(this)">×</button></span>'
+      : '<input class="wt-input" value="'+esc(a[k]||'')+'" placeholder="'+esc(ph||'')+'" oninput="window.wtMaszAct(\''+id+'\',\''+k+'\',this.value)">')+'</label>';
+    return '<div class="wt-masz-act" data-act="'+id+'" style="'+(value==='NIE'?'':'display:none')+'">'
+      + f('action','Działanie naprawcze','text','np. montaż wyłącznika awaryjnego w zasięgu operatora')
+      + f('due','Termin usunięcia','date') + f('who','Odpowiedzialny','text','np. kierownik utrzymania ruchu')
+      + '<div class="wt-masz-actchk"><label><input type="checkbox"'+(a.prio?' checked':'')+' onchange="window.wtMaszAct(\''+id+'\',\'prio\',this.checked)"> Pilne</label>'
+      + '<label><input type="checkbox"'+(a.stop?' checked':'')+' onchange="window.wtMaszAct(\''+id+'\',\'stop\',this.checked)"> Maszyna nie może być eksploatowana do usunięcia</label></div>'
+      + f('done','Data usunięcia niezgodności','date') + '</div>';
+  }
+  window.wtMaszAct = function(id, key, value){
+    const m = maszState.current; if(!m) return;
+    m.mwActions = m.mwActions || {};
+    m.mwActions[id] = Object.assign({}, m.mwActions[id]||{}, {[key]: value});
+    scheduleSaveMasz(); renderMaszWarnings();
+  };
+  /* instrukcje na stanowisku: 3 pytania + szczegóły instrukcji stanowiskowej */
+  function renderMaszInstr(){
+    const el = document.getElementById('maszInstr'); const m = maszState.current; if(!el || !m) return;
+    const w = m.wsi || {}, ans = m.instrAnswers || {};
+    const fi = (k, label, type, ph)=>'<div><label>'+label+'</label>'+(type==='date'
+      ? '<span class="wt-date-wrap"><input class="wt-input" type="date" value="'+esc(w[k]||'')+'" oninput="window.wtMaszWsi(\''+k+'\',this.value)"><button type="button" class="wt-date-clear" title="Wyczyść datę" onclick="window.wtClearDateInput(this)">×</button></span>'
+      : '<input class="wt-input" style="width:100%;" value="'+esc(w[k]||'')+'" placeholder="'+esc(ph||'')+'" oninput="window.wtMaszWsi(\''+k+'\',this.value)">')+'</div>';
+    el.innerHTML = MASZ_INSTR_ITEMS.map(it=>maszItemRowHtml('instr', it, ans[it.id]||'')).join('')
+      + '<div class="wt-masz-wsi" id="maszWsiBox" style="'+(ans.wsi==='TAK'?'':'display:none')+'"><h4 style="margin:4px 0 8px;font-size:14px;">Instrukcja stanowiskowa BHP — dane</h4><div class="wt-rj-fields">'
+      + fi('no','Numer / oznaczenie instrukcji','text','np. IS-07') + fi('date','Data opracowania lub ostatniej aktualizacji','date')
+      + fi('author','Opracował (imię, nazwisko, funkcja)','text') + fi('review','Termin przeglądu instrukcji','date') + '</div>'
+      + '<p class="small" style="margin:0;color:var(--ink-faint);">Przegląd instrukcji warto zaplanować po każdej zmianie maszyny, technologii lub oceny ryzyka; termin trafi do terminarza.</p></div>'
+      + '<div class="wt-pz-actions" style="justify-content:flex-start"><button class="wt-btn" type="button" onclick="wtRjDownloadTemplate(\'e2_3_instrukcja_stanowiskowa\')">Pobierz wzór instrukcji stanowiskowej (E.2–E.3)</button></div>';
+  }
+  window.wtMaszWsi = function(k, v){ const m = maszState.current; if(!m) return; m.wsi = Object.assign({}, m.wsi||{}, {[k]: v}); scheduleSaveMasz(); renderMaszWarnings(); };
+  /* podpowiedź: maszyna sprzed 2003 r. */
+  function maszLooksLegacy(m){
+    const y = parseInt(String(m.yearBuilt||'').match(/\d{4}/) ? String(m.yearBuilt).match(/\d{4}/)[0] : '', 10);
+    return (y && y < 2003) || (m.dateAcquired && m.dateAcquired < '2003-01-01');
+  }
+  function renderMaszLegacyHint(){
+    const el = document.getElementById('maszLegacyHint'); const m = maszState.current; if(!el || !m) return;
+    el.innerHTML = (!m.isLegacy && maszLooksLegacy(m))
+      ? '<div class="wt-masz-hint"><span>Rok produkcji lub data oddania wskazują na maszynę sprzed 1.01.2003 r. Jeśli nie była istotnie modernizowana i nie ma oznakowania CE, oceniasz ją pod kątem minimalnych wymagań (rozp. MG z 30.10.2002 r.), a dokumentacja CE jej nie dotyczy.</span><button class="wt-btn" type="button" onclick="window.wtMaszToggleFlag(\'isLegacy\', true)">Oznacz: maszyna sprzed 2003 r.</button></div>'
+      : '';
+  }
+  /* braki i ostrzeżenia w teczce maszyny — te same na liście maszyn */
+  function wtMaszIssues(m){
+    const out = [], today = wtTodayIso(), ans = m.mwAnswers||{}, acts = m.mwActions||{};
+    const nie = MW_CATEGORIES.filter(c=>!(c.conditional==='mobile' && !m.isMobile) && !(c.conditional==='lifting' && !m.isLifting))
+      .flatMap(c=>c.items).filter(it=>ans[it.id]==='NIE');
+    const open = nie.filter(it=>!(acts[it.id]||{}).done);
+    if(m.assessResult==='wylaczona' || open.some(it=>(acts[it.id]||{}).stop)) out.push({cls:'crit', key:'stop', text:'Maszyna wyłączona z eksploatacji do usunięcia niezgodności'});
+    const overdue = open.filter(it=>(acts[it.id]||{}).due && acts[it.id].due < today).length;
+    if(overdue) out.push({cls:'crit', key:'overdue', text:overdue+' '+wtPl(overdue,'niezgodność','niezgodności','niezgodności')+' po terminie usunięcia'});
+    const noPlan = open.filter(it=>!(acts[it.id]||{}).action || !(acts[it.id]||{}).due).length;
+    if(noPlan) out.push({cls:'high', key:'noplan', text:noPlan+' '+wtPl(noPlan,'niezgodność','niezgodności','niezgodności')+' bez działania naprawczego lub terminu'});
+    if(m.isLegacy && !Object.keys(ans).some(k=>ans[k])) out.push({cls:'high', key:'noassess', text:'Brak oceny dostosowania do minimalnych wymagań (maszyna sprzed 2003 r.)'});
+    const ia = m.instrAnswers||{};
+    if(ia.manualPl==='NIE') out.push({cls:'high', key:'manualpl', text:'Brak instrukcji obsługi w języku polskim'});
+    if(ia.manualAt==='NIE') out.push({cls:'high', key:'manualat', text:'Instrukcja obsługi niedostępna przy maszynie'});
+    if(ia.wsi==='NIE') out.push({cls:'high', key:'wsi', text:'Brak instrukcji stanowiskowej BHP'});
+    if(ia.wsi==='TAK' && m.wsi && m.wsi.review && m.wsi.review < today) out.push({cls:'high', key:'wsireview', text:'Minął termin przeglądu instrukcji stanowiskowej'});
+    if(m.nextControlDate && m.nextControlDate < today) out.push({cls:'crit', key:'ctrl', text:'Kontrola okresowa po terminie ('+fmtDatePL(m.nextControlDate)+')'});
+    return out;
+  }
+  window.wtMaszIssues = wtMaszIssues;
+  function renderMaszWarnings(){
+    const el = document.getElementById('maszWarnings'); const m = maszState.current; if(!el || !m) return;
+    const L = wtMaszIssues(m);
+    el.innerHTML = L.length ? '<div class="wt-masz-warn"><b>Do uzupełnienia w teczce</b><ul>'+L.map(x=>'<li class="'+x.cls+'">'+esc(x.text)+'</li>').join('')+'</ul></div>' : '';
   }
   function renderMaszChecklists(){
     const m = maszState.current;
@@ -17805,11 +17962,14 @@ document.addEventListener('keydown', e=>{
     const t = e.target;
     if(t.dataset && t.dataset.item!==undefined && maszState.current){
       const m = maszState.current;
-      const bucket = t.dataset.group==='doc' ? 'docAnswers' : 'mwAnswers';
+      const bucket = t.dataset.group==='doc' ? 'docAnswers' : t.dataset.group==='instr' ? 'instrAnswers' : 'mwAnswers';
       m[bucket] = m[bucket]||{};
       m[bucket][t.dataset.item] = t.value;
+      if(t.dataset.group==='mw'){ const box = document.querySelector('.wt-masz-act[data-act="'+t.dataset.item+'"]'); if(box) box.style.display = t.value==='NIE' ? '' : 'none'; }
+      if(t.dataset.group==='instr' && t.dataset.item==='wsi'){ const box = document.getElementById('maszWsiBox'); if(box) box.style.display = t.value==='TAK' ? '' : 'none'; }
       renderMaszCatCounts();
       renderMaszSummary();
+      renderMaszWarnings();
       scheduleSaveMasz();
     }
   }
@@ -17819,6 +17979,8 @@ document.addEventListener('keydown', e=>{
   function maszXlsxColumns(){
     return [
       {label:'Nazwa', key:'name'},
+      {label:'Nr ewidencyjny', key:'inventoryNumber'},
+      {label:'Lokalizacja', key:'location'},
       {label:'Kategoria', render: m=>{ const cat=MACHINE_CATEGORIES.find(c=>c.id===m.categoryId); return cat?cat.label:''; }},
       {label:'Producent', key:'manufacturer'},
       {label:'Model', key:'model'},
@@ -17861,6 +18023,8 @@ document.addEventListener('keydown', e=>{
         +'<span><b>Model/typ:</b> '+esc(m.model||'\u2014')+'</span>'
         +'<span><b>Nr seryjny:</b> '+esc(m.serialNumber||'\u2014')+'</span>'
         +'<span><b>Rok produkcji:</b> '+esc(m.yearBuilt||'\u2014')+'</span>'
+        +'<span><b>Nr ewidencyjny:</b> '+esc(m.inventoryNumber||'\u2014')+'</span>'
+        +'<span><b>Lokalizacja:</b> '+esc(m.location||'\u2014')+'</span>'
         +(client?'<span><b>Klient:</b> '+esc(client.name)+'</span>':'')
       +'</div>'
       +'<div class="rp-meta">'
@@ -17871,23 +18035,41 @@ document.addEventListener('keydown', e=>{
       +'</div>'
       +'<table><thead><tr><th>Zgodność z minimalnymi wymaganiami BHP (rozp. MG 30.10.2002)</th><th>Odpowiedź</th></tr></thead>'
         +'<tbody>'+rowsFor(MW_CATEGORIES, m.mwAnswers||{})+'</tbody></table>'
+      + maszNonconfTableHtml(m)
+      +'<table style="margin-top:10px;"><thead><tr><th>Instrukcje na stanowisku pracy</th><th>Odpowiedź</th></tr></thead><tbody>'
+        + MASZ_INSTR_ITEMS.map(it=>'<tr><td>'+esc(it.q)+'</td><td>'+esc((m.instrAnswers||{})[it.id]||'—')+'</td></tr>').join('')
+        + ((m.instrAnswers||{}).wsi==='TAK' ? '<tr><td colspan="2">Instrukcja stanowiskowa: '+esc([(m.wsi||{}).no, (m.wsi||{}).date?'z '+fmtDatePL(m.wsi.date):'', (m.wsi||{}).author?'oprac. '+m.wsi.author:'', (m.wsi||{}).review?'przegląd do '+fmtDatePL(m.wsi.review):''].filter(Boolean).join(', ')||'—')+'</td></tr>' : '')
+      +'</tbody></table>'
       +(m.isLegacy
         ? '<p style="font-size:10.5px;color:#777;margin-top:10px;">Maszyna wprowadzona do obrotu przed 1.01.2003 r. — nie podlega zasadniczym wymaganiom (CE/deklaracja zgodności/tabliczka wg dyrektywy maszynowej), o ile nie była później istotnie zmodernizowana.</p>'
         : '<table style="margin-top:10px;"><thead><tr><th>Dokumentacja maszyny (zasadnicze wymagania)</th><th>Odpowiedź</th></tr></thead>'
           +'<tbody>'+rowsFor(DOC_CATEGORIES, m.docAnswers||{})+'</tbody></table>')
-      + maszSimpleLogTableHtml('Historia usterek i napraw', m.faultHistory, MASZ_FAULT_COLUMNS)
-      + maszSimpleLogTableHtml('Konserwacje', m.maintenanceLog, MASZ_MAINT_COLUMNS)
+      + maszSimpleLogTableHtml('Historia usterek i napraw', m.faultHistory, MASZ_FAULT_COLUMNS, true)
+      + maszSimpleLogTableHtml('Konserwacje', m.maintenanceLog, MASZ_MAINT_COLUMNS, true)
       + maszSimpleLogTableHtml('Osoby upoważnione do obsługi', m.authorizedOperators, MASZ_OPERATOR_COLUMNS)
       + ((m.attachments||[]).length ? '<div style="margin-top:10px;font-size:10.5px;"><b>Załączniki:</b> '
           +(m.attachments||[]).map(a=>esc(a.name)).join(', ')+' (dostępne do pobrania w aplikacji)</div>' : '')
-      +'<div class="rp-footer">Wygenerowano w narzędziu BHP Audyt — '+fmtWhen(Date.now())+'</div>';
+      +'<div class="wt-masz-signrow"><div>Kartę sporządził<br><span>imię, nazwisko, data</span></div><div>Podpis</div><div>Zatwierdził (pracodawca)<br><span>data, podpis</span></div></div>'
+      +'<div class="rp-footer">Wygenerowano w narzędziu BHP Audyt — '+fmtWhen(Date.now())+'. Wyniki kontroli maszyn przechowuje się przez 5 lat (§ 28 rozp. MG z 30.10.2002 r.).</div>';
+    /* tabele karty nie mają kolumny „Lp.” — bez tej klasy wspólny styl wydruku ściskał pierwszą kolumnę do 20 px (dziesiątki stron) */
+    host.querySelectorAll('table').forEach(t=>t.classList.add('wt-masz-pt'));
   }
-  function maszSimpleLogTableHtml(title, rows, columns){
+  /* tabela niezgodności z oceny minimalnych wymagań — z rubryką na podpis po usunięciu */
+  function maszNonconfTableHtml(m){
+    const ans = m.mwAnswers||{}, acts = m.mwActions||{};
+    const items = MW_CATEGORIES.flatMap(c=>c.items).filter(it=>ans[it.id]==='NIE' || (acts[it.id]||{}).done);
+    if(!items.length) return '';
+    return '<table style="margin-top:10px;"><thead><tr><th colspan="6">Niezgodności i działania naprawcze'+(m.assessDate?' (ocena z '+esc(fmtDatePL(m.assessDate))+')':'')+'</th></tr>'
+      +'<tr><th>Wymaganie</th><th>Działanie naprawcze</th><th>Termin</th><th>Odpowiedzialny</th><th>Usunięto</th><th>Podpis</th></tr></thead><tbody>'
+      + items.map(it=>{ const a = acts[it.id]||{}; return '<tr><td>'+esc(it.q)+(a.stop?' <b>(maszyna wyłączona do usunięcia)</b>':'')+(a.prio?' <b>— pilne</b>':'')+'</td><td>'+esc(a.action||'—')+'</td><td>'+esc(fmtDatePL(a.due)||'—')+'</td><td>'+esc(a.who||'—')+'</td><td>'+esc(fmtDatePL(a.done)||'')+'</td><td style="min-width:90px"></td></tr>'; }).join('')
+      +'</tbody></table>';
+  }
+  function maszSimpleLogTableHtml(title, rows, columns, sign){
     rows = rows||[];
     if(!rows.length) return '';
-    return '<table style="margin-top:10px;"><thead><tr><th colspan="'+columns.length+'">'+esc(title)+'</th></tr>'
-      + '<tr>'+columns.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead>'
-      + '<tbody>'+rows.map(r=>'<tr>'+columns.map(c=>'<td>'+esc((c.type==='date'?fmtDatePL(r[c.key]):r[c.key])||'—')+'</td>').join('')+'</tr>').join('')
+    return '<table style="margin-top:10px;"><thead><tr><th colspan="'+(columns.length+(sign?1:0))+'">'+esc(title)+'</th></tr>'
+      + '<tr>'+columns.map(c=>'<th>'+esc(c.label)+'</th>').join('')+(sign?'<th>Podpis</th>':'')+'</tr></thead>'
+      + '<tbody>'+rows.map(r=>'<tr>'+columns.map(c=>'<td>'+esc((c.type==='date'?fmtDatePL(r[c.key]):r[c.key])||'—')+'</td>').join('')+(sign?'<td style="min-width:90px"></td>':'')+'</tr>').join('')
       + '</tbody></table>';
   }
   window.wtMaszPrint = function(){
@@ -19345,6 +19527,16 @@ document.addEventListener('keydown', e=>{
       out.push({key:'z:'+d.id, kind:'cz', id:d.id, projectId:d.projectId||'', source:'Choroba zawodowa — działania pracodawcy',
         date:d.decisionDate||d.suspicionDate||'', text:(d.employeeName?'['+d.employeeName+'] ':'')+d.measures, responsible:d.measuresResponsible||'', deadline:d.measuresDeadline||'', completedDate:d.measuresDoneDate||''});
     });
+    /* niezgodności z oceny minimalnych wymagań w teczkach maszyn */
+    allMachines.forEach(mc=>{
+      const ans = mc.mwAnswers||{}, acts = mc.mwActions||{};
+      MW_CATEGORIES.forEach(cat=>cat.items.forEach(it=>{
+        const a = acts[it.id]||{};
+        if(ans[it.id]!=='NIE' && !a.done) return;
+        out.push({key:'mc:'+mc.id+':'+it.id, kind:'masz', id:mc.id, itemId:it.id, projectId:mc.projectId||'', source:'Maszyna — ocena minimalnych wymagań: '+(mc.name||'bez nazwy'),
+          date:mc.assessDate||'', text:it.q+(a.action?' → '+a.action:''), responsible:a.who||'', deadline:a.due||'', completedDate:a.done||''});
+      }));
+    });
     allRecommendations.forEach(r=>{
       const s = wtRecSource(r.source);
       out.push({key:'r:'+r.id, kind:'rec', id:r.id, projectId:r.projectId||'', source:s.label+(r.authority?' — '+r.authority:'')+(r.docNo?' ('+r.docNo+')':''),
@@ -19451,7 +19643,16 @@ document.addEventListener('keydown', e=>{
     else if(it.kind==='accident') DB.doc('accident_cases/'+it.id).update({measuresCompletedDate:today, updatedAt:Date.now()}).catch(()=>wtToast('Nie udało się zapisać.', true));
     else if(it.kind==='rec') DB.doc('recommendations/'+it.id).update({completedDate:today, updatedAt:Date.now()}).catch(()=>wtToast('Nie udało się zapisać.', true));
     else if(it.kind==='cz') DB.doc('occupational_diseases/'+it.id).update({measuresDoneDate:today, updatedAt:Date.now()}).catch(()=>wtToast('Nie udało się zapisać.', true));
+    else if(it.kind==='masz') wtMaszMarkActionDone(it.id, it.itemId, today);
   };
+  /* „Wykonano” w rejestrze zaleceń → data usunięcia w teczce maszyny i odpowiedź TAK (jak synchronizacja M.1 z audytem) */
+  function wtMaszMarkActionDone(mid, itemId, day){
+    const mc = allMachines.find(x=>x.id===mid); if(!mc || !DB) return;
+    const acts = Object.assign({}, mc.mwActions||{}); acts[itemId] = Object.assign({}, acts[itemId]||{}, {done:day});
+    const ans = Object.assign({}, mc.mwAnswers||{}); ans[itemId] = 'TAK';
+    if(maszState.current && maszState.current.id===mid){ maszState.current.mwActions = JSON.parse(JSON.stringify(acts)); maszState.current.mwAnswers = Object.assign({}, ans); }
+    DB.doc('machines/'+mid).update({mwActions:acts, mwAnswers:ans, updatedAt:Date.now()}).catch(()=>wtToast('Nie udało się zapisać.', true));
+  }
   window.wtRecOpen = function(key){
     const it = wtCollectRecommendations().find(x=>x.key===key);
     if(!it) return;
@@ -19462,6 +19663,7 @@ document.addEventListener('keydown', e=>{
       if(window.wtRjOpenRowDetail) window.wtRjOpenRowDetail(it.rowIdx);
     } else if(it.kind==='accident'){ wtRecAccidentEdit(it.id); }
     else if(it.kind==='cz'){ window.wtCzEdit(it.id); }
+    else if(it.kind==='masz'){ showSection('maszyny'); window.wtMaszOpen(it.id); setTimeout(()=>{ const box = document.querySelector('.wt-masz-act[data-act="'+it.itemId+'"]'); if(box){ const cat = box.closest('.cat'); if(cat) cat.classList.add('open'); box.scrollIntoView({block:'center'}); } }, 80); }
     else if(it.kind==='audit'){
       // otwiera raport audytu/obchodu w panelu klienta — to on tworzy protokół M.1 z wszystkimi NIE
       showSection('klienci'); window.wtKlienciOpen(it.projectId); window.wtOpenAuditReport(it.auditId);
@@ -20672,7 +20874,10 @@ document.addEventListener('keydown', e=>{
     if(type==='rejestr_dostosowania_maszyn'){
       return allMachines.filter(m=>m.projectId===cid).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''), 'pl')).map(m=>{ const c = wtMachineComplianceSummary(m);
         const res = c.nie>0 ? 'wymaga dostosowania ('+c.nie+' niezgodn.)' : c.unanswered===c.total ? 'brak oceny' : c.unanswered>0 ? 'ocena w toku' : 'zgodna';
-        return B({machineName:m.name||'(bez nazwy)', inventoryNumber:m.serialNumber||'', yearInService: m.yearBuilt || String(m.dateAcquired||'').slice(0,4), subjectToAdaptation: m.isLegacy ? 'TAK (przed 2003 r.)' : 'NIE — maszyna z CE (zasadnicze wymagania)', assessmentResult:res, status: c.nie>0 ? 'w realizacji' : res==='zgodna' ? 'zakończone' : ''}); });
+        const ans = m.mwAnswers||{}, acts = m.mwActions||{}, nieIt = MW_CATEGORIES.flatMap(cc=>cc.items).filter(it=>ans[it.id]==='NIE' || (acts[it.id]||{}).done);
+        const open = nieIt.filter(it=>!(acts[it.id]||{}).done), dues = nieIt.map(it=>(acts[it.id]||{}).due).filter(Boolean).sort(), dones = nieIt.map(it=>(acts[it.id]||{}).done).filter(Boolean).sort();
+        return B({machineName:m.name||'(bez nazwy)', inventoryNumber:m.inventoryNumber||m.serialNumber||'', yearInService: m.yearBuilt || String(m.dateAcquired||'').slice(0,4), subjectToAdaptation: m.isLegacy ? 'TAK (przed 2003 r.)' : 'NIE — maszyna z CE (zasadnicze wymagania)', assessmentDate:m.assessDate||'', assessmentResult:res,
+          adaptationScope: nieIt.map(it=>((acts[it.id]||{}).action||it.q)).join('; '), deadline: dues.length ? dues[dues.length-1] : '', status: open.length ? 'w realizacji' : (nieIt.length ? 'zakończone' : (res==='zgodna' ? 'zakończone' : '')), completedDate: (nieIt.length && !open.length && dones.length) ? dones[dones.length-1] : ''}); });
     }
     if(type==='rejestr_zalecen_pokontrolnych'){
       return wtCollectRecommendations().filter(it=>it.projectId===cid && !(it.kind==='register' && /^M\.[36]/.test(it.source)))
@@ -27102,6 +27307,7 @@ document.addEventListener('keydown', e=>{
     });
     document.getElementById('maszMwChecklist').addEventListener('change', maszHandleAnswerChange);
     document.getElementById('maszDocChecklist').addEventListener('change', maszHandleAnswerChange);
+    document.getElementById('maszInstr').addEventListener('change', maszHandleAnswerChange);
   }
   /* ---------------- Lokalny magazyn danych (IndexedDB) — działa bez claude.ai ----------------
      Gdy narzędzie jest otwarte jako zwykły plik HTML (nie jako strona na claude.ai), capability
@@ -30146,6 +30352,32 @@ document.addEventListener('keydown', e=>{
     if(on) sec.querySelectorAll('.cat').forEach(c=>{ if(c.querySelector('.item[data-pip]')) c.classList.add('open'); });
   };
   try{ wtPipDecorate(); }catch(e){ console.error('PIP', e); }
+  /* ---- protokół oceny dostosowania maszyny do minimalnych wymagań (PDF w wyglądzie raportu z audytu) ---- */
+  window.wtMaszProtocolPdf = function(){
+    const m = maszState.current; if(!m) return;
+    const client = m.projectId ? wtProjectById(m.projectId) : null, ans = m.mwAnswers||{}, acts = m.mwActions||{};
+    const cats = MW_CATEGORIES.filter(c=>!(c.conditional==='mobile' && !m.isMobile) && !(c.conditional==='lifting' && !m.isLifting));
+    const all = cats.flatMap(c=>c.items), tak = all.filter(it=>ans[it.id]==='TAK').length, nie = all.filter(it=>ans[it.id]==='NIE'), nd = all.filter(it=>ans[it.id]==='ND').length, unans = all.length - tak - nie.length - nd;
+    if(!tak && !nie.length && !nd){ wtToast('Najpierw oceń wymagania (TAK / NIE / N.D.) w sekcji minimalnych wymagań.', true); return; }
+    const pct = Math.round(tak/Math.max(1, tak+nie.length)*100);
+    const resLbl = {zgodna:'Maszyna spełnia minimalne wymagania i może być eksploatowana.', warunkowo:'Maszyna dopuszczona do eksploatacji warunkowo — niezgodności do usunięcia w podanych terminach.', wylaczona:'Maszyna wyłączona z eksploatacji do czasu usunięcia niezgodności oznaczonych jako blokujące.'}[m.assessResult] || 'Wynik oceny: nie określono.';
+    const cards = nie.map(it=>{ const a = acts[it.id]||{}; return {question:it.q, comment:[a.stop?'Maszyna nie może być eksploatowana do usunięcia.':'', a.done?'Usunięto: '+fmtDatePL(a.done):''].filter(Boolean).join(' '), action:a.action||'', owner:a.who||'', due:fmtDatePL(a.due)||'', pill:a.stop?'BLOKUJĄCA':a.prio?'PILNE':'NIE', pillCls:(a.stop||a.prio)?'':'', w1:'Sposób usunięcia', w2:'Data i podpis'}; });
+    const rows = cats.flatMap(c=>c.items.map(it=>({text:it.q, note:c.label, status:{TAK:'TAK',NIE:'NIE',ND:'N.D.'}[ans[it.id]]||'—', cls:{TAK:'ok',NIE:'bad',ND:'nd'}[ans[it.id]]||'blank'})));
+    const basis = 'Rozporządzenie Ministra Gospodarki z 30.10.2002 r. w sprawie minimalnych wymagań dotyczących bezpieczeństwa i higieny pracy w zakresie użytkowania maszyn przez pracowników podczas pracy (Dz.U. Nr 191, poz. 1596 ze zm.), rozdział 3.'
+      + (m.isLegacy ? ' Maszyna nabyta przed 1.01.2003 r. — obowiązek dostosowania do minimalnych wymagań (§ 34).' : '')
+      + '\nZespół oceniający: ' + (m.assessTeam||'—') + '\nLokalizacja: ' + (m.location||'—');
+    const sign = '<div class="wt-rpc-sign"><div>Zespół oceniający<br><br>……………………………<br>podpisy</div><div>Pracodawca<br><br>……………………………<br>data i podpis</div></div>';
+    const html = wtRpcReport({pills:['Protokół oceny dostosowania maszyny do minimalnych wymagań BHP'], title:m.name||'Maszyna', subtitle:client?client.name:'',
+      meta:[{lbl:'Nr ewidencyjny', val:m.inventoryNumber||'—'},{lbl:'Nr fabryczny', val:m.serialNumber||'—'},{lbl:'Rok produkcji', val:m.yearBuilt||'—'},{lbl:'Data oceny', val:fmtDatePL(m.assessDate)||'—'}],
+      ring:{pct, label:'Spełnione', sub:tak+' z '+(tak+nie.length)+' ocenionych wymagań'},
+      stats:[{label:'Wymagań', num:all.length},{label:'Spełnione', num:tak, cls:'ok'},{label:'Niezgodności', num:nie.length, cls:'bad'},{label:'N.D. / bez oceny', num:nd+unans, cls:'warn'}],
+      sections:[wtRpcSection('Podstawa', 'Podstawa i zakres oceny', wtRpcText(basis)),
+        wtRpcSection('Niezgodności', 'Stwierdzone niezgodności i działania naprawcze', wtRpcCards(cards), 'red'),
+        wtRpcSection('Lista kontrolna', 'Ocena poszczególnych wymagań', wtRpcRows(rows), 'blue'),
+        wtRpcSection('Wynik', 'Wynik oceny', wtRpcText(resLbl) + sign)],
+      footer:'Wyniki kontroli maszyn rejestruje się i przechowuje przez 5 lat (§ 28 rozp. MG z 30.10.2002 r.).', brand:client?client.name:''});
+    wtRpcExport(html, 'Protokol_oceny_'+rpcSlug(m.name||'maszyna')+'.pdf');
+  };
   window.wtPpozDataChanged = function(){ wtPpozRerender(); };
   /* Nawigacja do sekcji z drążeniem (Klienci: lista/szczegóły klienta; Rejestry: hub/lista/edytor)
      zawsze wraca do EKRANU GŁÓWNEGO tej sekcji, zamiast pamiętać ostatnio otwarty
