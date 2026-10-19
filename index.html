@@ -9154,7 +9154,7 @@ window.__WT_FIREBASE_CONFIG__ = {
   </div>
   <div class="wt-toolbar">
     <select class="status-select" id="czynnikiClient" onchange="window.wtCzySet('client', this.value)"></select>
-    <select class="status-select" id="czynnikiStatus" onchange="window.wtCzySet('status', this.value)"><option value="all">Wszystkie pomiary</option><option value="due">Po terminie i w ciągu 30 dni</option></select>
+    <select class="status-select" id="czynnikiStatus" onchange="window.wtCzySet('status', this.value)"><option value="all">Wszystkie pomiary</option><option value="due">Po terminie i w ciągu 90 dni</option></select>
     <button class="wt-btn primary" onclick="window.wtCzyEdit(null)">+ Dodaj pomiar</button>
   </div>
   <div id="czynnikiBody"></div>
@@ -13872,12 +13872,15 @@ document.addEventListener('keydown', e=>{
     }
     return null;
   }
-  function wtPrzStatusFor(dateStr){
+  /* dłuższe wyprzedzenie (UWAGA 90 dni) dla terminów wymagających organizacji: szkolenia okresowe BHP, pomiary czynników szkodliwych */
+  const WT_TH_90 = {urgent:30, warning:90};
+  function wtPrzStatusFor(dateStr, thresholds){
     const days = wtDaysUntil(dateStr);
     if(days===null) return null;
-    const bucket = wtExpiryBucket(days);
+    const bucket = wtExpiryBucket(days, thresholds);
     const cls = {expired:'crit', urgent:'high', warning:'med', ok:'low'};
-    return { days, bucket, cls: cls[bucket], label: DEFAULT_STATUS_LABELS[bucket] };
+    const label = bucket==='warning' && thresholds && thresholds.warning!==60 ? 'UWAGA (≤'+thresholds.warning+' dni)' : DEFAULT_STATUS_LABELS[bucket];
+    return { days, bucket, cls: cls[bucket], label };
   }
 
   /* Uprawnienia UDT/TDT/WDT: wniosek o bezpłatne przedłużenie zaświadczenia kwalifikacyjnego trzeba złożyć
@@ -13938,8 +13941,8 @@ document.addEventListener('keydown', e=>{
     return '<span class="badge '+st.cls+'"'+(st.ext?' title="'+esc(wtUdtExtNote(st.ext))+'"':'')+'><span class="dot" style="background:var(--'+st.cls+')"></span>'+esc(st.label)+'</span>'
       + (st.ext && st.bucket!=='expired' ? '<div class="wt-emp-date">wniosek do '+esc(fmtDatePL(st.ext))+'</div>' : '');
   }
-  function wtPrzStatusPillHtml(dateStr){
-    const st = wtPrzStatusFor(dateStr);
+  function wtPrzStatusPillHtml(dateStr, thresholds){
+    const st = wtPrzStatusFor(dateStr, thresholds);
     if(!st) return '<span class="wt-rj-computed-empty">brak terminu</span>';
     return '<span class="badge '+st.cls+'"><span class="dot" style="background:var(--'+st.cls+')"></span>'+esc(st.label)+'</span>';
   }
@@ -19111,8 +19114,8 @@ document.addEventListener('keydown', e=>{
     const out = {permits:[]};
     const risk = wtEmpClientRisk(e);
     const g = wtEmpGroup(e.group);
-    function fromDate(date, okNote){
-      const st = wtPrzStatusFor(date);
+    function fromDate(date, okNote, thresholds){
+      const st = wtPrzStatusFor(date, thresholds);
       if(!st) return null;
       return {cls:st.cls, label:st.label, date, days:st.days, bucket:st.bucket, note:okNote||''};
     }
@@ -19127,13 +19130,13 @@ document.addEventListener('keydown', e=>{
       out.training = {cls:'med', label:'Brak grupy szkoleniowej', note:'Wybierz grupę, aby wyliczyć termin.'};
     } else if(e.periodicTrainingDate){
       const due = wtAddMonthsIso(e.periodicTrainingDate, g.years*12);
-      out.training = fromDate(due, 'Co '+wtYearsLabel(g.years)+' — '+EMP_GROUP_BASIS) || {cls:'med', label:'Błędna data'};
+      out.training = fromDate(due, 'Co '+wtYearsLabel(g.years)+' — '+EMP_GROUP_BASIS, WT_TH_90) || {cls:'med', label:'Błędna data'};
       out.training.due = due;
     } else {
       const start = e.positionStartDate || e.hireDate;
       if(start){
         const due = wtAddMonthsIso(start, g.firstMonths);
-        out.training = fromDate(due, 'Pierwsze okresowe do '+g.firstMonths+' mies. od rozpoczęcia pracy na stanowisku — '+EMP_GROUP_BASIS) || {cls:'med', label:'Błędna data'};
+        out.training = fromDate(due, 'Pierwsze okresowe do '+g.firstMonths+' mies. od rozpoczęcia pracy na stanowisku — '+EMP_GROUP_BASIS, WT_TH_90) || {cls:'med', label:'Błędna data'};
         out.training.due = due; out.training.first = true;
       } else {
         out.training = {cls:'med', label:'Brak daty szkolenia', note:'Wpisz datę ostatniego szkolenia okresowego albo datę rozpoczęcia pracy.'};
@@ -22353,13 +22356,13 @@ document.addEventListener('keydown', e=>{
     let list = [];
     versions.forEach(v=>(v.rows||[]).forEach((r,i)=>{ if(wtCzyFilled(r)) list.push({v, r, i, p:wtProjectById(v.projectId)}); }));
     const all = list.slice();
-    if(czyState.status==='due') list = list.filter(x=>{ const n = wtDaysUntil(x.r.nextDate); return n!==null && n<=30; });
+    if(czyState.status==='due') list = list.filter(x=>{ const n = wtDaysUntil(x.r.nextDate); return n!==null && n<=90; });
     list.sort((a,b)=>String(a.r.nextDate||'9999').localeCompare(String(b.r.nextDate||'9999')));
     const over = all.filter(x=>{ const n = wtDaysUntil(x.r.nextDate); return n!==null && n<0; }).length;
-    const soon = all.filter(x=>{ const n = wtDaysUntil(x.r.nextDate); return n!==null && n>=0 && n<=30; }).length;
+    const soon = all.filter(x=>{ const n = wtDaysUntil(x.r.nextDate); return n!==null && n>=0 && n<=90; }).length;
     const showClient = !czyState.client;
     const summary = all.length ? '<div class="small" style="margin:0 0 10px;color:var(--ink-soft);">'+all.length+' '+wtPl(all.length,'pomiar','pomiary','pomiarów')
-      +(over ? ' · <b style="color:var(--crit)">'+over+' po terminie</b>' : '')+(soon ? ' · <b style="color:var(--high)">'+soon+' w ciągu 30 dni</b>' : '')+'</div>' : '';
+      +(over ? ' · <b style="color:var(--crit)">'+over+' po terminie</b>' : '')+(soon ? ' · <b style="color:var(--high)">'+soon+' w ciągu 90 dni</b>' : '')+'</div>' : '';
     const table = list.length ? '<div class="wt-tablewrap"><table class="ref wt-autocards"><thead><tr><th>Stanowisko / czynnik</th>'+(showClient?'<th>Klient</th>':'')+'<th>Rodzaj</th><th>Wynik</th><th>Pomiar</th><th>Częstotliwość</th><th>Następny pomiar</th></tr></thead><tbody>'
       + list.map(x=>{ const r = x.r, rule = wtMeasureRule(r);
         return '<tr style="cursor:pointer;" onclick="window.wtCzyEdit(\''+x.v.id+'\','+x.i+')"><td>'+esc(r.position||'—')+'<div class="small">'+esc(r.factor||'')+'</div></td>'
@@ -22368,7 +22371,7 @@ document.addEventListener('keydown', e=>{
           +'<td class="small">'+esc(r.result||'')+(r.ratio?'<div class="wt-emp-date">krotność '+esc(r.ratio)+'</div>':'')+'</td>'
           +'<td class="mono small">'+esc(fmtDatePL(r.date)||'—')+'</td>'
           +'<td class="small">'+esc(rule ? rule.label : '—')+'</td>'
-          +'<td>'+(r.nextDate ? '<div class="mono small">'+esc(fmtDatePL(r.nextDate))+'</div>'+wtPrzStatusPillHtml(r.nextDate) : '<span class="small" style="color:var(--ink-faint)">—</span>')+'</td></tr>'; }).join('')
+          +'<td>'+(r.nextDate ? '<div class="mono small">'+esc(fmtDatePL(r.nextDate))+'</div>'+wtPrzStatusPillHtml(r.nextDate, WT_TH_90) : '<span class="small" style="color:var(--ink-faint)">—</span>')+'</td></tr>'; }).join('')
       + '</tbody></table></div>'
       : '<div class="wt-empty">'+(all.length ? 'Brak pomiarów z terminem w ciągu 30 dni ani po terminie.' : 'Brak wpisów. Dodaj pierwszy pomiar — rejestr F.1 klienta utworzy się sam.')+'</div>';
     const regs = versions.length ? '<div class="wt-prof-head">Rejestr F.1 — druk, PDF, Excel</div><div style="display:flex;flex-wrap:wrap;gap:8px;">'
