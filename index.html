@@ -602,6 +602,7 @@ a.jump:hover{text-decoration:underline;}
 .wt-sign-box{background:var(--bg,#fff);border-radius:14px;padding:16px;width:100%;max-width:640px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .wt-sign-title{font-weight:700;margin-bottom:8px;}
 .wt-sign-canvas{width:100%;height:auto;aspect-ratio:600/220;border:2px dashed var(--line,#ccc);border-radius:10px;background:#fff;touch-action:none;display:block;}
+.wt-permit-kind{min-width:0;font-size:12.5px;padding:4px 6px;}
 .wt-calc-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-bottom:16px;}
 .wt-calc-card{min-width:0;}
 .wt-calc-out{overflow-x:auto;}
@@ -848,7 +849,7 @@ a.jump:hover{text-decoration:underline;}
 .wt-emp-st{text-transform:none;letter-spacing:0;font-weight:500;display:inline-flex;gap:8px;align-items:center;}
 .wt-emp-st .wt-emp-date{margin:0;}
 .wt-emp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px;}
-.wt-emp-permit{display:grid;grid-template-columns:2fr 1fr 170px auto;gap:8px;align-items:center;margin-bottom:6px;}
+.wt-emp-permit{display:grid;grid-template-columns:minmax(0,2fr) 150px minmax(0,1fr) 170px auto;gap:8px;align-items:center;margin-bottom:6px;}
 .wt-emp-permit .wt-input{min-width:0;width:100%;}
 @media (max-width:640px){.wt-emp-grid{grid-template-columns:1fr 1fr;}.wt-emp-permit{grid-template-columns:1fr 1fr;}}
 @media (max-width:420px){.wt-emp-grid{grid-template-columns:1fr;}}
@@ -13883,14 +13884,16 @@ document.addEventListener('keydown', e=>{
      najpóźniej 3 miesiące przed upływem ważności (art. 23 ust. 2c pkt 1 ustawy o dozorze technicznym, t.j. Dz.U. 2024 poz. 1194),
      później zostaje ponowny egzamin. Dlatego status liczymy od terminu wniosku: UWAGA 60 dni, PILNE 30 dni przed nim. */
   const WT_UDT_PERMIT_RE = /\budt\b|\btdt\b|\bwdt\b|dozor\w* techn|wozk|suwnic|zuraw|dzwig|wciagn|podest\w* ruch|ukladnic|podnosnik|napelnian|konserwator|zbiornik\w* cisn|kotl/;
-  function wtIsUdtPermit(type){
+  function wtIsUdtPermit(type, kind){
+    if(kind==='udt') return true;
+    if(kind==='other') return false;
     const n = String(type||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ł/g,'l');
     return WT_UDT_PERMIT_RE.test(n);
   }
   window.wtIsUdtPermit = wtIsUdtPermit;
-  function wtPermitStatusFor(dateStr, type){
+  function wtPermitStatusFor(dateStr, type, kind){
     const st = wtPrzStatusFor(dateStr);
-    if(!st || st.bucket==='expired' || !wtIsUdtPermit(type)) return st;
+    if(!st || st.bucket==='expired' || !wtIsUdtPermit(type, kind)) return st;
     const ext = wtAddMonthsIso(dateStr, -3), dExt = wtDaysUntil(ext);
     if(dExt===null) return st;
     if(dExt < 0) return {days:st.days, bucket:'urgent', cls:'high', label:'PO TERMINIE WNIOSKU UDT — egzamin', ext, udt:true};
@@ -13899,9 +13902,19 @@ document.addEventListener('keydown', e=>{
     return Object.assign({}, st, {ext, udt:true});
   }
   window.wtPermitStatusFor = wtPermitStatusFor;
+  /* lista wyboru rodzaju uprawnienia: zaznaczenie ręczne (data-auto=0) ma pierwszeństwo; dopóki go nie ma, podąża za nazwą */
+  function wtPermitKindSelect(attrs, type, kind){
+    const v = kind || (wtIsUdtPermit(type) ? 'udt' : 'other');
+    return '<select class="wt-input wt-permit-kind" '+attrs+' data-auto="'+(kind?'0':'1')+'" title="Zaświadczenie UDT/TDT/WDT przedłuża się na wniosek złożony najpóźniej 3 miesiące przed upływem ważności — aplikacja przypomina wcześniej." onchange="this.dataset.auto=\'0\'">'
+      + '<option value="udt"'+(v==='udt'?' selected':'')+'>UDT / TDT / WDT</option><option value="other"'+(v==='other'?' selected':'')+'>Inne uprawnienie</option></select>';
+  }
+  window.wtPermitKindAuto = function(inp){
+    const sel = inp.parentElement && inp.parentElement.querySelector('.wt-permit-kind');
+    if(sel && sel.dataset.auto==='1') sel.value = wtIsUdtPermit(inp.value) ? 'udt' : 'other';
+  };
   function wtUdtExtNote(ext){ return 'Wniosek o bezpłatne przedłużenie zaświadczenia UDT złóż najpóźniej '+fmtDatePL(ext)+' (3 miesiące przed upływem ważności — art. 23 ust. 2c ustawy o dozorze technicznym); po tym terminie potrzebny ponowny egzamin.'; }
-  function wtPermitPillHtml(dateStr, type){
-    const st = wtPermitStatusFor(dateStr, type);
+  function wtPermitPillHtml(dateStr, type, kind){
+    const st = wtPermitStatusFor(dateStr, type, kind);
     if(!st) return '<span class="wt-rj-computed-empty">brak terminu</span>';
     return '<span class="badge '+st.cls+'"'+(st.ext?' title="'+esc(wtUdtExtNote(st.ext))+'"':'')+'><span class="dot" style="background:var(--'+st.cls+')"></span>'+esc(st.label)+'</span>'
       + (st.ext && st.bucket!=='expired' ? '<div class="wt-emp-date">wniosek do '+esc(fmtDatePL(st.ext))+'</div>' : '');
@@ -13994,7 +14007,7 @@ document.addEventListener('keydown', e=>{
   function upwWorstStatus(rows){
     let worst = null;
     (rows||[]).forEach(r=>{
-      const st = wtPermitStatusFor(r.expiryDate, r.permitType);
+      const st = wtPermitStatusFor(r.expiryDate, r.permitType, r.permitKind);
       if(!st) return;
       if(!worst || PRZ_BUCKET_RANK[st.bucket] > PRZ_BUCKET_RANK[worst.bucket]) worst = st;
     });
@@ -14146,7 +14159,7 @@ document.addEventListener('keydown', e=>{
         {key:'docNumber', label:'Nr dokumentu'},
         {key:'issueDate', label:'Data uzyskania', type:'date'},
         {key:'expiryDate', label:'Data ważności', type:'date'},
-        {key:'status', label:'Status', type:'computed', render: row=>wtPermitPillHtml(row.expiryDate, row.permitType)},
+        {key:'status', label:'Status', type:'computed', render: row=>wtPermitPillHtml(row.expiryDate, row.permitType, row.permitKind)},
         {key:'notes', label:'Uwagi'}
       ],
       titleFor: row => row.employee || 'Pracownik',
@@ -14158,11 +14171,11 @@ document.addEventListener('keydown', e=>{
     return '<td class="lp">'+(idx+1)+'</td>'
       +'<td><input type="text" list="wtUpwEmpList" data-row="'+idx+'" data-key="employee" placeholder="Imię i nazwisko…" value="'+esc(row.employee||'')+'">'+(row.empId?'<div class="wt-upw-link" title="Wiersz powiązany z kartą pracownika — zmiany zapisują się w kartotece">z kartoteki</div>':(row.employee?'<div class="wt-upw-link off" title="Osoba spoza kartoteki tego klienta — wpis tylko w tej karcie">spoza kartoteki</div>':''))+'</td>'
       +'<td>'+upwPositionCellHtml(row, idx)+'</td>'
-      +'<td><textarea rows="1" data-row="'+idx+'" data-key="permitType" placeholder="Rodzaj uprawnienia / pozwolenia…">'+esc(row.permitType||'')+'</textarea></td>'
+      +'<td><textarea rows="1" data-row="'+idx+'" data-key="permitType" placeholder="Rodzaj uprawnienia / pozwolenia…">'+esc(row.permitType||'')+'</textarea>'+wtPermitKindSelect('data-row="'+idx+'" data-key="permitKind"', row.permitType, row.permitKind)+'</td>'
       +'<td><input type="text" data-row="'+idx+'" data-key="docNumber" placeholder="Nr dokumentu" value="'+esc(row.docNumber||'')+'"></td>'
       +'<td><input type="date" data-row="'+idx+'" data-key="issueDate" value="'+esc(row.issueDate||'')+'"></td>'
       +'<td><input type="date" data-row="'+idx+'" data-key="expiryDate" value="'+esc(row.expiryDate||'')+'"></td>'
-      +'<td class="wt-ryz-pill" id="upwPill-'+idx+'">'+wtPermitPillHtml(row.expiryDate, row.permitType)+'</td>'
+      +'<td class="wt-ryz-pill" id="upwPill-'+idx+'">'+wtPermitPillHtml(row.expiryDate, row.permitType, row.permitKind)+'</td>'
       +'<td><textarea rows="1" data-row="'+idx+'" data-key="notes" placeholder="Uwagi…">'+esc(row.notes||'')+'</textarea></td>'
       +'<td class="rowdel"><span class="wt-iconbtn" data-action="expandrow" data-row="'+idx+'" title="Pokaż cały wiersz w powiększeniu"><svg viewBox="0 0 24 24" fill="none"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="wt-iconbtn danger" data-action="delrow" data-row="'+idx+'" title="Usuń wiersz"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></span></td>';
   }
@@ -14187,7 +14200,7 @@ document.addEventListener('keydown', e=>{
     const counts = {};
     let unscheduled = 0;
     rows.forEach(r=>{
-      const st = wtPermitStatusFor(r.expiryDate, r.permitType);
+      const st = wtPermitStatusFor(r.expiryDate, r.permitType, r.permitKind);
       if(!st){ unscheduled++; return; }
       counts[st.label] = counts[st.label]||{n:0,cls:st.cls,rank:PRZ_BUCKET_RANK[st.bucket]};
       counts[st.label].n++;
@@ -14236,10 +14249,12 @@ document.addEventListener('keydown', e=>{
         scheduleSaveUpw();
         return;
       }
+      if(t.dataset.key==='permitKind'){ t.dataset.auto = '0'; }
       row[t.dataset.key] = t.value;
-      if(t.dataset.key==='expiryDate' || t.dataset.key==='permitType'){
+      if(t.dataset.key==='permitType'){ const ks = t.parentElement && t.parentElement.querySelector('.wt-permit-kind'); if(ks && ks.dataset.auto==='1') ks.value = wtIsUdtPermit(t.value) ? 'udt' : 'other'; }
+      if(t.dataset.key==='expiryDate' || t.dataset.key==='permitType' || t.dataset.key==='permitKind'){
         const pill = document.getElementById('upwPill-'+idx);
-        if(pill) pill.innerHTML = wtPermitPillHtml(row.expiryDate, row.permitType);
+        if(pill) pill.innerHTML = wtPermitPillHtml(row.expiryDate, row.permitType, row.permitKind);
         renderUpwSummary();
       }
       scheduleSaveUpw();
@@ -14264,7 +14279,7 @@ document.addEventListener('keydown', e=>{
     const host = document.getElementById('rj-print-host');
     const client = (v.projectId && wtClientProjects().find(p=>p.id===v.projectId));
     const rowsHtml = (v.rows||[]).map((r,idx)=>{
-      const st = wtPermitStatusFor(r.expiryDate, r.permitType);
+      const st = wtPermitStatusFor(r.expiryDate, r.permitType, r.permitKind);
       return '<tr><td>'+(idx+1)+'</td><td>'+esc(r.employee||'')+'</td><td>'+esc(r.position||'')+'</td>'
         +'<td>'+esc(r.permitType||'')+'</td><td>'+esc(r.docNumber||'')+'</td>'
         +'<td>'+esc(fmtDatePL(r.issueDate)||'—')+'</td><td>'+esc(fmtDatePL(r.expiryDate)||'—')+'</td>'
@@ -15898,7 +15913,7 @@ document.addEventListener('keydown', e=>{
       if(mW) reasons.push({key:'masz', tab:'rejestry', target:'klienciMachines', rank:PRZ_BUCKET_RANK[mW.st.bucket], days:mW.st.days, txt:'Kontrola maszyny „'+mW.label+'” '+dd(mW.st)+more(mW.n)});
       const rW = worstOf((typeof allReviewCards!=='undefined' ? allReviewCards : []).filter(r=>r.projectId===p.id).flatMap(r=>r.rows||[]), 'nextDue', r=>r.name||'element bez nazwy');
       if(rW) reasons.push({key:'prz', tab:'rejestry', target:'klienciReviewCards', rank:PRZ_BUCKET_RANK[rW.st.bucket], days:rW.st.days, txt:'Przegląd „'+rW.label+'” '+dd(rW.st)+more(rW.n)});
-      const uW = worstOf((typeof allEmployeePermits!=='undefined' ? allEmployeePermits : []).filter(r=>r.projectId===p.id).flatMap(r=>r.rows||[]).map(r=>{ const ps = wtPermitStatusFor(r.expiryDate, r.permitType); return ps && ps.ext && ps.bucket!=='expired' && ps.bucket!=='ok' ? Object.assign({}, r, {expiryDate: ps.ext < wtTodayIso() ? wtTodayIso() : ps.ext}) : r; }), 'expiryDate', r=>[r.permitType, r.employee].filter(Boolean).join(' — ')||'uprawnienie');
+      const uW = worstOf((typeof allEmployeePermits!=='undefined' ? allEmployeePermits : []).filter(r=>r.projectId===p.id).flatMap(r=>r.rows||[]).map(r=>{ const ps = wtPermitStatusFor(r.expiryDate, r.permitType, r.permitKind); return ps && ps.ext && ps.bucket!=='expired' && ps.bucket!=='ok' ? Object.assign({}, r, {expiryDate: ps.ext < wtTodayIso() ? wtTodayIso() : ps.ext}) : r; }), 'expiryDate', r=>[r.permitType, r.employee].filter(Boolean).join(' — ')||'uprawnienie');
       if(uW) reasons.push({key:'upw', tab:'rejestry', target:'klienciEmployeePermits', rank:PRZ_BUCKET_RANK[uW.st.bucket], days:uW.st.days, txt:'Uprawnienie „'+uW.label+'” '+dd(uW.st)+more(uW.n)});
       if(empWorst) reasons.push({key:'emp', tab:'pracownicy', target:'klsecEmp', rank:PRZ_BUCKET_RANK[empWorst.bucket], txt:'Kartoteka: '+empWorst.count+' '+wtPl(empWorst.count,'termin pracownika','terminy pracowników','terminów pracowników')+' (szkolenia, badania, uprawnienia)'});
       const evs = allEvents.filter(e=>e.pid===p.id);
@@ -16130,7 +16145,7 @@ document.addEventListener('keydown', e=>{
       const client = e.projectId ? wtProjectById(e.projectId) : null;
       if(!client || !wtIsRealClient(client)) return;
       (e.permits||[]).forEach(pm=>{
-        if(!pm.validUntil || !wtIsUdtPermit(pm.type)) return;
+        if(!pm.validUntil || !wtIsUdtPermit(pm.type, pm.kind)) return;
         const ext = wtAddMonthsIso(pm.validUntil, -3);
         seen.add(e.projectId+'|'+wtEmpName(e).toLowerCase()+'|'+pm.validUntil);
         if(ext>=startIso && ext<=endIso) out.push({date:ext, kind:'review', tag:'Wniosek UDT', title:'Ostatni dzień na wniosek o przedłużenie: '+(pm.type||'zaświadczenie UDT')+' — '+wtEmpName(e)+' ['+client.name+'] (ważne do '+fmtDatePL(pm.validUntil)+')', color:client.color, pid:client.id, nav:{section:'klienci', openFn:'wtEmpOpenFromCal', id:e.id}});
@@ -16139,7 +16154,7 @@ document.addEventListener('keydown', e=>{
     allEmployeePermits.forEach(v=>{
       const client = v.projectId ? wtProjectById(v.projectId) : null;
       (v.rows||[]).forEach((row,rowIdx)=>{
-        if(!row.expiryDate || !wtIsUdtPermit(row.permitType)) return;
+        if(!row.expiryDate || !wtIsUdtPermit(row.permitType, row.permitKind)) return;
         if(seen.has(v.projectId+'|'+String(row.employee||'').toLowerCase()+'|'+row.expiryDate) || row.empId) return;
         const ext = wtAddMonthsIso(row.expiryDate, -3);
         if(ext>=startIso && ext<=endIso) out.push({date:ext, kind:'review', tag:'Wniosek UDT', title:'Ostatni dzień na wniosek o przedłużenie: '+(row.permitType||'zaświadczenie UDT')+(row.employee?' — '+row.employee:'')+(client?' ['+client.name+']':'')+' (ważne do '+fmtDatePL(row.expiryDate)+')', color:client?client.color:null, pid:client?client.id:null,
@@ -18298,7 +18313,7 @@ document.addEventListener('keydown', e=>{
       }).sort((a,b)=>String(b.validUntil||'9999').localeCompare(String(a.validUntil||'9999')));
       if(!L.length) out.push({cls:'crit', text:'Brak wymaganego uprawnienia w kartotece: '+req});
       else {
-        const p = L[0], isUdt = /udt|tdt|wdt/.test(wtNormName(p.type)) || !!rk;
+        const p = L[0], isUdt = (p.kind ? p.kind==='udt' : wtIsUdtPermit(p.type)) || !!rk;
         const label = p.type+(p.number?' nr '+p.number:'');
         if(!p.validUntil){
           out.push(isUdt
@@ -19100,9 +19115,9 @@ document.addEventListener('keydown', e=>{
     // Uprawnienia
     (e.permits||[]).forEach(pm=>{
       if(!pm || !(pm.type||pm.validUntil)) return;
-      const ps = pm.validUntil ? wtPermitStatusFor(pm.validUntil, pm.type) : null;
+      const ps = pm.validUntil ? wtPermitStatusFor(pm.validUntil, pm.type, pm.kind) : null;
       const st = pm.validUntil ? (ps ? {cls:ps.cls, label:ps.label, date:pm.validUntil, days:ps.days, bucket:ps.bucket, ext:ps.ext||'', note: ps.ext ? wtUdtExtNote(ps.ext) : ''} : null)
-        : (wtIsUdtPermit(pm.type) ? {cls:'crit', label:'Brak daty ważności', bucket:'expired', note:'Zaświadczenia UDT wydaje się na czas określony (art. 22 ust. 3a); te sprzed 1.06.2019 r. — także bez terminu — zachowały ważność tylko przez 5 lat (art. 3 ust. 1 ustawy z 9.11.2018 r.). Wpisz datę z aktualnego zaświadczenia.'} : {cls:'blue', label:'Bezterminowe'});
+        : (wtIsUdtPermit(pm.type, pm.kind) ? {cls:'crit', label:'Brak daty ważności', bucket:'expired', note:'Zaświadczenia UDT wydaje się na czas określony (art. 22 ust. 3a); te sprzed 1.06.2019 r. — także bez terminu — zachowały ważność tylko przez 5 lat (art. 3 ust. 1 ustawy z 9.11.2018 r.). Wpisz datę z aktualnego zaświadczenia.'} : {cls:'blue', label:'Bezterminowe'});
       out.permits.push(Object.assign({type:pm.type||'Uprawnienie', number:pm.number||''}, st||{cls:'med', label:'Błędna data'}));
     });
     const rank = {crit:4, high:3, med:2, blue:0, low:0};
@@ -19131,7 +19146,7 @@ document.addEventListener('keydown', e=>{
   function wtPmId(){ return 'pm'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
   const wtSameType = (a,b)=>!!wtNormName(a) && wtNormName(a)===wtNormName(b);
   function wtUpwLinkedRow(e, pm){
-    return {id:'e'+e.id+'_'+pm.id, empId:e.id, pmId:pm.id, employee:wtEmpName(e), position:pm.activity||'', permitType:pm.type||'',
+    return {id:'e'+e.id+'_'+pm.id, empId:e.id, pmId:pm.id, employee:wtEmpName(e), position:pm.activity||'', permitType:pm.type||'', permitKind:pm.kind||'',
       docNumber:pm.number||'', issueDate:pm.issueDate||'', expiryDate:pm.validUntil||'', notes:pm.notes||''};
   }
   let wtUpwSyncT = null, wtUpwSyncing = false, wtUpwSyncAgain = false;
@@ -19162,7 +19177,7 @@ document.addEventListener('keydown', e=>{
           const permits = (e.permits||[]).map(x=>Object.assign({}, x));
           let pm = permits.find(x=>wtSameType(x.type, r.permitType));
           if(!pm){ pm = {id:wtPmId(), type:r.permitType, number:'', issueDate:'', validUntil:'', notes:'', activity:''}; permits.push(pm); }
-          [['number','docNumber'],['issueDate','issueDate'],['validUntil','expiryDate'],['notes','notes'],['activity','position']].forEach(([k,rk])=>{ if(!pm[k] && r[rk]) pm[k] = r[rk]; });
+          [['number','docNumber'],['issueDate','issueDate'],['validUntil','expiryDate'],['notes','notes'],['activity','position'],['kind','permitKind']].forEach(([k,rk])=>{ if(!pm[k] && r[rk]) pm[k] = r[rk]; });
           e.permits = permits; await DB.doc('employees/'+e.id).update({permits, updatedAt:Date.now()});
           r.empId = e.id; r.pmId = pm.id;
         }
@@ -19172,7 +19187,7 @@ document.addEventListener('keydown', e=>{
         const rows = linked.concat(manual);
         const name = (card && card.name) ? card.name : 'Uprawnienia pracowników — '+p.name;
         if(!card){ await DB.collection('employee_permits_cards').add({name, projectId:p.id, auto:true, rows, createdAt:Date.now(), updatedAt:Date.now()}); continue; }
-        const sig = rs=>JSON.stringify((rs||[]).map(r=>[r.empId||'',r.pmId||'',r.employee||'',r.position||'',r.permitType||'',r.docNumber||'',r.issueDate||'',r.expiryDate||'',r.notes||'']));
+        const sig = rs=>JSON.stringify((rs||[]).map(r=>[r.empId||'',r.pmId||'',r.employee||'',r.position||'',r.permitType||'',r.permitKind||'',r.docNumber||'',r.issueDate||'',r.expiryDate||'',r.notes||'']));
         if(!card.auto || sig(card.rows)!==sig(rows)){
           const editing = upwState.view==='editor' && upwState.current && upwState.current.id===card.id;
           if(editing && upwState.saveTimer && document.activeElement && document.activeElement.closest && document.activeElement.closest('#upwEditor')) { wtUpwSyncAgain = true; continue; } // nie przerywamy pisania
@@ -19203,7 +19218,7 @@ document.addEventListener('keydown', e=>{
       let pm = r.pmId ? t.permits.find(x=>x.id===r.pmId) : null;
       if(!pm) pm = t.permits.find(x=>wtSameType(x.type, r.permitType));
       if(!pm){ pm = {id:wtPmId()}; t.permits.push(pm); }
-      Object.assign(pm, {type:r.permitType||'', number:r.docNumber||'', issueDate:r.issueDate||'', validUntil:r.expiryDate||'', notes:r.notes||'', activity:r.position||''});
+      Object.assign(pm, {type:r.permitType||'', kind:r.permitKind||pm.kind||'', number:r.docNumber||'', issueDate:r.issueDate||'', validUntil:r.expiryDate||'', notes:r.notes||'', activity:r.position||''});
       r.empId = e.id; r.pmId = pm.id;
     });
     let n = 0;
@@ -19658,7 +19673,8 @@ document.addEventListener('keydown', e=>{
       : '<input class="wt-input" type="'+(type||'text')+'" data-ef="'+k+'" value="'+esc(e[k]||'')+'" placeholder="'+esc(ph||'')+'">')+'</div>';
     const s = wtEmpStatus(e);
     const permitsHtml = e.permits.map((pm,i)=>'<div class="wt-emp-permit">'
-      +'<input class="wt-input" data-pm="'+i+'" data-pk="type" value="'+esc(pm.type||'')+'" placeholder="Rodzaj (np. UDT wózki, SEP E do 1 kV)" list="wtEmpPermitTypes">'
+      +'<input class="wt-input" data-pm="'+i+'" data-pk="type" value="'+esc(pm.type||'')+'" placeholder="Rodzaj (np. UDT wózki, SEP E do 1 kV)" list="wtEmpPermitTypes" oninput="window.wtPermitKindAuto(this)">'
+      + wtPermitKindSelect('data-pm="'+i+'" data-pk="kind"', pm.type, pm.kind)
       +'<input class="wt-input" data-pm="'+i+'" data-pk="number" value="'+esc(pm.number||'')+'" placeholder="Nr dokumentu">'
       +'<span class="wt-date-wrap"><input class="wt-input" type="date" data-pm="'+i+'" data-pk="validUntil" value="'+esc(pm.validUntil||'')+'" title="Ważne do (puste = bezterminowe)"><button type="button" class="wt-date-clear" title="Wyczyść datę" onclick="window.wtClearDateInput(this)">×</button></span>'
       +'<span class="wt-iconbtn danger" title="Usuń" onclick="window.wtEmpPermitDel('+i+')"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></span>'
@@ -19685,7 +19701,7 @@ document.addEventListener('keydown', e=>{
         +'<button class="wt-btn ghost" style="margin-top:8px;" onclick="window.wtEmpPermitAdd()">+ Dodaj uprawnienie</button>'
         +'<div class="small" style="color:var(--ink-faint);margin-top:6px;">Uprawnienia zapisują się też w „Terminach uprawnień i pozwoleń” tego klienta — nie trzeba ich tam wpisywać ponownie.</div>'
         +(()=>{ const keys = wtEmpNameKeys(e); const ms = allMachines.filter(m=>m.projectId===e.projectId && (m.authorizedOperators||[]).some(o=>o.empId===e.id || keys.includes(wtNormName(o.name)))); return ms.length ? '<div class="wt-emp-machines"><b>Upoważniony do obsługi maszyn:</b> '+ms.map(m=>esc(m.name||'maszyna bez nazwy')).join(', ')+'</div>' : ''; })()
-        +'<datalist id="wtEmpPermitTypes"><option value="UDT — wózki jezdniowe podnośnikowe"><option value="UDT — suwnice"><option value="UDT — podesty ruchome"><option value="SEP — eksploatacja (E) do 1 kV"><option value="SEP — dozór (D) do 1 kV"><option value="Badania do pracy na wysokości powyżej 3 m"><option value="Uprawnienia spawalnicze"><option value="Prawo jazdy kat. C / świadectwo kwalifikacji"><option value="Szkolenie ADR"><option value="Szkolenie z pierwszej pomocy"></datalist>'
+        +'<datalist id="wtEmpPermitTypes"><option value="UDT — wózki jezdniowe podnośnikowe"><option value="UDT — wózki jezdniowe podnośnikowe z wysięgnikiem / z osobą podnoszoną"><option value="UDT — suwnice"><option value="UDT — wciągniki i wciągarki"><option value="UDT — żurawie"><option value="UDT — podesty ruchome"><option value="UDT — układnice"><option value="UDT — napełnianie zbiorników (butli) gazami"><option value="UDT — konserwator urządzeń transportu bliskiego"><option value="UDT — kotły / urządzenia ciśnieniowe"><option value="SEP — eksploatacja (E) do 1 kV"><option value="SEP — dozór (D) do 1 kV"><option value="Badania do pracy na wysokości powyżej 3 m"><option value="Uprawnienia spawalnicze"><option value="Prawo jazdy kat. C / świadectwo kwalifikacji"><option value="Szkolenie ADR"><option value="Szkolenie z pierwszej pomocy"></datalist>'
         +'<div class="wt-emp-sec">Uwagi</div>'
         +'<textarea class="wt-input" data-ef="notes" rows="2" style="width:100%;">'+esc(e.notes||'')+'</textarea>'
       +'</div>'
@@ -19706,7 +19722,9 @@ document.addEventListener('keydown', e=>{
     });
     ov.querySelectorAll('[data-pm]').forEach(i=>{
       const pm = empEdit.permits[+i.dataset.pm];
-      if(pm) pm[i.dataset.pk] = i.value.trim();
+      if(!pm) return;
+      if(i.dataset.pk==='kind'){ pm.kind = i.dataset.auto==='0' ? i.value : (pm.kind||''); return; }
+      pm[i.dataset.pk] = i.value.trim();
     });
   }
   window.wtEmpPermitAdd = function(){ wtEmpReadForm(); empEdit.permits.push({id:wtPmId(), type:'', number:'', validUntil:''}); renderEmpEditor(); };
@@ -26999,7 +27017,7 @@ document.addEventListener('keydown', e=>{
         {label:'Nr dokumentu', key:'docNumber'},
         {label:'Data uzyskania', key:'issueDate', type:'date'},
         {label:'Data ważności', key:'expiryDate', type:'date'},
-        {label:'Status', render: row=>{ const st=wtPermitStatusFor(row.expiryDate, row.permitType); return st?st.label+(st.ext && st.bucket!=='expired'?' (wniosek do '+fmtDatePL(st.ext)+')':''):''; }},
+        {label:'Status', render: row=>{ const st=wtPermitStatusFor(row.expiryDate, row.permitType, row.permitKind); return st?st.label+(st.ext && st.bucket!=='expired'?' (wniosek do '+fmtDatePL(st.ext)+')':''):''; }},
         {label:'Uwagi', key:'notes'}
       ],
       rows: v.rows||[]
