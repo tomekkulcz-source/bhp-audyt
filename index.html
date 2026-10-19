@@ -17266,6 +17266,14 @@ document.addEventListener('keydown', e=>{
   const przState = {view:'list', current:null, saveTimer:null};
   const PRZ_BUCKET_RANK = {expired:3, urgent:2, warning:1, ok:0};
 
+  /* pozycje „pomiary czynników szkodliwych” — 90 dni wyprzedzenia (zamówienie akredytowanego laboratorium); pomiary elektryczne zostają na 60 dni */
+  function wtPrzRowTh(row){
+    if(!row) return undefined;
+    if(/^pomiary_/.test(row.itemId||'')) return WT_TH_90;
+    const n = String(row.name||'').toLowerCase();
+    if(/izolac|rezystanc|elektr|uziemi|piorun|odgrom/.test(n)) return undefined;
+    return /pomiar\w*.*(czynnik|chemicz|pył|pyl|hałas|halas|drga|oświetl|oswietl|promieniow|mikroklimat|stężeń|stezen|nds|ndn)|\b(nds|ndn)\b/.test(n) ? WT_TH_90 : undefined;
+  }
   function przBlankRow(itemId){
     const lib = itemId ? wtPrzFindItem(itemId) : null;
     return {
@@ -17280,7 +17288,7 @@ document.addEventListener('keydown', e=>{
   function przWorstStatus(rows){
     let worst = null;
     (rows||[]).forEach(r=>{
-      const st = wtPrzStatusFor(r.nextDue);
+      const st = wtPrzStatusFor(r.nextDue, wtPrzRowTh(r));
       if(!st) return;
       if(!worst || PRZ_BUCKET_RANK[st.bucket] > PRZ_BUCKET_RANK[worst.bucket]) worst = st;
     });
@@ -17465,7 +17473,7 @@ document.addEventListener('keydown', e=>{
         {key:'freq', label:'Częstotliwość'},
         {key:'lastCheck', label:'Ostatnia kontrola', type:'date'},
         {key:'nextDue', label:'Termin kolejnej kontroli', type:'date'},
-        {key:'status', label:'Status', type:'computed', render: row=>wtPrzStatusPillHtml(row.nextDue)},
+        {key:'status', label:'Status', type:'computed', render: row=>wtPrzStatusPillHtml(row.nextDue, wtPrzRowTh(row))},
         {key:'basis', label:'Podstawa prawna'},
         {key:'notes', label:'Uwagi'}
       ],
@@ -17483,7 +17491,7 @@ document.addEventListener('keydown', e=>{
       +'<td><textarea rows="2" data-row="'+idx+'" data-key="freq" placeholder="Częstotliwość…">'+esc(row.freq||'')+'</textarea></td>'
       +'<td><input type="date" data-row="'+idx+'" data-key="lastCheck" value="'+esc(row.lastCheck||'')+'"></td>'
       +'<td><input type="date" data-row="'+idx+'" data-key="nextDue" value="'+esc(row.nextDue||'')+'"></td>'
-      +'<td class="wt-ryz-pill" id="przPill-'+idx+'">'+wtPrzStatusPillHtml(row.nextDue)+'</td>'
+      +'<td class="wt-ryz-pill" id="przPill-'+idx+'">'+wtPrzStatusPillHtml(row.nextDue, wtPrzRowTh(row))+'</td>'
       +'<td><textarea rows="2" data-row="'+idx+'" data-key="basis" placeholder="Podstawa prawna…">'+esc(row.basis||'')+'</textarea></td>'
       +'<td><textarea rows="2" data-row="'+idx+'" data-key="notes" placeholder="Uwagi…">'+esc(row.notes||'')+'</textarea></td>'
       +'<td class="rowdel"><span class="wt-iconbtn" data-action="expandrow" data-row="'+idx+'" title="Pokaż cały wiersz w powiększeniu"><svg viewBox="0 0 24 24" fill="none"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="wt-iconbtn danger" data-action="delrow" data-row="'+idx+'" title="Usuń wiersz"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></span></td>';
@@ -17503,7 +17511,7 @@ document.addEventListener('keydown', e=>{
     const counts = {};
     let unscheduled = 0;
     rows.forEach(r=>{
-      const st = wtPrzStatusFor(r.nextDue);
+      const st = wtPrzStatusFor(r.nextDue, wtPrzRowTh(r));
       if(!st){ unscheduled++; return; }
       counts[st.label] = counts[st.label]||{n:0,cls:st.cls,rank:PRZ_BUCKET_RANK[st.bucket]};
       counts[st.label].n++;
@@ -17542,7 +17550,7 @@ document.addEventListener('keydown', e=>{
       }
       if(t.dataset.key==='nextDue' || t.dataset.key==='lastCheck' || t.dataset.key==='freq'){
         const pill = document.getElementById('przPill-'+idx);
-        if(pill) pill.innerHTML = wtPrzStatusPillHtml(row.nextDue);
+        if(pill) pill.innerHTML = wtPrzStatusPillHtml(row.nextDue, wtPrzRowTh(row));
         renderPrzSummary();
       }
       scheduleSavePrz();
@@ -17562,7 +17570,7 @@ document.addEventListener('keydown', e=>{
     const host = document.getElementById('rj-print-host');
     const client = (v.projectId && wtClientProjects().find(p=>p.id===v.projectId));
     const rowsHtml = (v.rows||[]).map((r,idx)=>{
-      const st = wtPrzStatusFor(r.nextDue);
+      const st = wtPrzStatusFor(r.nextDue, wtPrzRowTh(r));
       return '<tr><td>'+(idx+1)+'</td><td>'+esc(r.name||'')+'</td><td>'+esc(r.freq||'')+'</td>'
         +'<td>'+esc(fmtDatePL(r.lastCheck)||'\u2014')+'</td><td>'+esc(fmtDatePL(r.nextDue)||'\u2014')+'</td>'
         +'<td>'+(st?esc(st.label):'\u2014')+'</td><td>'+esc(r.basis||'')+'</td><td>'+esc(r.notes||'')+'</td></tr>';
@@ -27032,7 +27040,7 @@ document.addEventListener('keydown', e=>{
         {label:'Częstotliwość', key:'freq'},
         {label:'Ostatnia kontrola', key:'lastCheck', type:'date'},
         {label:'Termin kolejnej kontroli', key:'nextDue', type:'date'},
-        {label:'Status', render: row=>{ const st=wtPrzStatusFor(row.nextDue); return st?st.label:''; }},
+        {label:'Status', render: row=>{ const st=wtPrzStatusFor(row.nextDue, wtPrzRowTh(row)); return st?st.label:''; }},
         {label:'Podstawa prawna', key:'basis'},
         {label:'Uwagi', key:'notes'}
       ],
