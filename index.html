@@ -849,7 +849,7 @@ a.jump:hover{text-decoration:underline;}
 .wt-emp-st{text-transform:none;letter-spacing:0;font-weight:500;display:inline-flex;gap:8px;align-items:center;}
 .wt-emp-st .wt-emp-date{margin:0;}
 .wt-emp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px;}
-.wt-emp-permit{display:grid;grid-template-columns:minmax(0,2fr) 150px minmax(0,1fr) 170px auto;gap:8px;align-items:center;margin-bottom:6px;}
+.wt-emp-permit{display:grid;grid-template-columns:minmax(0,2fr) 170px minmax(0,1fr) 170px auto;gap:8px;align-items:center;margin-bottom:6px;}
 .wt-emp-permit .wt-input{min-width:0;width:100%;}
 @media (max-width:640px){.wt-emp-grid{grid-template-columns:1fr 1fr;}.wt-emp-permit{grid-template-columns:1fr 1fr;}}
 @media (max-width:420px){.wt-emp-grid{grid-template-columns:1fr;}}
@@ -13883,17 +13883,34 @@ document.addEventListener('keydown', e=>{
   /* Uprawnienia UDT/TDT/WDT: wniosek o bezpłatne przedłużenie zaświadczenia kwalifikacyjnego trzeba złożyć
      najpóźniej 3 miesiące przed upływem ważności (art. 23 ust. 2c pkt 1 ustawy o dozorze technicznym, t.j. Dz.U. 2024 poz. 1194),
      później zostaje ponowny egzamin. Dlatego status liczymy od terminu wniosku: UWAGA 60 dni, PILNE 30 dni przed nim. */
-  const WT_UDT_PERMIT_RE = /\budt\b|\btdt\b|\bwdt\b|dozor\w* techn|wozk|suwnic|zuraw|dzwig|wciagn|podest\w* ruch|ukladnic|podnosnik|napelnian|konserwator|zbiornik\w* cisn|kotl/;
+  const WT_UDT_PERMIT_RE = /\budt\b|\btdt\b|\bwdt\b|dozor\w* techn|woz(?:ek|k)|butl|suwnic|zuraw|dzwig|wciagn|podest\w* ruch|ukladnic|podnosnik|napelnian|konserwator|zbiornik\w* cisn|kotl/;
+  /* SEP — świadectwa kwalifikacyjne (art. 54 ust. 1aa i 2c Prawa energetycznego): ważne 5 lat od wydania, bez przedłużenia
+     na wniosek — trzeba ponownie zdać egzamin przed komisją. Przypominamy 90 dni wcześniej, żeby zdążyć zapisać się na egzamin. */
+  const WT_SEP_PERMIT_RE = /\bsep\b|swiadectw\w* kwalifik|eksploatac|\bdozor\w*\s*\(?d\)?|\(e\)|\(d\)|\b[ed] ?(do|pow|powyzej) \d|\bg ?[123]\b|grup\w* [123]|elektroenerget|energetycz|cieplne|gazow/;
+  function wtPermitKindOf(type, kind){
+    if(kind==='udt' || kind==='sep' || kind==='other') return kind;
+    const n = String(type||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l');
+    if(WT_UDT_PERMIT_RE.test(n)) return 'udt';
+    if(WT_SEP_PERMIT_RE.test(n)) return 'sep';
+    return 'other';
+  }
+  window.wtPermitKindOf = wtPermitKindOf;
   function wtIsUdtPermit(type, kind){
     if(kind==='udt') return true;
-    if(kind==='other') return false;
+    if(kind==='other' || kind==='sep') return false;
     const n = String(type||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ł/g,'l');
     return WT_UDT_PERMIT_RE.test(n);
   }
   window.wtIsUdtPermit = wtIsUdtPermit;
   function wtPermitStatusFor(dateStr, type, kind){
     const st = wtPrzStatusFor(dateStr);
-    if(!st || st.bucket==='expired' || !wtIsUdtPermit(type, kind)) return st;
+    if(!st || st.bucket==='expired') return st;
+    if(wtPermitKindOf(type, kind)==='sep'){
+      if(st.days <= 30) return {days:st.days, bucket:'urgent', cls:'high', label:'PILNE — egzamin SEP', sep:true, plan:wtAddMonthsIso(dateStr, -3)};
+      if(st.days <= 90) return {days:st.days, bucket:'warning', cls:'med', label:'UWAGA — zaplanuj egzamin SEP', sep:true, plan:wtAddMonthsIso(dateStr, -3)};
+      return Object.assign({}, st, {sep:true, plan:wtAddMonthsIso(dateStr, -3)});
+    }
+    if(!wtIsUdtPermit(type, kind)) return st;
     const ext = wtAddMonthsIso(dateStr, -3), dExt = wtDaysUntil(ext);
     if(dExt===null) return st;
     if(dExt < 0) return {days:st.days, bucket:'urgent', cls:'high', label:'PO TERMINIE WNIOSKU UDT — egzamin', ext, udt:true};
@@ -13904,18 +13921,20 @@ document.addEventListener('keydown', e=>{
   window.wtPermitStatusFor = wtPermitStatusFor;
   /* lista wyboru rodzaju uprawnienia: zaznaczenie ręczne (data-auto=0) ma pierwszeństwo; dopóki go nie ma, podąża za nazwą */
   function wtPermitKindSelect(attrs, type, kind){
-    const v = kind || (wtIsUdtPermit(type) ? 'udt' : 'other');
-    return '<select class="wt-input wt-permit-kind" '+attrs+' data-auto="'+(kind?'0':'1')+'" title="Zaświadczenie UDT/TDT/WDT przedłuża się na wniosek złożony najpóźniej 3 miesiące przed upływem ważności — aplikacja przypomina wcześniej." onchange="this.dataset.auto=\'0\'">'
-      + '<option value="udt"'+(v==='udt'?' selected':'')+'>UDT / TDT / WDT</option><option value="other"'+(v==='other'?' selected':'')+'>Inne uprawnienie</option></select>';
+    const v = wtPermitKindOf(type, kind);
+    return '<select class="wt-input wt-permit-kind" '+attrs+' data-auto="'+(kind?'0':'1')+'" title="UDT/TDT/WDT: przedłużenie na wniosek najpóźniej 3 miesiące przed upływem ważności. SEP: świadectwo ważne 5 lat, nowy egzamin przed upływem — przypomnienie 90 dni wcześniej." onchange="this.dataset.auto=\'0\'">'
+      + '<option value="udt"'+(v==='udt'?' selected':'')+'>UDT / TDT / WDT</option><option value="sep"'+(v==='sep'?' selected':'')+'>SEP (świadectwo kwalifikacyjne)</option><option value="other"'+(v==='other'?' selected':'')+'>Inne uprawnienie</option></select>';
   }
   window.wtPermitKindAuto = function(inp){
     const sel = inp.parentElement && inp.parentElement.querySelector('.wt-permit-kind');
-    if(sel && sel.dataset.auto==='1') sel.value = wtIsUdtPermit(inp.value) ? 'udt' : 'other';
+    if(sel && sel.dataset.auto==='1') sel.value = wtPermitKindOf(inp.value);
   };
   function wtUdtExtNote(ext){ return 'Wniosek o bezpłatne przedłużenie zaświadczenia UDT złóż najpóźniej '+fmtDatePL(ext)+' (3 miesiące przed upływem ważności — art. 23 ust. 2c ustawy o dozorze technicznym); po tym terminie potrzebny ponowny egzamin.'; }
+  function wtSepNote(date){ return 'Świadectwo kwalifikacyjne (SEP) traci ważność po 5 latach od wydania — nie przedłuża się go na wniosek, trzeba ponownie zdać egzamin przed komisją kwalifikacyjną (art. 54 ust. 1aa i 2c Prawa energetycznego). Zapisz pracownika na egzamin tak, by nowe świadectwo było przed '+fmtDatePL(date)+'.'; }
   function wtPermitPillHtml(dateStr, type, kind){
     const st = wtPermitStatusFor(dateStr, type, kind);
     if(!st) return '<span class="wt-rj-computed-empty">brak terminu</span>';
+    if(st.sep) return '<span class="badge '+st.cls+'" title="'+esc(wtSepNote(dateStr))+'"><span class="dot" style="background:var(--'+st.cls+')"></span>'+esc(st.label)+'</span>';
     return '<span class="badge '+st.cls+'"'+(st.ext?' title="'+esc(wtUdtExtNote(st.ext))+'"':'')+'><span class="dot" style="background:var(--'+st.cls+')"></span>'+esc(st.label)+'</span>'
       + (st.ext && st.bucket!=='expired' ? '<div class="wt-emp-date">wniosek do '+esc(fmtDatePL(st.ext))+'</div>' : '');
   }
@@ -14251,7 +14270,7 @@ document.addEventListener('keydown', e=>{
       }
       if(t.dataset.key==='permitKind'){ t.dataset.auto = '0'; }
       row[t.dataset.key] = t.value;
-      if(t.dataset.key==='permitType'){ const ks = t.parentElement && t.parentElement.querySelector('.wt-permit-kind'); if(ks && ks.dataset.auto==='1') ks.value = wtIsUdtPermit(t.value) ? 'udt' : 'other'; }
+      if(t.dataset.key==='permitType'){ const ks = t.parentElement && t.parentElement.querySelector('.wt-permit-kind'); if(ks && ks.dataset.auto==='1') ks.value = wtPermitKindOf(t.value); }
       if(t.dataset.key==='expiryDate' || t.dataset.key==='permitType' || t.dataset.key==='permitKind'){
         const pill = document.getElementById('upwPill-'+idx);
         if(pill) pill.innerHTML = wtPermitPillHtml(row.expiryDate, row.permitType, row.permitKind);
@@ -16150,12 +16169,26 @@ document.addEventListener('keydown', e=>{
         seen.add(e.projectId+'|'+wtEmpName(e).toLowerCase()+'|'+pm.validUntil);
         if(ext>=startIso && ext<=endIso) out.push({date:ext, kind:'review', tag:'Wniosek UDT', title:'Ostatni dzień na wniosek o przedłużenie: '+(pm.type||'zaświadczenie UDT')+' — '+wtEmpName(e)+' ['+client.name+'] (ważne do '+fmtDatePL(pm.validUntil)+')', color:client.color, pid:client.id, nav:{section:'klienci', openFn:'wtEmpOpenFromCal', id:e.id}});
       });
+      (e.permits||[]).forEach(pm=>{
+        if(!pm.validUntil || wtPermitKindOf(pm.type, pm.kind)!=='sep') return;
+        const d0 = new Date(pm.validUntil+'T00:00:00'); d0.setDate(d0.getDate()-90); const plan = calIso(d0.getFullYear(), d0.getMonth(), d0.getDate());
+        seen.add('sep|'+e.projectId+'|'+wtEmpName(e).toLowerCase()+'|'+pm.validUntil);
+        if(plan>=startIso && plan<=endIso) out.push({date:plan, kind:'review', tag:'Egzamin SEP', title:'Zaplanuj egzamin SEP: '+(pm.type||'świadectwo kwalifikacyjne')+' — '+wtEmpName(e)+' ['+client.name+'] (ważne do '+fmtDatePL(pm.validUntil)+')', color:client.color, pid:client.id, nav:{section:'klienci', openFn:'wtEmpOpenFromCal', id:e.id}});
+      });
     });
     allEmployeePermits.forEach(v=>{
       const client = v.projectId ? wtProjectById(v.projectId) : null;
       (v.rows||[]).forEach((row,rowIdx)=>{
-        if(!row.expiryDate || !wtIsUdtPermit(row.permitType, row.permitKind)) return;
-        if(seen.has(v.projectId+'|'+String(row.employee||'').toLowerCase()+'|'+row.expiryDate) || row.empId) return;
+        if(!row.expiryDate || row.empId) return;
+        if(wtPermitKindOf(row.permitType, row.permitKind)==='sep'){
+          if(seen.has('sep|'+v.projectId+'|'+String(row.employee||'').toLowerCase()+'|'+row.expiryDate)) return;
+          const d0 = new Date(row.expiryDate+'T00:00:00'); d0.setDate(d0.getDate()-90); const plan = calIso(d0.getFullYear(), d0.getMonth(), d0.getDate());
+          if(plan>=startIso && plan<=endIso) out.push({date:plan, kind:'review', tag:'Egzamin SEP', title:'Zaplanuj egzamin SEP: '+(row.permitType||'świadectwo kwalifikacyjne')+(row.employee?' — '+row.employee:'')+(client?' ['+client.name+']':'')+' (ważne do '+fmtDatePL(row.expiryDate)+')', color:client?client.color:null, pid:client?client.id:null,
+            nav:{section:'terminy-uprawnien', openFn:'wtUpwOpen', id:v.id, rowDetailFn:'wtUpwOpenRowDetail', rowIdx:rowIdx}});
+          return;
+        }
+        if(!wtIsUdtPermit(row.permitType, row.permitKind)) return;
+        if(seen.has(v.projectId+'|'+String(row.employee||'').toLowerCase()+'|'+row.expiryDate)) return;
         const ext = wtAddMonthsIso(row.expiryDate, -3);
         if(ext>=startIso && ext<=endIso) out.push({date:ext, kind:'review', tag:'Wniosek UDT', title:'Ostatni dzień na wniosek o przedłużenie: '+(row.permitType||'zaświadczenie UDT')+(row.employee?' — '+row.employee:'')+(client?' ['+client.name+']':'')+' (ważne do '+fmtDatePL(row.expiryDate)+')', color:client?client.color:null, pid:client?client.id:null,
           nav:{section:'terminy-uprawnien', openFn:'wtUpwOpen', id:v.id, rowDetailFn:'wtUpwOpenRowDetail', rowIdx:rowIdx}});
@@ -19116,7 +19149,7 @@ document.addEventListener('keydown', e=>{
     (e.permits||[]).forEach(pm=>{
       if(!pm || !(pm.type||pm.validUntil)) return;
       const ps = pm.validUntil ? wtPermitStatusFor(pm.validUntil, pm.type, pm.kind) : null;
-      const st = pm.validUntil ? (ps ? {cls:ps.cls, label:ps.label, date:pm.validUntil, days:ps.days, bucket:ps.bucket, ext:ps.ext||'', note: ps.ext ? wtUdtExtNote(ps.ext) : ''} : null)
+      const st = pm.validUntil ? (ps ? {cls:ps.cls, label:ps.label, date:pm.validUntil, days:ps.days, bucket:ps.bucket, ext:ps.ext||'', note: ps.ext ? wtUdtExtNote(ps.ext) : (ps.sep ? wtSepNote(pm.validUntil) : '')} : null)
         : (wtIsUdtPermit(pm.type, pm.kind) ? {cls:'crit', label:'Brak daty ważności', bucket:'expired', note:'Zaświadczenia UDT wydaje się na czas określony (art. 22 ust. 3a); te sprzed 1.06.2019 r. — także bez terminu — zachowały ważność tylko przez 5 lat (art. 3 ust. 1 ustawy z 9.11.2018 r.). Wpisz datę z aktualnego zaświadczenia.'} : {cls:'blue', label:'Bezterminowe'});
       out.permits.push(Object.assign({type:pm.type||'Uprawnienie', number:pm.number||''}, st||{cls:'med', label:'Błędna data'}));
     });
