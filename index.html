@@ -602,7 +602,18 @@ a.jump:hover{text-decoration:underline;}
 .wt-sign-box{background:var(--bg,#fff);border-radius:14px;padding:16px;width:100%;max-width:640px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .wt-sign-title{font-weight:700;margin-bottom:8px;}
 .wt-sign-canvas{width:100%;height:auto;aspect-ratio:600/220;border:2px dashed var(--line,#ccc);border-radius:10px;background:#fff;touch-action:none;display:block;}
-.wt-calc-wrap{display:grid;gap:16px;margin-bottom:16px;}
+.wt-calc-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-bottom:16px;}
+.wt-calc-card{min-width:0;}
+.wt-calc-out{overflow-x:auto;}
+.wt-calc-grid > div{min-width:0;}
+.wt-cz-steps{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 12px;}
+.wt-cz-steps summary,.wt-cz-howto summary{cursor:pointer;}
+.wt-cz-steps ol{list-style:none;margin:8px 0 2px;padding:0;display:flex;flex-direction:column;gap:6px;}
+.wt-cz-steps li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;font-size:13px;line-height:1.45;}
+.wt-cz-steps li .mk{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--bg-soft,rgba(0,0,0,.05));color:var(--ink-soft);}
+.wt-cz-steps li.ok .mk{background:var(--low);color:#fff;}
+.wt-cz-steps li.part .mk{background:var(--med);color:#fff;}
+.wt-cz-steps li.skip{opacity:.5;}
 .wt-calc-card h3{margin:0 0 8px;font-size:17px;}
 .wt-calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 14px;margin:10px 0;}
 .wt-calc-grid label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:4px;}
@@ -9121,6 +9132,18 @@ window.__WT_FIREBASE_CONFIG__ = {
     <select class="status-select" onchange="window.wtCzSet('status', this.value)"><option value="open">Otwarte</option><option value="all">Wszystkie</option></select>
     <button class="wt-btn primary" onclick="window.wtCzEdit(null)">+ Zgłoś podejrzenie</button>
   </div>
+  <details class="card wt-cz-howto" style="margin-bottom:14px;"><summary><b>Co robić przy podejrzeniu choroby zawodowej — kroki</b></summary>
+    <ol class="small" style="margin:10px 0 4px 18px;padding:0;line-height:1.55;">
+      <li>Zgłoś podejrzenie <b>niezwłocznie</b> do państwowego inspektora sanitarnego i okręgowego inspektora pracy — na formularzu urzędowym (przycisk w zgłoszeniu). Przy ostrym przebiegu lub podejrzeniu, że choroba była przyczyną śmierci — dodatkowo telefonicznie. <span class="mono">art. 235 § 1 KP; § 3 rozp. RM z 30.06.2009 r.</span> Podejrzenie może zgłosić też lekarz albo sam pracownik (aktualnie zatrudniony — przez lekarza medycyny pracy). <span class="mono">art. 235 § 2–2² KP</span></li>
+      <li>Wpisz podejrzenie do rejestru chorób zawodowych i podejrzeń (G.1). <span class="mono">art. 235 § 4 KP</span></li>
+      <li>PIS wszczyna postępowanie i ocenia narażenie zawodowe — przygotuj pomiary czynników, ocenę ryzyka i dokumentację przebiegu zatrudnienia. PIS kieruje pracownika do jednostki orzeczniczej I stopnia. <span class="mono">§ 4 rozp.</span></li>
+      <li>Lekarz jednostki I stopnia wydaje orzeczenie o rozpoznaniu albo o braku podstaw. Pracownik może w ciągu 14 dni wnioskować o ponowne badanie w jednostce II stopnia. <span class="mono">§ 5–7 rozp.</span></li>
+      <li>PIS wydaje decyzję o stwierdzeniu choroby zawodowej albo o braku podstaw i przesyła ją m.in. pracodawcy i okręgowemu inspektorowi pracy. <span class="mono">§ 8 rozp.</span></li>
+      <li>Po stwierdzeniu choroby: ustal przyczyny i rozmiar zagrożenia w porozumieniu z PIS, usuń czynniki, zastosuj środki zapobiegawcze i zrealizuj zalecenia lekarskie (np. przeniesienie na inne stanowisko). <span class="mono">art. 235 § 3 KP</span></li>
+      <li>Przeanalizuj przyczyny i zaktualizuj ocenę ryzyka zawodowego. <span class="mono">art. 236 i 226 KP</span></li>
+      <li>Prześlij zawiadomienie o skutkach choroby zawodowej do Instytutu Medycyny Pracy w Łodzi i do PIS — niezwłocznie po ustaleniu uszczerbku na zdrowiu lub niezdolności do pracy. <span class="mono">art. 235 § 5 KP; § 10 rozp.</span></li>
+    </ol>
+  </details>
   <div id="chorobyBody"></div>
 </section>
 <section id="sec-czynniki" class="section">
@@ -9150,7 +9173,7 @@ window.__WT_FIREBASE_CONFIG__ = {
 <section id="sec-kalkulatory" class="section">
   <div class="section-head">
     <h2>Kalkulatory i materiały</h2>
-    <p>Dane do informacji ZUS IWA z rejestru wypadków, liczba osób do pierwszej pomocy i ewakuacji, obowiązek posiłków i napojów profilaktycznych oraz plakaty dla pracowników do wydruku.</p>
+    <p>Dane do informacji ZUS IWA, osoby do pierwszej pomocy i ewakuacji, posiłki i napoje, temperatura w pracy (§ 30a), limity dźwigania, dobór ochronników słuchu, strefa wolnego upadku, plan BIOZ i zawiadomienie inspektora pracy oraz plakaty do wydruku.</p>
   </div>
   <div id="kalkulatoryBody" class="wt-calc-wrap"></div>
   <div id="materialyBody"></div>
@@ -16175,6 +16198,34 @@ document.addEventListener('keydown', e=>{
     });
     return out;
   }
+  /* Roczne terminy sprawozdawcze klienta — z profilu (cmr, adr, z10) i liczby ubezpieczonych (IWA ≥ 10):
+     CMR do 15.01 (§ 6 ust. 2 rozp. MZ z 26.07.2024 r.), ZUS IWA do 31.01 (art. 31 ust. 6–7 ustawy wypadkowej),
+     GUS Z-10 do 15.02 (PBSSP na 2026 r., Dz.U. 2025 poz. 1842, poz. 1.196), ADR do 28.02 (art. 16 ust. 1 ustawy o przewozie towarów niebezpiecznych). */
+  function wtAnnualDutiesFor(p){
+    const pr = wtProfileOf(p), hc = wtProfileHeadcount(p).n, out = [];
+    if(pr.cmr) out.push({md:'01-15', key:'cmr', title:'Informacja o czynnikach CMR do PWIS i OIP', basis:'§ 6 ust. 2 rozp. MZ z 26.07.2024 r.'});
+    if(hc!=null && hc>=10) out.push({md:'01-31', key:'iwa', title:'Informacja ZUS IWA (wypadki, zatrudnieni w zagrożeniu)', basis:'art. 31 ust. 6 ustawy z 30.10.2002 r.'});
+    if(pr.z10) out.push({md:'02-15', key:'z10', title:'Sprawozdanie GUS Z-10 o zatrudnionych w warunkach zagrożenia', basis:'program badań statystycznych GUS'});
+    if(pr.adr) out.push({md:'02-28', key:'adr', title:'Roczne sprawozdanie ADR (doradca) do WITD', basis:'art. 16 ust. 1 ustawy o przewozie towarów niebezpiecznych'});
+    return out;
+  }
+  window.wtAnnualDutiesFor = wtAnnualDutiesFor;
+  function wtCollectAnnualDutyDatesInRange(startIso, endIso){
+    const out = [];
+    const y0 = +String(startIso).slice(0,4) || new Date().getFullYear(), y1 = +String(endIso).slice(0,4) || y0;
+    wtClientProjects().forEach(p=>{
+      if(p.contractEnd && p.contractEnd < startIso) return;
+      wtAnnualDutiesFor(p).forEach(a=>{
+        for(let y=Math.max(y0, 2000); y<=Math.min(y1, y0+3); y++){
+          const date = y+'-'+a.md;
+          if(date<startIso || date>endIso) continue;
+          out.push({date, kind:'review', tag:'Obowiązek roczny', title:a.title+' za '+(y-1)+' r. — '+(p.name||''), color:p.color, pid:p.id,
+            nav:{section:'klienci', openFn:'wtKlienciOpen', id:p.id}});
+        }
+      });
+    });
+    return out;
+  }
   function wtCollectContractDatesInRange(startIso, endIso){
     const out = [];
     wtClientProjects().forEach(p=>{
@@ -16221,6 +16272,7 @@ document.addEventListener('keydown', e=>{
     out.push(...wtCollectChemDatesInRange(startIso, endIso));
     out.push(...wtCollectRyzDatesInRange(startIso, endIso));
     out.push(...wtCollectContractDatesInRange(startIso, endIso));
+    out.push(...wtCollectAnnualDutyDatesInRange(startIso, endIso));
     out.push(...wtCollectTaskNoteDatesInRange(startIso, endIso));
     allCalEvents.forEach(e=>{
       if(e.date>=startIso && e.date<=endIso){
@@ -16337,7 +16389,7 @@ document.addEventListener('keydown', e=>{
     registerDates.push(...wtCollectAccidentDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
     registerDates.push(...wtCollectMachineDatesForMonth(calYear, calMonth));
     registerDates.push(...wtCollectChemDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
-    registerDates.push(...wtCollectRyzDatesForMonth(calYear, calMonth));
+    registerDates.push(...wtCollectRyzDatesForMonth(calYear, calMonth)); registerDates.push(...wtCollectAnnualDutyDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
     registerDates.push(...wtCollectContractDatesForMonth(calYear, calMonth));
     const monthStartIso = calIso(calYear, calMonth, 1);
     const monthEndIso = calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate());
@@ -19187,7 +19239,8 @@ document.addEventListener('keydown', e=>{
     {k:'remoteWork', l:'Praca zdalna'},
     {k:'shiftWork', l:'Praca zmianowa'},
     {k:'nightWork', l:'Praca w porze nocnej'},
-    {k:'unions', l:'Działa zakładowa organizacja związkowa'}
+    {k:'unions', l:'Działa zakładowa organizacja związkowa'},
+    {k:'z10', l:'Sprawozdanie GUS Z-10 (10+ pracujących, sekcja PKD objęta badaniem)'}
   ];
   function wtProfileOf(p){ return (p && p.profile) || {}; }
   function wtProfileNum(v){ const n = parseInt(v, 10); return isNaN(n) ? null : n; }
@@ -21275,6 +21328,29 @@ document.addEventListener('keydown', e=>{
     return {cls:'med', label:'Otwarte'};
   }
   const czState = {client:'', status:'open'};
+  /* kroki postępowania — art. 235–236 KP i rozp. RM z 30.06.2009 r. w sprawie chorób zawodowych (t.j. Dz.U. 2026 poz. 1297) */
+  function wtCzSteps(d){
+    d = d || {};
+    const yes = d.decision==='Stwierdzono chorobę zawodową', no = d.decision==='Brak podstaw do stwierdzenia choroby zawodowej';
+    return [
+      {t:'Zgłoś podejrzenie niezwłocznie do państwowego inspektora sanitarnego i okręgowego inspektora pracy — na formularzu; przy ostrym przebiegu lub podejrzeniu, że choroba była przyczyną śmierci, dodatkowo telefonicznie', b:'art. 235 § 1 KP; § 3 rozp.', ok:!!(d.reportedPisDate && d.reportedPipDate), part:!!(d.reportedPisDate || d.reportedPipDate)},
+      {t:'Wpisz podejrzenie do rejestru chorób zawodowych i podejrzeń (G.1)', b:'art. 235 § 4 KP', ok:!!d.g1VersionId},
+      {t:'Udostępnij PIS dokumentację narażenia (pomiary, ocena ryzyka, przebieg zatrudnienia) — PIS sporządza ocenę narażenia zawodowego i kieruje pracownika do jednostki orzeczniczej I stopnia', b:'§ 4 ust. 1–1a rozp.', ok:!!d.pisInvestigationDate},
+      {t:'Orzeczenie lekarza jednostki orzeczniczej I stopnia (o rozpoznaniu albo braku podstaw)', b:'§ 5–6 rozp.', ok:!!d.rulingDate},
+      {t:'Ewentualne odwołanie pracownika do jednostki II stopnia — 14 dni od otrzymania orzeczenia, za pośrednictwem jednostki I stopnia', b:'§ 7 rozp.', ok:!!d.rulingDate, info:true},
+      {t:'Decyzja PIS o stwierdzeniu choroby zawodowej albo o braku podstaw', b:'§ 8 rozp.', ok:!!(yes || no)},
+      {t:'Po stwierdzeniu: ustal przyczyny i rozmiar zagrożenia (w porozumieniu z PIS), usuń czynniki, zastosuj środki zapobiegawcze, zrealizuj zalecenia lekarskie', b:'art. 235 § 3 KP', ok:!!d.measuresDoneDate, skip:no},
+      {t:'Przeanalizuj przyczyny i zaktualizuj ocenę ryzyka zawodowego na stanowisku', b:'art. 236 i 226 KP', ok:!!d.riskReviewDate, skip:no},
+      {t:'Prześlij zawiadomienie o skutkach choroby zawodowej do Instytutu Medycyny Pracy w Łodzi i PIS — niezwłocznie po ustaleniu uszczerbku lub niezdolności do pracy', b:'art. 235 § 5 KP; § 10 rozp.', ok:!!d.effectsSentDate, skip:no}
+    ];
+  }
+  window.wtCzSteps = wtCzSteps;
+  function wtCzStepsHtml(d){
+    const L = wtCzSteps(d), done = L.filter(x=>x.ok && !x.skip).length, all = L.filter(x=>!x.skip).length;
+    return '<details class="wt-cz-steps"'+(d && d.id ? '' : ' open')+'><summary><b>Kroki postępowania</b> <span class="small">('+done+' z '+all+')</span></summary><ol>'
+      + L.map(x=>'<li class="'+(x.skip?'skip':x.ok?'ok':x.part?'part':'')+'"><span class="mk">'+(x.skip?'–':x.ok?'✓':x.part?'½':'○')+'</span><span>'+esc(x.t)+' <span class="wt-emp-date">'+esc(x.b)+'</span></span></li>').join('')
+      + '</ol></details>';
+  }
   function wtCzRowsHtml(list, showClient){
     if(!list.length) return '<div class="wt-empty">Brak zgłoszeń chorób zawodowych.</div>';
     return '<div class="wt-tablewrap"><table class="ref wt-autocards"><thead><tr><th>Podejrzenie</th>'+(showClient?'<th>Klient</th>':'')+'<th>Pracownik</th><th>Choroba / czynnik</th><th>Decyzja</th><th>Status</th></tr></thead><tbody>'
@@ -22324,6 +22400,7 @@ document.addEventListener('keydown', e=>{
     const emps = wtEmployeesFor(d.projectId).filter(wtEmpActive);
     ov.innerHTML = '<div class="wt-emp-box" role="dialog" aria-modal="true">'
       +'<div class="wt-emp-boxhead"><h3>'+(d.id?'Choroba zawodowa':'Zgłoszenie podejrzenia choroby zawodowej')+'</h3><button class="wt-iconbtn" title="Zamknij" onclick="window.wtEmpClose()"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button></div>'
+      + wtCzStepsHtml(d)
       +'<div class="wt-emp-sec">Pracownik i podejrzenie</div><div class="wt-emp-grid">'
         +'<div><label>Klient</label><select class="wt-input" data-cz="projectId">'+wtClientProjects().map(p=>'<option value="'+p.id+'"'+(p.id===d.projectId?' selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select></div>'
         +'<div><label>Pracownik</label><input class="wt-input" data-cz="employeeName" value="'+esc(d.employeeName||'')+'" list="wtCzEmps" oninput="window.wtCzEmpPick(this)"><datalist id="wtCzEmps">'+emps.map(e=>'<option value="'+esc(wtEmpName(e))+'">').join('')+'</datalist></div>'
@@ -22343,9 +22420,10 @@ document.addEventListener('keydown', e=>{
         +dt('rulingDate','Orzeczenie jednostki orzeczniczej') + sel('decision','Decyzja PIS',['W toku','Stwierdzono chorobę zawodową','Brak podstaw do stwierdzenia choroby zawodowej']) + dt('decisionDate','Data decyzji')
         +tx('decisionNo','Nr decyzji')
       +'</div>'
-      +'<div class="wt-emp-sec">Działania pracodawcy po stwierdzeniu choroby (art. 235 § 2 KP)</div>'
+      +'<div class="wt-emp-sec">Działania pracodawcy po stwierdzeniu choroby (art. 235 § 3 KP)</div>'
       +'<textarea class="wt-input" data-cz="measures" rows="3" style="width:100%;" placeholder="ustalenie przyczyn i zagrożenia z PIS, usunięcie czynników, środki zapobiegawcze, realizacja zaleceń lekarskich (np. przeniesienie na inne stanowisko)">'+esc(d.measures||'')+'</textarea>'
-      +'<div class="wt-emp-grid" style="margin-top:10px;">'+tx('measuresResponsible','Odpowiedzialny')+dt('measuresDeadline','Termin realizacji')+dt('measuresDoneDate','Data realizacji')+'</div>'
+      +'<div class="wt-emp-grid" style="margin-top:10px;">'+tx('measuresResponsible','Odpowiedzialny')+dt('measuresDeadline','Termin realizacji')+dt('measuresDoneDate','Data realizacji')
+        +dt('riskReviewDate','Aktualizacja oceny ryzyka (art. 226, 236 KP)')+dt('effectsSentDate','Zawiadomienie o skutkach do IMP i PPIS (art. 235 § 5 KP)')+'</div>'
       +'<div class="wt-emp-sec">Uwagi</div><textarea class="wt-input" data-cz="notes" rows="2" style="width:100%;">'+esc(d.notes||'')+'</textarea>'
       +'<div class="note">Podejrzenie choroby zawodowej zgłasza się właściwemu państwowemu inspektorowi sanitarnemu i okręgowemu inspektorowi pracy (art. 235 § 1 KP; rozp. RM z 30.06.2009 r. w sprawie chorób zawodowych). Każde podejrzenie i stwierdzenie wpisuje się do rejestru G.1 — przycisk „Wpisz do G.1”.</div>'
       +'<div class="wt-report-actionbar">'+(d.id?'<button class="wt-btn danger ghost" style="margin-right:auto;" onclick="window.wtCzDelete()">Usuń</button>':'')
@@ -23865,11 +23943,194 @@ document.addEventListener('keydown', e=>{
       +'<div><label>Praca na otwartej przestrzeni — temperatura [°C]</label><input class="wt-input" type="number" id="pnOut" placeholder="puste = nie dotyczy"></div>'
       +'<div><label>Wskaźnik WBGT [°C] (jeśli mierzony)</label><input class="wt-input" type="number" step="0.1" id="pnWbgt"></div>'
       +'<div><label>Okres zimowy — praca na otwartej przestrzeni lub w pomieszczeniu nieogrzewanym</label><select class="wt-input" id="pnWinter"><option value="">nie</option><option value="1">tak</option></select></div></div>'
-      +'<div id="pnOut2" class="wt-calc-out"></div></div>';
-    el.querySelectorAll('input,select').forEach(i=>{ if(!i.getAttribute('onchange')) i.addEventListener('input', wtCalcRecompute); });
+      +'<div id="pnOut2" class="wt-calc-out"></div></div>'
+      + wtCalc2Html();
+    el.querySelectorAll('input,select').forEach(i=>{ if(!i.getAttribute('onchange')){ i.addEventListener('input', wtCalcRecompute); i.addEventListener('change', wtCalc2Recompute); i.addEventListener('input', wtCalc2Recompute); } });
     const p = wtProjectById(calcState.iwaClient);
     if(p){ const hc = wtProfileHeadcount(p).n; if(hc!=null) document.getElementById('iwaIns').value = hc; }
-    wtCalcRecompute();
+    wtCalcRecompute(); wtCalc2Recompute();
+  }
+  /* ===== Kalkulatory z kompendium (2026-10): § 30a, dźwiganie, ochronniki słuchu, strefa wolnego upadku, BIOZ/OIP =====
+     Wszystkie progi z tekstów aktów (api.sejm.gov.pl): rozp. MPiPS 26.09.1997 § 30a (Dz.U. 2026 poz. 927), rozp. MPiPS 14.03.2000
+     (t.j. Dz.U. 2018 poz. 1139) § 13, § 17, rozp. RM 19.06.2023 (Dz.U. poz. 1240) zał. 1 cz. I pkt 1 ppkt 4, rozp. RM 3.04.2017
+     (Dz.U. poz. 796) zał. cz. I, rozp. MGiP 5.08.2005 (Dz.U. nr 157 poz. 1318) § 6, Prawo budowlane art. 21a, 45a, rozp. MI 6.02.2003 § 3. */
+  function wtCalc2Html(){
+    const opt = (L, sel)=>L.map(([v,l])=>'<option value="'+v+'"'+(v===sel?' selected':'')+'>'+esc(l)+'</option>').join('');
+    const law30a = wtTodayIso() < '2027-01-11' ? ' <span class="badge blue"><span class="dot"></span>obowiązuje od 11.01.2027</span>' : '';
+    return ''
+      /* 1. § 30a */
+      +'<div class="card wt-calc-card"><h3>Temperatura w pracy — § 30a'+law30a+'</h3>'
+      +'<p class="small">§ 30a rozp. w sprawie ogólnych przepisów BHP (dodany Dz.U. 2026 poz. 927). Progi dotyczą temperatury wywołanej warunkami atmosferycznymi. Duży wysiłek = efektywny wydatek energetyczny na zmianę powyżej 1500 kcal (mężczyźni) / 1000 kcal (kobiety).</p>'
+      +'<div class="wt-calc-grid"><div><label>Miejsce pracy</label><select class="wt-input" id="t30Place">'+opt([['in','pomieszczenie pracy'],['out','otwarta przestrzeń']],'in')+'</select></div>'
+      +'<div><label>Praca związana z dużym wysiłkiem fizycznym</label><select class="wt-input" id="t30Heavy">'+opt([['0','nie'],['1','tak (>1500 kcal M / >1000 kcal K na zmianę)']],'0')+'</select></div>'
+      +'<div><label>Temperatura [°C]</label><input class="wt-input" type="number" step="0.5" id="t30T" value="30"></div>'
+      +'<div><label>Względy technologiczne nie pozwalają obniżyć temperatury</label><select class="wt-input" id="t30Tech">'+opt([['0','nie'],['1','tak (np. huta, piekarnia)']],'0')+'</select></div></div>'
+      +'<div id="t30Out" class="wt-calc-out"></div></div>'
+      /* 2. dźwiganie */
+      +'<div class="card wt-calc-card"><h3>Dopuszczalna masa przy ręcznym dźwiganiu</h3>'
+      +'<p class="small">Limity dla dorosłych: § 13 i § 17 rozp. MPiPS z 14.03.2000 r. (t.j. Dz.U. 2018 poz. 1139). Młodociani: 60% limitu kobiet / 40% limitu mężczyzn (rozp. RM z 19.06.2023 r., zał. 1 cz. I pkt 1 ppkt 4). Kobiety w ciąży i karmiące: rozp. RM z 3.04.2017 r. (Dz.U. poz. 796). Praca dorywcza = nie częściej niż 4 razy na godzinę i łącznie do 4 h na dobę.</p>'
+      +'<div class="wt-calc-grid"><div><label>Pracownik</label><select class="wt-input" id="lfGroup">'+opt([['M','mężczyzna'],['K','kobieta'],['YM','młodociany mężczyzna'],['YK','młodociana kobieta'],['P','kobieta w ciąży'],['B','kobieta karmiąca piersią']],'M')+'</select></div>'
+      +'<div><label>Rodzaj pracy</label><select class="wt-input" id="lfMode">'+opt([['s','stała'],['d','dorywcza']],'s')+'</select></div>'
+      +'<div><label>Sposób przenoszenia</label><select class="wt-input" id="lfHow">'+opt([['base','podnoszenie i przenoszenie'],['shoulder','podnoszenie powyżej obręczy barkowej'],['dist','przenoszenie na odległość powyżej 25 m'],['up30','pod górę (nachylenie do 30°), wysokość powyżej 4 m'],['up30p','pod górę (nachylenie ponad 30°), wysokość powyżej 4 m'],['team','zespołowo (przedmiot dłuższy niż 4 m)']],'base')+'</select></div>'
+      +'<div><label>Masa przedmiotu [kg]</label><input class="wt-input" type="number" min="0" step="0.5" id="lfMass" value="25"></div>'
+      +'<div><label>Liczba osób w zespole</label><input class="wt-input" type="number" min="1" id="lfTeam" value="2"></div>'
+      +'<div><label>Odległość przy pracy zespołowej [m]</label><input class="wt-input" type="number" min="0" id="lfTeamDist" value="10"></div></div>'
+      +'<div id="lfOut" class="wt-calc-out"></div></div>'
+      /* 3. ochronniki słuchu */
+      +'<div class="card wt-calc-card"><h3>Czy ochronniki słuchu wystarczają?</h3>'
+      +'<p class="small">Poziom pod ochronnikiem wg PN-EN ISO 4869-2 (metoda HML, gdy podano H, M i L, albo SNR) i ocena wg PN-EN 458. Potrzebny poziom dźwięku A i C z protokołu pomiarów. Na koniec efekt zdejmowania ochronników — liczony energetycznie dla 8-godzinnej zmiany.</p>'
+      +'<div class="wt-calc-grid"><div><label>Poziom ekspozycji L<sub>EX,8h</sub> / L<sub>Aeq</sub> [dB(A)]</label><input class="wt-input" type="number" step="0.1" id="hpLA" value="95"></div>'
+      +'<div><label>Poziom dźwięku C — L<sub>Ceq</sub> [dB(C)]</label><input class="wt-input" type="number" step="0.1" id="hpLC" value="98"></div>'
+      +'<div><label>SNR ochronnika [dB]</label><input class="wt-input" type="number" step="0.1" id="hpSNR" value="30"></div>'
+      +'<div><label>H / M / L ochronnika [dB] (opcjonalnie)</label><div style="display:flex;gap:6px;"><input class="wt-input" type="number" step="0.1" id="hpH" placeholder="H" style="min-width:0;flex:1"><input class="wt-input" type="number" step="0.1" id="hpM" placeholder="M" style="min-width:0;flex:1"><input class="wt-input" type="number" step="0.1" id="hpL" placeholder="L" style="min-width:0;flex:1"></div></div>'
+      +'<div><label>Czas bez ochronników w ciągu zmiany [min]</label><input class="wt-input" type="number" min="0" max="480" id="hpOff" value="30"></div></div>'
+      +'<div id="hpOut" class="wt-calc-out"></div></div>'
+      /* 4. strefa wolnego upadku */
+      +'<div class="card wt-calc-card"><h3>Strefa wolnego upadku (szelki z amortyzatorem)</h3>'
+      +'<p class="small">Wymagana wolna przestrzeń pod punktem kotwiczenia = długość linki + wydłużenie amortyzatora (do 1,75 m — PN-EN 355) + wzrost użytkownika + zapas bezpieczeństwa (min. 1 m). Linka z amortyzatorem łącznie nie dłuższa niż 2 m. Dane producenta sprzętu mają pierwszeństwo.</p>'
+      +'<div class="wt-calc-grid"><div><label>Długość linki z amortyzatorem [m]</label><input class="wt-input" type="number" step="0.05" min="0" id="ffL" value="2"></div>'
+      +'<div><label>Wydłużenie amortyzatora [m]</label><input class="wt-input" type="number" step="0.05" min="0" id="ffA" value="1.75"></div>'
+      +'<div><label>Wzrost użytkownika [m]</label><input class="wt-input" type="number" step="0.05" min="0" id="ffH" value="1.8"></div>'
+      +'<div><label>Zapas bezpieczeństwa [m]</label><input class="wt-input" type="number" step="0.1" min="1" id="ffZ" value="1"></div>'
+      +'<div><label>Wysokość punktu kotwiczenia nad podłożem / przeszkodą [m]</label><input class="wt-input" type="number" step="0.1" min="0" id="ffAvail" value="5"></div></div>'
+      +'<div id="ffOut" class="wt-calc-out"></div></div>'
+      /* 5. BIOZ / OIP */
+      +'<div class="card wt-calc-card"><h3>Plan BIOZ i zawiadomienie inspektora pracy</h3>'
+      +'<p class="small">Prawo budowlane art. 21a ust. 1a–2 (plan BIOZ — sporządza kierownik budowy przed rozpoczęciem budowy) i art. 45a ust. 1 pkt 3 lit. b (ogłoszenie BIOZ na budowie); § 3 rozp. MI z 6.02.2003 r. w sprawie BHP podczas wykonywania robót budowlanych (zawiadomienie inspektora pracy).</p>'
+      +'<div class="wt-calc-grid"><div><label>Przewidywany czas robót [dni robocze]</label><input class="wt-input" type="number" min="0" id="bzDays" value="40"></div>'
+      +'<div><label>Największa liczba pracowników zatrudnionych jednocześnie</label><input class="wt-input" type="number" min="0" id="bzWorkers" value="12"></div>'
+      +'<div><label>Pracochłonność [osobodni] (puste = dni × pracownicy)</label><input class="wt-input" type="number" min="0" id="bzPd"></div>'
+      +'<div><label>Data rozpoczęcia budowy (opcjonalnie)</label><input class="wt-input" type="date" id="bzStart"></div>'
+      +'<div class="wt-prof-wide"><label>Roboty wymienione w art. 21a ust. 2 Prawa budowlanego</label><div class="wt-prof-checks">'
+      + [['1','szczególnie wysokie ryzyko — m.in. przysypania ziemią lub upadku z wysokości'],['2','substancje chemiczne lub czynniki biologiczne zagrażające zdrowiu'],['3','zagrożenie promieniowaniem jonizującym'],['4','w pobliżu linii wysokiego napięcia lub czynnych linii komunikacyjnych'],['5','ryzyko utonięcia pracowników'],['6','w studniach, pod ziemią i w tunelach'],['7','przez kierujących pojazdami zasilanymi z linii napowietrznych'],['8','w kesonach, z atmosferą ze sprężonego powietrza'],['9','z użyciem materiałów wybuchowych'],['10','montaż i demontaż ciężkich elementów prefabrykowanych']]
+        .map(([k,l])=>'<label class="wt-prof-check"><input type="checkbox" class="bzR" value="'+k+'"> '+esc(l)+'</label>').join('')
+      +'</div></div></div>'
+      +'<div id="bzOut" class="wt-calc-out"></div></div>';
+  }
+  function wtCalc2Recompute(){
+    const g = id=>document.getElementById(id);
+    const num = id=>{ const e = g(id); if(!e || e.value==='' ) return null; const v = Number(String(e.value).replace(',','.')); return isNaN(v) ? null : v; };
+    const val = id=>(g(id)||{}).value||'';
+    const row = (k, v)=>'<tr><td>'+k+'</td><td class="mono"><b>'+v+'</b></td></tr>';
+    const verdict = (cls, txt)=>'<div style="margin:8px 0;"><span class="badge '+cls+'"><span class="dot"></span>'+txt+'</span></div>';
+    const f1 = x=>(Math.round(x*10)/10).toLocaleString('pl-PL');
+    /* 1. § 30a */
+    const t30 = g('t30Out');
+    if(t30){
+      const out = val('t30Place')==='out', heavy = val('t30Heavy')==='1', tech = val('t30Tech')==='1', t = num('t30T');
+      const thr = out ? 25 : (heavy ? 25 : 28), max = out ? (heavy ? 32 : null) : 35;
+      let h = '<table class="ref"><tbody>'+row('Próg obowiązku działania', thr+'°C')+row('Temperatura maksymalna', max!=null ? max+'°C' : 'brak (praca bez dużego wysiłku na otwartej przestrzeni)')+'</tbody></table>';
+      if(t==null) h += '<div class="small">Wpisz temperaturę.</div>';
+      else if(max!=null && t>max && !tech) h += verdict('crit','Prace nie mogą być wykonywane w czasie, gdy temperatura przekracza '+max+'°C')+'<div class="small">§ 30a ust. 1–2. Wyjątek — gdy względy technologiczne nie pozwalają na obniżenie temperatury.</div>';
+      else if(t>thr){
+        h += verdict(max!=null && t>max ? 'high' : 'high', out ? 'Obowiązek: rozwiązania organizacyjne minimalizujące wpływ temperatury (§ 30a ust. 4)' : 'Obowiązek: rozwiązania techniczne obniżające temperaturę lub rozwiązania organizacyjne (§ 30a ust. 3)');
+        h += '<ul class="small" style="margin:6px 0 0 18px;padding:0;">'
+          +(out ? '' : '<li>techniczne: klimatyzacja, wentylacja, osłony od słońca, ekrany — chyba że nie pozwalają na to względy technologiczne;</li>')
+          +'<li>organizacyjne (zależne od warunków i specyfiki pracy): przerwy, skrócenie czasu narażenia, zmiana godzin pracy, rotacja, miejsca odpoczynku w chłodzie;</li>'
+          +'<li>rozwiązania organizacyjne ustala się po konsultacji w komisji BHP, a gdy jej nie ma — w trybie art. 237¹¹ᵃ KP i po opinii lekarza medycyny pracy; potem informuje się pracowników (§ 30a ust. 5–7);</li>'
+          +'<li>napoje: przy temperaturze powyżej 28°C w pomieszczeniu lub 25°C na otwartej przestrzeni (§ 4 rozp. RM z 28.05.1996 r.) — zob. kalkulator posiłków i napojów.</li></ul>'
+          +(max!=null && t>max && tech ? '<div class="small" style="margin-top:6px;">Temperatura przekracza '+max+'°C — dopuszczalne tylko dlatego, że nie pozwalają na to względy technologiczne.</div>' : '');
+      } else h += verdict('low','Poniżej progu — § 30a nie nakłada dodatkowych obowiązków');
+      h += '<div class="small" style="margin-top:6px;">Ust. 1 (temperatura maksymalna) nie dotyczy m.in. prac z art. 151¹⁰ pkt 1, 2, 5–8 i 9 lit. c–h KP, pracowników żłobków i klubów dziecięcych oraz funkcjonariuszy i żołnierzy (§ 30a ust. 8).</div>';
+      t30.innerHTML = h;
+    }
+    /* 2. dźwiganie */
+    const lf = g('lfOut');
+    if(lf){
+      const grp = val('lfGroup'), d = val('lfMode')==='d', how = val('lfHow'), mass = num('lfMass'), team = Math.max(1, num('lfTeam')||1), tdist = num('lfTeamDist');
+      const A = {M:{base:[30,50], shoulder:[21,35], dist:[30,30], up30:[30,30], up30p:[20,30], team:[25,42], teamMax:500},
+                 K:{base:[12,20], shoulder:[8,14], dist:[12,12], up30:[12,12], up30p:[8,12], team:[10,17], teamMax:200}};
+      let lim = null, note = '', banned = '', basis = '';
+      if(grp==='M' || grp==='K' || grp==='YM' || grp==='YK'){
+        const sex = (grp==='M' || grp==='YM') ? 'M' : 'K', k = grp==='YM' ? 0.4 : grp==='YK' ? 0.6 : 1;
+        lim = A[sex][how][d?1:0]*k;
+        basis = how==='team' ? '§ 17 ust. 1' : '§ 13 ust. '+({base:1, shoulder:2, dist:3, up30:4, up30p:5})[how];
+        basis += ' rozp. z 14.03.2000 r.'+(k<1 ? ' × '+Math.round(k*100)+'% (rozp. RM z 19.06.2023 r., zał. 1 cz. I pkt 1 ppkt 4)' : '');
+        if(k<1) note = 'Młodocianym nie wolno powierzać prac polegających wyłącznie na podnoszeniu, przenoszeniu i przewożeniu ciężarów ani prac załadunkowych i wyładunkowych (zał. 1 cz. I pkt 1 ppkt 1 i 3).';
+        if(how==='team'){
+          const tmax = A[sex].teamMax*k;
+          if(mass!=null && mass > tmax) banned = 'Masa przedmiotu ('+f1(mass)+' kg) przekracza '+f1(tmax)+' kg — zespołowe ręczne przemieszczanie niedopuszczalne (§ 17 ust. 3).';
+          if(tdist!=null && tdist > 25) banned = 'Odległość '+tdist+' m przekracza 25 m — zespołowe ręczne przemieszczanie niedopuszczalne (§ 17 ust. 3).';
+          note = (note ? note+' ' : '')+'Odstęp między pracownikami co najmniej 0,75 m, dobór pod względem wzrostu i wieku, nadzór doświadczonego pracownika (§ 18).';
+        }
+      } else if(grp==='P'){
+        basis = 'rozp. RM z 3.04.2017 r., zał. cz. I pkt 1';
+        if(how==='team') banned = 'Kobiecie w ciąży nie wolno uczestniczyć w zespołowym przemieszczaniu przedmiotów (pkt 1 ppkt 7).';
+        else if(how==='up30' || how==='up30p') lim = d ? 1 : 0, note = 'Ręczne przenoszenie pod górę: przy pracy stałej zakazane, przy dorywczej — do 1 kg (pkt 1 ppkt 5).';
+        else lim = 3, note = 'Ręczne podnoszenie i przenoszenie przedmiotów o masie powyżej 3 kg jest zakazane (pkt 1 ppkt 2).';
+      } else if(grp==='B'){
+        basis = 'rozp. RM z 3.04.2017 r., zał. cz. I pkt 2';
+        if(how==='team') banned = 'Kobiecie karmiącej piersią nie wolno uczestniczyć w zespołowym przemieszczaniu przedmiotów (pkt 2 ppkt 10).';
+        else if(how==='up30p') lim = d ? 6 : 4;
+        else if(how==='dist' || how==='up30') lim = 6;
+        else { lim = d ? 10 : 6; if(how==='shoulder') note = 'Rozporządzenie nie podaje odrębnego limitu dla podnoszenia powyżej barków — przyjęto limit ogólny.'; }
+      }
+      const per = mass!=null ? mass/(how==='team' ? team : 1) : null;
+      let h = '';
+      if(banned) h += verdict('crit', banned);
+      else if(lim!=null){
+        h += '<table class="ref"><tbody>'+row('Dopuszczalna masa'+(how==='team'?' na 1 osobę':''), lim===0 ? 'zakaz' : f1(lim)+' kg')
+          +(per!=null ? row(how==='team' ? 'Masa na 1 osobę ('+f1(mass)+' kg / '+team+' os.)' : 'Masa przedmiotu', f1(per)+' kg') : '')+'</tbody></table>';
+        if(per!=null) h += (lim===0 || per>lim) ? verdict('crit','Przekroczony limit — zastosuj sprzęt pomocniczy, zmniejsz masę lub zwiększ zespół') : verdict('low','W granicach limitu');
+      }
+      h += '<div class="small" style="margin-top:6px;">'+esc(basis)+(note ? (/\.$/.test(basis) ? ' ' : '. ')+esc(note) : '')+'</div>';
+      lf.innerHTML = h;
+    }
+    /* 3. ochronniki słuchu */
+    const hp = g('hpOut');
+    if(hp){
+      const LA = num('hpLA'), LC = num('hpLC'), SNR = num('hpSNR'), H = num('hpH'), M = num('hpM'), L = num('hpL'), off = Math.min(480, Math.max(0, num('hpOff')||0));
+      let h = '';
+      if(LA==null) h = '<div class="small">Wpisz poziom ekspozycji.</div>';
+      else {
+        let Lp = null, meth = '';
+        if(LC!=null && H!=null && M!=null && L!=null){
+          const dlt = LC - LA; const PNR = dlt <= 2 ? M - (H-M)/4*(dlt-2) : M - (M-L)/8*(dlt-2);
+          Lp = LA - PNR; meth = 'HML: L<sub>C</sub> − L<sub>A</sub> = '+f1(dlt)+' dB, PNR = '+f1(PNR)+' dB';
+        } else if(LC!=null && SNR!=null){ Lp = LC - SNR; meth = 'SNR: L′<sub>A</sub> = L<sub>C</sub> − SNR'; }
+        const duty = LA>=85 ? 'stosowanie ochronników obowiązkowe, pracodawca nadzoruje ich używanie (§ 6 ust. 1 pkt 2 rozp. z 5.08.2005 r.); strefa oznakowana (§ 7)' : LA>80 ? 'pracodawca udostępnia ochronniki słuchu (§ 6 ust. 1 pkt 1)' : 'poniżej progu działania 80 dB — ochronniki nie są wymagane przepisami';
+        h += '<table class="ref"><tbody>'+row('Obowiązek', '<span style="font-weight:400">'+duty+'</span>');
+        if(Lp==null){ h += '</tbody></table><div class="small">Wpisz L<sub>C</sub> i SNR (albo H, M, L) — bez poziomu C metody z PN-EN ISO 4869-2 nie dają wiarygodnego wyniku.</div>'; }
+        else {
+          const rate = Lp>80 ? ['crit','niewystarczająca — ochronnik za słaby'] : Lp>75 ? ['med','dostateczna (75–80 dB)'] : Lp>=70 ? ['low','dobra (70–75 dB) — zalecany zakres'] : Lp>=65 ? ['med','dostateczna (65–70 dB)'] : ['high','nadmierna — utrudnia komunikację i słyszenie sygnałów; rozważ słabszy ochronnik'];
+          const eff = 10*Math.log10(((480-off)/480)*Math.pow(10, Lp/10) + (off/480)*Math.pow(10, LA/10));
+          h += row('Poziom pod ochronnikiem L′<sub>A</sub>', f1(Lp)+' dB(A)')+row('Ocena wg PN-EN 458', '<span class="badge '+rate[0]+'"><span class="dot"></span>'+rate[1]+'</span>')
+            +(off ? row('Rzeczywista ekspozycja przy '+off+' min bez ochronników', f1(eff)+' dB(A) — tłumienie spada z '+f1(LA-Lp)+' do '+f1(LA-eff)+' dB') : '')
+            +'</tbody></table><div class="small" style="margin-top:6px;">'+meth+'. Wartości tłumienia są laboratoryjne — w praktyce bywają niższe, zwłaszcza dla źle założonych wkładek. '+(off && eff>80 ? '<b>Zdejmowanie ochronników na '+off+' min przekreśla ochronę — nawet krótka przerwa w głośnym miejscu niesie większość dawki dziennej.</b>' : '')+'</div>';
+        }
+      }
+      hp.innerHTML = h;
+    }
+    /* 4. strefa wolnego upadku */
+    const ff = g('ffOut');
+    if(ff){
+      const Ll = num('ffL')||0, Aa = num('ffA')||0, Hh = num('ffH')||0, Zz = num('ffZ')||0, av = num('ffAvail');
+      const need = Ll + Aa + Hh + Zz; const f2 = x=>(Math.round(x*100)/100).toLocaleString('pl-PL');
+      let h = '<table class="ref"><tbody>'+row('Linka', f2(Ll)+' m')+row('Wydłużenie amortyzatora', f2(Aa)+' m')+row('Wzrost użytkownika', f2(Hh)+' m')+row('Zapas bezpieczeństwa', f2(Zz)+' m')+row('Wymagana wolna przestrzeń pod punktem kotwiczenia', f2(need)+' m')+'</tbody></table>';
+      if(Ll > 2) h += verdict('high','Linka z amortyzatorem dłuższa niż 2 m — niezgodna z PN-EN 355');
+      if(Aa > 1.75) h += verdict('high','Wydłużenie amortyzatora ponad 1,75 m — sprawdź dane producenta (PN-EN 355 dopuszcza maks. 1,75 m)');
+      if(Zz < 1) h += verdict('med','Zapas mniejszy niż 1 m');
+      if(av!=null) h += av >= need ? verdict('low','Wystarczająca wysokość — zostaje '+f2(av-need)+' m') : verdict('crit','Za mała wysokość — brakuje '+f2(need-av)+' m. Użyj urządzenia samohamownego (PN-EN 360) o krótkiej drodze hamowania albo zakotwicz wyżej, nad głową');
+      h += '<div class="small" style="margin-top:6px;">Krótsza linka nie zawsze pomaga — liczy się cały układ. Zaplanuj też ratowanie po zatrzymaniu upadku: zawiśnięcie w szelkach dłużej niż 10–15 minut grozi urazem zawieszeniowym.</div>';
+      ff.innerHTML = h;
+    }
+    /* 5. BIOZ / OIP */
+    const bz = g('bzOut');
+    if(bz){
+      const days = num('bzDays')||0, w = num('bzWorkers')||0, pdIn = num('bzPd'), pd = pdIn!=null ? pdIn : days*w, start = val('bzStart');
+      const risky = Array.from(document.querySelectorAll('.bzR:checked')).map(x=>x.value);
+      const big = (days>30 && w>=20) || pd>500;
+      const bioz = big || risky.length>0;
+      let notice = '';
+      if(start){ const d0 = new Date(start+'T00:00:00'); d0.setDate(d0.getDate()-7); notice = calIso(d0.getFullYear(), d0.getMonth(), d0.getDate()); }
+      let h = '<table class="ref"><tbody>'+row('Pracochłonność', f1(pd)+' osobodni'+(pdIn==null?' (szacunek: dni × pracownicy)':''))+'</tbody></table>';
+      h += bioz ? verdict('high','Plan BIOZ wymagany') : verdict('low','Plan BIOZ nie jest wymagany');
+      h += '<div class="small">'+(bioz ? 'Podstawa: '+[big ? 'roboty ponad 30 dni roboczych przy co najmniej 20 pracownikach jednocześnie lub pracochłonność ponad 500 osobodni (art. 21a ust. 1a pkt 2)' : '', risky.length ? 'roboty z art. 21a ust. 2 pkt '+risky.join(', ')+' (art. 21a ust. 1a pkt 1)' : ''].filter(Boolean).join('; ')+'. Plan sporządza (lub zapewnia sporządzenie) kierownik budowy przed rozpoczęciem budowy, na podstawie informacji BIOZ od projektanta (art. 21a ust. 1, art. 20 ust. 1 pkt 1b).' : 'Żaden z warunków art. 21a ust. 1a nie jest spełniony.')+'</div>';
+      h += big ? verdict('high','Zawiadomienie inspektora pracy — co najmniej 7 dni przed rozpoczęciem budowy'+(notice ? ' (najpóźniej '+fmtDatePL(notice)+')' : ''))
+               + '<div class="small">Obowiązek inwestora (§ 3 rozp. MI z 6.02.2003 r.). Kierownik budowy umieszcza na budowie ogłoszenie z danymi BIOZ — żółta tablica obok tablicy informacyjnej (art. 45a ust. 1 pkt 3 lit. b, art. 45c).</div>'
+             : verdict('low','Zawiadomienie inspektora pracy i ogłoszenie BIOZ nie są wymagane');
+      bz.innerHTML = h;
+    }
   }
   window.wtCalcSet = function(k, v){ calcState[k] = v; renderCalcSection(); };
   function wtCalcRecompute(){
