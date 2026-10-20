@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
-<meta name="theme-color" content="#0F2033">
+<meta name="theme-color" id="wtThemeColor" content="#F4F4F6">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BHP Audyt">
 
 <title>BHP Audyt</title>
@@ -10501,8 +10501,11 @@ function applyTheme(t){
     ? '<svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M5 5l1.8 1.8M17.2 17.2 19 19M19 5l-1.8 1.8M6.8 17.2 5 19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     : '<svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   localStorage.setItem('bhp_theme', t);
+  wtSyncThemeColor(t);
   if(document.readyState!=='loading') paintCategoryColors();
 }
+/* Pasek stanu iOS (status-bar-style „default”) przyjmuje kolor z theme-color — dopasowany do tła aplikacji, bez treści pod zegarem (iOS 26 rozmywał ją efektem Liquid Glass). */
+function wtSyncThemeColor(t){ const m=document.getElementById('wtThemeColor'); if(m) m.setAttribute('content', t==='dark' ? '#0B0B0D' : '#F4F4F6'); }
 function toggleTheme(){
   applyTheme(document.documentElement.getAttribute('data-theme')==='dark' ? 'light' : 'dark');
 }
@@ -10510,6 +10513,7 @@ function toggleTheme(){
   const saved = localStorage.getItem('bhp_theme');
   const t = saved || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   document.documentElement.setAttribute('data-theme', t);
+  try{ wtSyncThemeColor(t); }catch(e){}
   document.addEventListener('DOMContentLoaded', ()=>applyTheme(t));
 })();
 
