@@ -1438,6 +1438,13 @@ html[data-theme="dark"] .wt-modesw button[aria-pressed="true"]{color:#140806;}
   .topbar, .wt-bnav{background:var(--bg) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;}
   .searchbar{background:var(--bg) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;}
 }
+
+/* Lista klientów: kosz „Usuń klienta” w prawym górnym rogu karty — na telefonie stał obok treści i nachodził na długie odznaki. */
+#klienciList .wt-rj-versioncard{position:relative;}
+#klienciList .wt-rj-versioncard .info{min-width:0;flex:1 1 100%;}
+#klienciList .wt-rj-versioncard h4{padding-right:48px;}
+#klienciList .wt-rj-versioncard .wt-rj-actions{position:absolute;top:12px;right:12px;}
+#klienciList .wt-kl-status .badge{white-space:normal;max-width:100%;}
 </style>
 <style>
 /* ===== Boczne menu: zwijanie po kategoriach + własny kolor na kategorię ===== */
