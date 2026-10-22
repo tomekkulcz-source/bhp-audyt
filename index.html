@@ -23064,6 +23064,10 @@ document.addEventListener('keydown', e=>{
      i rozliczenie planu z poprzedniego roku. Zapis: client_projects/{id}.analyses[rok] = {v:2, on, sec, plan,
      review, summary, custom, savedAt, generatedAt}. Starszy zapis {conclusions, recs} przechodzi do summary/plan. */
   const AN_SECTIONS = [
+    {k:'spis', t:'Strona tytułowa i spis treści', special:'toc', big:true},
+    {k:'zarzad', t:'Podsumowanie dla zarządu', special:'exec', big:true},
+    {k:'metodyka', t:'Zakres i metodyka analizy', big:true, tables:[
+      {title:'Wizyty, audyty i obchody w roku', head:['Data','Czynność','Zakres / wynik'], w:[16,34,50]}]},
     {k:'zaklad', t:'Dane zakładu i okres analizy', core:true},
     {k:'ocena', t:'Ocena ogólna stanu BHP', special:'overview', core:true},
     {k:'zatrudnienie', t:'Stan zatrudnienia', core:true, tables:[
@@ -23078,6 +23082,8 @@ document.addEventListener('keydown', e=>{
     {k:'wypadki', t:'Wypadki przy pracy i choroby zawodowe', core:true, tables:[
       {title:'Wypadki przy pracy', head:['Data','Poszkodowany / stanowisko','Okoliczności i skutki','Dni niezdolności'], w:[14,26,44,16]},
       {title:'Choroby zawodowe', head:['Pracownik / stanowisko','Choroba / czynnik','Stan postępowania'], w:[34,36,30]}]},
+    {k:'trendy', t:'Trendy — porównanie z latami poprzednimi', big:true, tables:[
+      {title:'Wskaźniki w kolejnych latach', head:['Rok','Zatrudnienie','Wypadki przy pracy','Dni niezdolności','Zgodność audytów (%)'], w:[16,21,21,21,21]}]},
     {k:'dokumentacja', t:'Kompletność dokumentacji BHP', tables:[
       {title:'Wymagana dokumentacja', head:['Dokument / obowiązek','Podstawa prawna','Stan'], w:[50,32,18]}]},
     {k:'soi', t:'Środki ochrony indywidualnej i zbiorowej', tables:[
@@ -23089,11 +23095,97 @@ document.addEventListener('keydown', e=>{
       {title:'Najczęstsze nieprawidłowości', head:['Nieprawidłowość','Liczba stwierdzeń'], w:[82,18]},
       {title:'Audyty i obchody w roku', head:['Data','Rodzaj','Zgodność','Niezgodności'], w:[20,40,20,20]}]},
     {k:'zalecenia', t:'Zalecenia z audytów, obchodów i kontroli', core:true, tables:[
-      {title:'Zalecenia wydane w roku i otwarte', head:['Zalecenie','Źródło i data','Odpowiedzialny','Termin','Stan'], w:[40,24,14,10,12]}]},
+      {title:'Zalecenia wydane w roku i otwarte', cards:true, head:['Zalecenie','Źródło i data','Odpowiedzialny','Termin','Stan','Poziom ryzyka','Przyczyna','Stanowisko pracodawcy'], w:[40,24,14,10,12,10,20,20]}]},
+    {k:'dojrzalosc', t:'Ocena dojrzałości systemu BHP', special:'maturity', big:true},
     {k:'rozliczenie', t:'Realizacja planu z poprzedniego roku', special:'review'},
     {k:'plan', t:'Plan poprawy stanu BHP na rok następny', special:'plan', core:true},
     {k:'podsumowanie', t:'Podsumowanie i wnioski', special:'summary', core:true}
   ];
+  /* ===== Elementy raportu „jak w firmach doradczych” (domyślnie tylko u klientów ≥ 50 pracowników) ===== */
+  const AN_MATURITY = [
+    {k:'lead', t:'Przywództwo i zaangażowanie kierownictwa'},
+    {k:'org', t:'Organizacja BHP i zasoby (służba BHP, komisja, osoby wyznaczone)'},
+    {k:'risk', t:'Identyfikacja zagrożeń i ocena ryzyka'},
+    {k:'comp', t:'Szkolenia i kompetencje'},
+    {k:'ctrl', t:'Nadzór, kontrole i realizacja zaleceń'},
+    {k:'inc', t:'Wypadki, zdarzenia i doskonalenie'},
+    {k:'doc', t:'Dokumentacja i zgodność z przepisami'},
+    {k:'comm', t:'Komunikacja i konsultacje z pracownikami'}];
+  const AN_LEVELS = ['', 'Początkowy (reaktywny)', 'Podstawowy', 'Zdefiniowany (zgodność z przepisami)', 'Zarządzany (proaktywny)', 'Optymalizowany (wiodący)'];
+  const AN_RATINGS = [{v:'Dobry', cls:'ok'}, {v:'Zadowalający', cls:'ok'}, {v:'Wymaga poprawy', cls:'warn'}, {v:'Niezadowalający', cls:'bad'}];
+  const AN_HOR = [{v:'q', t:'Szybkie działania (do 30 dni)'}, {v:'m', t:'Działania krótkoterminowe (do 6 miesięcy)'}, {v:'l', t:'Działania długofalowe'}];
+  function anIsBig(cid){ const p = wtProjectById(cid); const n = p ? wtProfileHeadcount(p).n : null; return n!=null && n>=50; }
+  function anHorizon(r){
+    if(r.hor) return r.hor;
+    if(r.due){ const n = wtDaysUntil(r.due); if(n!==null) return n<=30 ? 'q' : n<=183 ? 'm' : 'l'; }
+    return r.prio==='Wysoki' ? 'q' : r.prio==='Niski' ? 'l' : 'm';
+  }
+  function anExecPrefill(cid, year, a){
+    const ov = anOverview(cid, year);
+    const bad = ov.filter(o=>o.cls==='bad').length, warn = ov.filter(o=>o.cls==='warn').length;
+    const rating = bad>=3 ? 'Niezadowalający' : bad>=1 ? 'Wymaga poprawy' : warn ? 'Zadowalający' : 'Dobry';
+    const msgs = ov.filter(o=>o.cls!=='ok').map(o=>'• '+o.area+': '+o.detail+'.');
+    const okA = ov.filter(o=>o.cls==='ok').map(o=>o.area.toLowerCase());
+    if(okA.length) msgs.push('• W porządku: '+okA.join(', ')+'.');
+    const planN = ((a && a.plan) || []).filter(r=>r.action).length;
+    if(planN) msgs.push('• Plan poprawy na rok '+(year+1)+' obejmuje '+planN+' '+wtPl(planN,'działanie','działania','działań')+'.');
+    const risks = [];
+    const z = (a && a.sec && a.sec.zalecenia && a.sec.zalecenia.tables && a.sec.zalecenia.tables[0]) || anPrefill(cid, year, 'zalecenia').tables[0] || [];
+    z.filter(r=>/wysok/i.test(r[5]||'')).slice(0,3).forEach(r=>risks.push(String(r[0]||'').split(' → ')[0]));
+    ov.filter(o=>o.cls==='bad').forEach(o=>{ if(risks.length<3) risks.push(o.area+' — '+o.detail); });
+    return {rating, messages:msgs.join('\n'), risks:risks.slice(0,3).join('\n')};
+  }
+  function anMaturityPrefill(cid, year){
+    const d = wtAnalysisData(cid, year), ov = anOverview(cid, year);
+    const st = k=>{ const o = ov.find(x=>x.k===k); return o ? o.cls : 'ok'; };
+    const lv = cls=>cls==='bad' ? 2 : cls==='warn' ? 3 : 3;
+    return {lead:{lvl:3, note:''}, org:{lvl:3, note:''},
+      risk:{lvl:(d.ryzHigh.length||d.ryzReviewOver) ? 2 : d.ryz.length ? 3 : 2, note:d.ryz.length ? d.ryz.length+' ocen ryzyka'+(d.ryzReviewOver?', '+d.ryzReviewOver+' po terminie przeglądu':'') : 'brak ocen ryzyka w aplikacji'},
+      comp:{lvl:lv(st('szkolenia')), note:''}, ctrl:{lvl:lv(st('zalecenia')), note:''},
+      inc:{lvl:d.nearMiss ? 3 : 2, note:d.nearMiss ? d.nearMiss+' zgłoszonych zdarzeń potencjalnie wypadkowych' : 'brak zgłoszeń zdarzeń potencjalnie wypadkowych'},
+      doc:{lvl:st('dokumentacja')==='ok' ? 4 : st('dokumentacja')==='warn' ? 3 : 2, note:''}, comm:{lvl:3, note:''}};
+  }
+  /* wykresy rysowane na canvas → PNG (ten sam obraz w PDF i Word) */
+  function anChartTrends(rows){
+    const W = 1500, H = 470, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0,0,W,H);
+    const panels = [{t:'Wypadki przy pracy', k:'acc', c:'#d9463b'}, {t:'Wskaźnik częstości Wc (‰)', k:'wc', c:'#a86a12'}, {t:'Zgodność audytów (%)', k:'cmp', c:'#1f9d65', max:100}];
+    const pw = W/3;
+    panels.forEach((pn, i)=>{
+      const x0 = i*pw+30, y0 = 70, ph = H-150, bw = Math.min(110, (pw-80)/rows.length*0.6);
+      g.fillStyle = '#15171a'; g.font = '600 30px Helvetica, Arial, sans-serif'; g.fillText(pn.t, x0, 42);
+      const vals = rows.map(r=>r[pn.k]==null ? null : +r[pn.k]);
+      const max = pn.max || Math.max(1, ...vals.filter(v=>v!=null))*1.15;
+      g.strokeStyle = '#e4e1da'; g.lineWidth = 2; g.beginPath(); g.moveTo(x0, y0+ph); g.lineTo(x0+pw-70, y0+ph); g.stroke();
+      rows.forEach((r, j)=>{
+        const v = vals[j], slot = (pw-80)/rows.length, bx = x0 + j*slot + (slot-bw)/2;
+        if(v!=null){ const bh = Math.max(3, v/max*ph); g.fillStyle = j===rows.length-1 ? pn.c : pn.c+'66'; g.fillRect(bx, y0+ph-bh, bw, bh);
+          g.fillStyle = '#15171a'; g.font = '700 30px Helvetica, Arial, sans-serif'; g.textAlign = 'center'; g.fillText(String(pn.k==='wc' ? v.toFixed(1).replace('.',',') : Math.round(v)), bx+bw/2, y0+ph-bh-12); }
+        else { g.fillStyle = '#8f8b84'; g.font = '26px Helvetica, Arial, sans-serif'; g.textAlign = 'center'; g.fillText('—', bx+bw/2, y0+ph-12); }
+        g.fillStyle = '#5d5a55'; g.font = '26px Helvetica, Arial, sans-serif'; g.textAlign = 'center'; g.fillText(String(r.y), bx+bw/2, y0+ph+40); g.textAlign = 'left';
+      });
+    });
+    return {url:cv.toDataURL('image/png'), w:W, h:H};
+  }
+  function anChartRadar(levels){
+    const W = 1500, H = 900, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0,0,W,H);
+    const cx = W/2, cy = H/2+10, R = 330, n = AN_MATURITY.length;
+    const pt = (i, r)=>[cx + r*Math.sin(2*Math.PI*i/n), cy - r*Math.cos(2*Math.PI*i/n)];
+    for(let l=1;l<=5;l++){ g.beginPath(); for(let i=0;i<n;i++){ const [x,y] = pt(i, R*l/5); i?g.lineTo(x,y):g.moveTo(x,y); } g.closePath(); g.strokeStyle = l===3 ? '#c9c5bc' : '#e4e1da'; g.lineWidth = l===3 ? 3 : 2; g.stroke();
+      g.fillStyle = '#8f8b84'; g.font = '22px Helvetica, Arial, sans-serif'; g.fillText(String(l), cx+6, cy - R*l/5 + 22); }
+    for(let i=0;i<n;i++){ const [x,y] = pt(i, R); g.beginPath(); g.moveTo(cx,cy); g.lineTo(x,y); g.strokeStyle = '#e4e1da'; g.lineWidth = 2; g.stroke(); }
+    g.beginPath(); levels.forEach((lv,i)=>{ const [x,y] = pt(i, R*Math.max(0,lv)/5); i?g.lineTo(x,y):g.moveTo(x,y); }); g.closePath();
+    g.fillStyle = 'rgba(31,157,101,0.22)'; g.fill(); g.strokeStyle = '#1f9d65'; g.lineWidth = 5; g.stroke();
+    levels.forEach((lv,i)=>{ const [x,y] = pt(i, R*Math.max(0,lv)/5); g.beginPath(); g.arc(x,y,9,0,2*Math.PI); g.fillStyle = '#17603f'; g.fill(); });
+    g.fillStyle = '#15171a'; g.font = '600 26px Helvetica, Arial, sans-serif';
+    AN_MATURITY.forEach((m,i)=>{ const [x,y] = pt(i, R+48); const words = m.t.split(' ('); const label = words[0];
+      g.textAlign = Math.abs(x-cx)<20 ? 'center' : x<cx ? 'right' : 'left';
+      const lines = []; let line = ''; label.split(' ').forEach(w=>{ if((line+' '+w).trim().length>22){ lines.push(line.trim()); line = w; } else line += ' '+w; }); lines.push(line.trim());
+      lines.forEach((ln,k)=>g.fillText(ln, x, y + (k - (lines.length-1)/2)*30 + 8)); });
+    g.textAlign = 'left';
+    return {url:cv.toDataURL('image/png'), w:W, h:H};
+  }
   const AN_REVIEW_ST = ['wykonane','częściowo','niewykonane','w toku'];
   const AN_PRIO = ['Wysoki','Średni','Niski'];
   let anEdit = null;
@@ -23195,11 +23287,37 @@ document.addEventListener('keydown', e=>{
         return [fmtDatePL(new Date(s.createdAt).toISOString().slice(0,10)), s.source==='obc'?'Obchód zakładu':s.source==='stan'?'Kontrola stanowiska'+(s.position?' — '+s.position:''):'Audyt (checklista)', (tk+ni)?Math.round(tk/(tk+ni)*100)+'%':'—', String(ni)]; }));
       out.note = d.openOver.length ? 'Zalecenia niezrealizowane w terminie: '+d.openOver.length+'.' : '';
     }
+    if(k==='metodyka'){
+      const visits = allVisits.filter(v=>v.projectId===cid && inY(v.date));
+      const snaps = allChecklistSnapshots.filter(x=>x.projectId===cid && x.createdAt && new Date(x.createdAt).getFullYear()===year);
+      out.kv = [['Zakres analizy', 'Stan bezpieczeństwa i higieny pracy w zakładzie '+(p.name||'')+' w okresie 01.01–31.12.'+year],
+        ['Metody', 'przegląd dokumentacji BHP i rejestrów (wypadki, choroby zawodowe, szkolenia, badania, pomiary), obchody i audyty stanowisk pracy, rozmowy z kierownictwem i pracownikami'],
+        ['Źródła danych', 'dokumentacja udostępniona przez pracodawcę oraz dane prowadzone przez służbę BHP (stan na '+fmtDatePL(wtTodayIso())+')'],
+        ['Ograniczenia', 'analiza obejmuje informacje udostępnione i stwierdzone podczas wizyt; nie zastępuje kontroli organów nadzoru nad warunkami pracy'],
+        ['Wizyty służby BHP w roku', String(visits.length)], ['Audyty i obchody w roku', String(snaps.length)]];
+      const rows = visits.map(v=>({d:v.date, r:[fmtDatePL(v.date), 'Wizyta służby BHP', [v.description, v.hours?v.hours+' h':''].filter(Boolean).join(' · ')]}))
+        .concat(snaps.map(x=>{ const res = x.results||[], tk = res.filter(r=>r.value==='TAK').length, ni = res.filter(r=>r.value==='NIE').length; const di = new Date(x.createdAt).toISOString().slice(0,10);
+          return {d:di, r:[fmtDatePL(di), x.source==='obc'?'Obchód zakładu':x.source==='stan'?'Kontrola stanowiska pracy':'Audyt BHP (checklista)', (tk+ni)?'zgodność '+Math.round(tk/(tk+ni)*100)+'%, niezgodności: '+ni:'']}; }));
+      T(rows.sort((a,b)=>String(a.d).localeCompare(String(b.d))).map(x=>x.r));
+    }
+    if(k==='trendy'){
+      const rows = [];
+      for(let yy=year-2; yy<=year; yy++){
+        const ys = String(yy);
+        const acc = allAccidentCases.filter(c=>c.projectId===cid && String(c.eventDate||'').slice(0,4)===ys && wtWypKind(c)==='work' && c.isWpp!=='Nie');
+        const snaps = allChecklistSnapshots.filter(x=>x.projectId===cid && x.source!=='obc' && x.createdAt && new Date(x.createdAt).getFullYear()===yy);
+        const cmp = snaps.map(x=>{ const res = x.results||[], tk = res.filter(r=>r.value==='TAK').length, ni = res.filter(r=>r.value==='NIE').length; return (tk+ni) ? tk/(tk+ni)*100 : null; }).filter(v=>v!=null);
+        rows.push([ys, yy===year && d.hc!=null ? String(d.hc) : '', String(acc.length), String(acc.reduce((a2,c)=>a2+wtNum(c.sickDays),0)), cmp.length ? String(Math.round(cmp.reduce((a2,v)=>a2+v,0)/cmp.length)) : '']);
+      }
+      T(rows);
+      out.note = 'Zatrudnienie z lat poprzednich uzupełnij, aby wskaźnik częstości Wc liczył się dla każdego roku.';
+    }
     if(k==='zalecenia'){
       const items = wtCollectRecommendations().filter(it=>it.projectId===cid && (inY(it.date) || !it.completedDate) && it.kind!=='masz');
       items.sort((a,b)=>(b.status?b.status.rank:0)-(a.status?a.status.rank:0) || String(a.deadline||'9').localeCompare(String(b.deadline||'9')));
       T(items.map(it=>[it.text||'', [it.source, it.date?fmtDatePL(it.date):''].filter(Boolean).join(' · '), it.responsible||'', it.deadline?fmtDatePL(it.deadline):'',
-        it.completedDate ? 'zrealizowane '+fmtDatePL(it.completedDate) : (it.status ? it.status.label : 'otwarte')]));
+        it.completedDate ? 'zrealizowane '+fmtDatePL(it.completedDate) : (it.status ? it.status.label : 'otwarte'),
+        (it.kind==='accident' || (it.kind==='rec' && ['pip','pis','udt','psp'].includes(it.sourceId)) || (it.status && it.status.rank>=4 && !it.completedDate)) ? 'Wysokie' : 'Średnie', '', '']));
       const done = items.filter(it=>it.completedDate).length, over = items.filter(it=>!it.completedDate && it.status && it.status.rank>=4).length;
       out.kv = [['Zalecenia (wydane w roku i otwarte)', String(items.length)], ['Zrealizowane', String(done)], ['W toku', String(items.length-done-over)], ['Po terminie', String(over)]];
       out.note = over ? 'Zalecenia po terminie: '+over+' — wyznaczyć nowe terminy i nadzorować realizację.' : items.length ? 'Zalecenia realizowane terminowo.' : '';
@@ -23227,16 +23345,19 @@ document.addEventListener('keydown', e=>{
     });
   }
   function anNew(cid, year){
+    const big = anIsBig(cid);
     const a = {cid, year, on:{}, sec:{}, plan:anPlanPrefill(cid, year), review:anReviewPrefill(cid, year), summary:'', custom:[], savedAt:null, cur:'zaklad'};
     AN_SECTIONS.forEach(s=>{
       if(s.special) return;
       const f = anPrefill(cid, year, s.k);
       a.sec[s.k] = f;
       const has = f.kv.some(r=>r[1] && r[1]!=='0' && r[1]!=='0 / 0') || f.tables.some(t=>t.length);
-      a.on[s.k] = !!s.core || has;
+      a.on[s.k] = s.big ? big : (!!s.core || has);
     });
     a.on.rozliczenie = a.review.length>0;
     a.on.plan = true; a.on.podsumowanie = true; a.on.ocena = true;
+    a.on.spis = big; a.on.zarzad = big; a.on.dojrzalosc = big;
+    a.exec = anExecPrefill(cid, year, a); a.maturity = anMaturityPrefill(cid, year);
     const d = wtAnalysisData(cid, year);
     a.summary = d.conclusions.map(c=>'• '+c).join('\n');
     return a;
@@ -23258,6 +23379,9 @@ document.addEventListener('keydown', e=>{
         if(anEdit.on[s.k]==null) anEdit.on[s.k] = !!s.core; });
       anEdit.plan = anEdit.plan||[]; anEdit.review = anEdit.review||[]; anEdit.custom = anEdit.custom||[];
       if(anEdit.on.ocena==null) anEdit.on.ocena = true;
+      { const big = anIsBig(cid); AN_SECTIONS.forEach(s=>{ if(anEdit.on[s.k]==null) anEdit.on[s.k] = s.big ? big : !!s.core; }); }
+      if(!anEdit.exec) anEdit.exec = anExecPrefill(cid, year, anEdit);
+      if(!anEdit.maturity) anEdit.maturity = anMaturityPrefill(cid, year);
     } else {
       anEdit = anNew(cid, year);
       if(saved){ // starszy zapis: wnioski + zalecenia
@@ -23274,7 +23398,8 @@ document.addEventListener('keydown', e=>{
     if(k==='plan') return a.plan.some(r=>r.action) ? 'ok' : 'warn';
     if(k==='rozliczenie') return a.review.length ? 'ok' : 'warn';
     if(k==='podsumowanie') return a.summary.trim() ? 'ok' : 'warn';
-    if(k==='ocena') return 'ok';
+    if(k==='ocena' || k==='spis' || k==='dojrzalosc') return 'ok';
+    if(k==='zarzad') return (a.exec && String(a.exec.messages||'').trim()) ? 'ok' : 'warn';
     const s = a.sec[k]; if(!s) return 'warn';
     const filled = s.kv.some(r=>String(r[1]||'').trim()) || s.tables.some(t=>t.some(r=>r.some(c=>String(c||'').trim()))) || String(s.note||'').trim();
     return filled ? 'ok' : 'warn';
@@ -23293,6 +23418,7 @@ document.addEventListener('keydown', e=>{
           +'<div><label>Priorytet</label><select class="wt-input" data-pl="'+i+'" data-k="prio">'+AN_PRIO.map(x=>'<option'+(x===r.prio?' selected':'')+'>'+x+'</option>').join('')+'</select></div>'
           +'<div><label>Odpowiedzialny</label>'+anI(r.owner,'data-pl="'+i+'" data-k="owner"')+'</div>'
           +'<div><label>Termin</label>'+anI(r.due,'type="date" data-pl="'+i+'" data-k="due"')+'</div>'
+          +'<div><label>Horyzont</label><select class="wt-input" data-pl="'+i+'" data-k="hor"><option value="">Automatycznie (wg terminu)</option>'+AN_HOR.map(x=>'<option value="'+x.v+'"'+(r.hor===x.v?' selected':'')+'>'+x.t+'</option>').join('')+'</select></div>'
           +'<div><label>Koszt orientacyjny</label>'+anI(r.cost,'data-pl="'+i+'" data-k="cost" placeholder="np. 2 000 zł"')+'</div>'
           +'</div>'+anX('window.wtAn2Del(\'plan\','+i+')')+'</div>').join('')+'</div>'
         +'<div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2Add(\'plan\')">+ Dodaj działanie</button><button class="wt-btn ghost" onclick="window.wtAn2RefillPlan()">Podpowiedz ponownie z danych</button><button class="wt-btn ghost" onclick="window.wtAnalysisToRegister()">Przenieś do rejestru zaleceń</button></div>';
@@ -23303,6 +23429,27 @@ document.addEventListener('keydown', e=>{
         +'<div class="wt-an2-table"><table><thead><tr><th>Działanie z planu</th><th style="width:16%">Termin</th><th style="width:18%">Realizacja</th><th style="width:24%">Uwagi</th><th style="width:40px"></th></tr></thead><tbody>'
         +a.review.map((r,i)=>'<tr><td>'+anT(r.action,'data-rv="'+i+'" data-k="action"')+'</td><td>'+anI(r.due,'type="date" data-rv="'+i+'" data-k="due"')+'</td><td><select class="wt-input" data-rv="'+i+'" data-k="status"><option value="">—</option>'+AN_REVIEW_ST.map(x=>'<option'+(x===r.status?' selected':'')+'>'+x+'</option>').join('')+'</select></td><td>'+anT(r.note,'data-rv="'+i+'" data-k="note"')+'</td><td>'+anX('window.wtAn2Del(\'review\','+i+')')+'</td></tr>').join('')
         +'</tbody></table></div><div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2Add(\'review\')">+ Dodaj pozycję</button><button class="wt-btn ghost" onclick="window.wtAn2RefillReview()">Odśwież z analizy za '+(a.year-1)+' r.</button></div>';
+    }
+    if(k==='spis'){
+      return '<p class="small">W raporcie (PDF i Word) pojawi się strona tytułowa z oznaczeniem poufności oraz spis treści z numerami sekcji (w Wordzie — z numerami stron, aktualizowany po otwarciu pliku).</p>'
+        +'<div class="wt-an2-grid"><div class="wide"><label>Klauzula poufności</label>'+anI(a.confid==null?'Poufne — wyłącznie dla kierownictwa':a.confid,'id="wtAn2Confid"')+'</div></div>';
+    }
+    if(k==='zarzad'){
+      const e = a.exec || {};
+      return '<p class="small">Jedna strona dla zarządu: ogólna ocena, kluczowe wnioski i największe ryzyka — podpowiedziane z danych, edytuj dowolnie.</p>'
+        +'<div class="wt-an2-grid"><div><label>Ogólna ocena stanu BHP</label><select class="wt-input" data-ex="rating">'+AN_RATINGS.map(r=>'<option'+(r.v===e.rating?' selected':'')+'>'+r.v+'</option>').join('')+'</select></div></div>'
+        +'<div class="wt-emp-sec">Kluczowe wnioski (każdy w osobnej linii)</div>'+anT(e.messages,'data-ex="messages" style="width:100%;"',7)
+        +'<div class="wt-emp-sec">Najważniejsze ryzyka (maks. 3, każde w osobnej linii)</div>'+anT(e.risks,'data-ex="risks" style="width:100%;"',4)
+        +'<div class="wt-an2-btns"><button class="wt-btn ghost" onclick="window.wtAn2RefillExec()">Podpowiedz ponownie z danych</button></div>';
+    }
+    if(k==='dojrzalosc'){
+      const m = a.maturity || {};
+      return '<p class="small">Skala 1–5: 1 — początkowy (reaktywny), 2 — podstawowy, 3 — zdefiniowany (zgodność z przepisami), 4 — zarządzany (proaktywny), 5 — optymalizowany (wiodący). Poziomy podpowiedziane z danych tam, gdzie się da — oceń i popraw.</p>'
+        +'<div class="wt-an2-plan">'+AN_MATURITY.map(ar=>{ const v = m[ar.k] || {lvl:3, note:''};
+          return '<div class="wt-an2-card" style="grid-template-columns:minmax(0,1fr);"><div class="wt-an2-grid"><div class="wide" style="font-weight:600;">'+esc(ar.t)+'</div>'
+            +'<div><label>Poziom</label><select class="wt-input" data-mt="'+ar.k+'" data-k="lvl">'+[1,2,3,4,5].map(l=>'<option value="'+l+'"'+(+v.lvl===l?' selected':'')+'>'+l+' — '+AN_LEVELS[l]+'</option>').join('')+'</select></div>'
+            +'<div class="wide" style="grid-column:2/-1;"><label>Uzasadnienie / komentarz</label>'+anI(v.note,'data-mt="'+ar.k+'" data-k="note"')+'</div></div></div>'; }).join('')+'</div>'
+        +'<div class="wt-an2-btns"><button class="wt-btn ghost" onclick="window.wtAn2RefillMaturity()">Podpowiedz ponownie z danych</button></div>';
     }
     if(k==='ocena'){
       const ov = anOverview(a.cid, a.year);
@@ -23326,6 +23473,17 @@ document.addEventListener('keydown', e=>{
       +'<div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2Add(\'kv\')">+ Dodaj pozycję</button></div>';
     (def.tables||[]).forEach((td, ti)=>{
       const rows = s.tables[ti] || (s.tables[ti] = []);
+      if(td.cards){
+        h += '<div class="wt-emp-sec">'+esc(td.title)+(rows.length?' ('+rows.length+')':'')+'</div><div class="wt-an2-plan">'
+          + rows.map((r,ri)=>'<div class="wt-an2-card"><div class="wt-an-num">'+(ri+1)+'</div><div class="wt-an2-grid">'+td.head.map((x,ci)=>{
+              const attrs = 'data-tb="'+ti+'" data-r="'+ri+'" data-c="'+ci+'"';
+              if(/Poziom ryzyka/.test(x)) return '<div><label>'+esc(x)+'</label><select class="wt-input" '+attrs+'>'+['Wysokie','Średnie','Niskie'].map(o=>'<option'+(o===r[ci]?' selected':'')+'>'+o+'</option>').join('')+'</select></div>';
+              const wide = ci===0 || /Przyczyna|Stanowisko|Źródło/.test(x);
+              return '<div'+(wide?' class="wide"':'')+'><label>'+esc(x)+'</label>'+(ci===0||/Stanowisko|Przyczyna/.test(x) ? anT(r[ci], attrs) : anI(r[ci], attrs))+'</div>'; }).join('')
+            +'</div>'+anX('window.wtAn2DelRow('+ti+','+ri+')')+'</div>').join('')
+          + (rows.length?'':'<div class="wt-empty">Brak pozycji.</div>')+'</div><div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2AddRow('+ti+')">+ Dodaj pozycję</button></div>';
+        return;
+      }
       h += '<div class="wt-emp-sec">'+esc(td.title)+(rows.length?' ('+rows.length+')':'')+'</div>'
         +'<div class="wt-an2-table"><table><thead><tr>'+td.head.map(x=>'<th>'+esc(x)+'</th>').join('')+'<th style="width:40px"></th></tr></thead><tbody>'
         +rows.map((r,ri)=>'<tr>'+td.head.map((x,ci)=>'<td data-label="'+esc(x)+'">'+(String(r[ci]||'').length>40 ? anT(r[ci],'data-tb="'+ti+'" data-r="'+ri+'" data-c="'+ci+'"') : anI(r[ci],'data-tb="'+ti+'" data-r="'+ri+'" data-c="'+ci+'"'))+'</td>').join('')+'<td>'+anX('window.wtAn2DelRow('+ti+','+ri+')')+'</td></tr>').join('')
@@ -23382,6 +23540,9 @@ document.addEventListener('keydown', e=>{
     ov.querySelectorAll('[data-cu]').forEach(inp=>{ const r = a.custom[+inp.dataset.cu]; if(r) r[inp.dataset.k] = inp.type==='checkbox' ? inp.checked : inp.value; });
     const sum = document.getElementById('wtAn2Summary'); if(sum) a.summary = sum.value;
     const ovn = document.getElementById('wtAn2OvNote'); if(ovn) a.overviewNote = ovn.value;
+    ov.querySelectorAll('[data-ex]').forEach(inp=>{ a.exec = a.exec || {}; a.exec[inp.dataset.ex] = inp.value; });
+    ov.querySelectorAll('[data-mt]').forEach(inp=>{ a.maturity = a.maturity || {}; const m = a.maturity[inp.dataset.mt] = a.maturity[inp.dataset.mt] || {lvl:3, note:''}; m[inp.dataset.k] = inp.dataset.k==='lvl' ? +inp.value : inp.value; });
+    const cf = document.getElementById('wtAn2Confid'); if(cf) a.confid = cf.value;
   }
   window.wtAnalysisSwitchYear = async function(y){ wtAnalysisRead(); await window.wtAnalysisSave(true); window.wtAnalysisOpen(anEdit.cid, +y); };
   window.wtAn2Go = function(k){ wtAnalysisRead(); anEdit.cur = k; renderAnalysisEditor(); const m = document.querySelector('.wt-an2-main'); if(m) m.scrollTop = 0; };
@@ -23401,6 +23562,12 @@ document.addEventListener('keydown', e=>{
   window.wtAn2RefillPlan = async function(){ wtAnalysisRead();
     if(!await wtConfirm('Dopisać do planu działania podpowiedziane z aktualnych danych (pominie te, które już są)?', 'Dopisz', 'primary')) return;
     const have = new Set(anEdit.plan.map(r=>r.action)); anPlanPrefill(anEdit.cid, anEdit.year).forEach(r=>{ if(!have.has(r.action)) anEdit.plan.push(r); }); renderAnalysisEditor(); };
+  window.wtAn2RefillExec = async function(){ wtAnalysisRead();
+    if(!await wtConfirm('Zastąpić ocenę, wnioski i ryzyka podpowiedziami z aktualnych danych?', 'Zastąp', 'primary')) return;
+    anEdit.exec = anExecPrefill(anEdit.cid, anEdit.year, anEdit); renderAnalysisEditor(); };
+  window.wtAn2RefillMaturity = async function(){ wtAnalysisRead();
+    if(!await wtConfirm('Zastąpić poziomy dojrzałości podpowiedziami z aktualnych danych?', 'Zastąp', 'primary')) return;
+    anEdit.maturity = anMaturityPrefill(anEdit.cid, anEdit.year); renderAnalysisEditor(); };
   window.wtAn2RefillReview = async function(){ wtAnalysisRead();
     if(!await wtConfirm('Zastąpić rozliczenie działaniami z analizy za '+(anEdit.year-1)+' r.?', 'Zastąp', 'primary')) return;
     anEdit.review = anReviewPrefill(anEdit.cid, anEdit.year); if(anEdit.review.length) anEdit.on.rozliczenie = true; renderAnalysisEditor(); };
@@ -23409,7 +23576,7 @@ document.addEventListener('keydown', e=>{
     if(!DB || !anEdit) return false;
     const a = anEdit, p = wtProjectById(a.cid);
     const prev = (p.analyses||{})[a.year] || {};
-    const entry = {v:2, on:a.on, secJson:JSON.stringify(a.sec), plan:a.plan.filter(r=>r.action||r.problem), review:a.review.filter(r=>r.action), summary:a.summary||'', overviewNote:a.overviewNote||'', custom:a.custom.filter(c=>c.title||c.text),
+    const entry = {v:2, on:a.on, secJson:JSON.stringify(a.sec), plan:a.plan.filter(r=>r.action||r.problem), review:a.review.filter(r=>r.action), summary:a.summary||'', overviewNote:a.overviewNote||'', exec:a.exec||null, maturity:a.maturity||null, confid:a.confid==null?null:a.confid, custom:a.custom.filter(c=>c.title||c.text),
       savedAt:Date.now(), generatedAt: generated ? Date.now() : (prev.generatedAt||null)};
     const analyses = Object.assign({}, p.analyses||{}, {[a.year]: JSON.parse(JSON.stringify(entry))});
     try{ await DB.doc('client_projects/'+a.cid).update({analyses}); p.analyses = analyses; a.savedAt = entry.savedAt; if(!silent){ wtToast('Zapisano analizę.'); renderAnalysisEditor(); } return true; }
@@ -23438,6 +23605,9 @@ document.addEventListener('keydown', e=>{
       if(def.special==='plan'){ const plan = a.plan.filter(r=>r.action||r.problem); secs.push({k:def.k, t:def.t, plan}); return; }
       if(def.special==='review'){ const rv = a.review.filter(r=>r.action); if(rv.length) secs.push({k:def.k, t:def.t, table:{head:['Działanie z planu','Termin','Realizacja','Uwagi'], w:[46,14,16,24], rows:rv.map(r=>[r.action, r.due?fmtDatePL(r.due):'', r.status||'', r.note||''])}}); return; }
       if(def.special==='summary') return;
+      if(def.special==='toc'){ secs.push({k:def.k, t:'Spis treści', toc:true}); return; }
+      if(def.special==='exec'){ secs.push({k:def.k, t:def.t, exec:a.exec||anExecPrefill(a.cid, a.year, a)}); return; }
+      if(def.special==='maturity'){ secs.push({k:def.k, t:def.t, maturity:a.maturity||anMaturityPrefill(a.cid, a.year)}); return; }
       if(def.special==='overview'){ secs.push({k:def.k, t:def.t, overview:anOverview(a.cid, a.year), note:String(a.overviewNote||'').trim()}); return; }
       const s = a.sec[def.k] || {kv:[], tables:[], note:''};
       const kv = s.kv.filter(r=>String(r[0]||'').trim() && String(r[1]||'').trim());
@@ -23505,6 +23675,19 @@ document.addEventListener('keydown', e=>{
   /* bloki sekcji (wspólne dla PDF i Word) */
   function anBlocks(s){
     const B = [];
+    if(s.exec){
+      const r = AN_RATINGS.find(x=>x.v===s.exec.rating) || AN_RATINGS[1];
+      B.push({type:'banner', label:'Ogólna ocena stanu BHP', value:r.v, cls:r.cls});
+      if(String(s.exec.messages||'').trim()) B.push({type:'text', title:'Kluczowe wnioski', text:s.exec.messages});
+      const rk = String(s.exec.risks||'').split('\n').map(x=>x.replace(/^[•\-–\s]+/,'').trim()).filter(Boolean);
+      if(rk.length) B.push({type:'rows', title:'Najważniejsze ryzyka', rows:rk.map(t=>({text:t, status:'WYSOKIE', cls:'bad'}))});
+    }
+    if(s.maturity){
+      const lv = AN_MATURITY.map(m=>+((s.maturity[m.k]||{}).lvl||0));
+      B.push({type:'image', img:anChartRadar(lv), alt:'Ocena dojrzałości systemu BHP'});
+      const avg = lv.length ? (lv.reduce((x,y)=>x+y,0)/lv.length) : 0;
+      B.push({type:'rows', title:'Poziom w obszarach · średnio '+avg.toFixed(1).replace('.',',')+' / 5', rows:AN_MATURITY.map((m,i)=>({text:m.t, note:[AN_LEVELS[lv[i]]||'', (s.maturity[m.k]||{}).note||''].filter(Boolean).join(' · '), status:lv[i]+' / 5', cls:lv[i]<=2?'bad':lv[i]===3?'warn':'ok'}))});
+    }
     if(s.overview){ B.push({type:'rows', rows:s.overview.map(o=>({text:o.area, note:o.detail, status:o.status, cls:o.cls==='warn'?'warn':o.cls}))}); }
     if(s.kv && s.kv.length){
       let num = s.kv.filter(r=>AN_NUM_RE.test(String(r[1]).trim()) && String(r[0]).length<70);
@@ -23515,7 +23698,14 @@ document.addEventListener('keydown', e=>{
     }
     (s.tables||[]).forEach(t=>{
       if(s.k==='wypadki' && /Wypadki/.test(t.title)) B.push({type:'cards', title:t.title, items:t.rows.map(r=>({question:[r[0], r[1]].filter(Boolean).join(' — '), comment:r[2]||'', pill:r[3]?r[3]+' dni':'—', pillCls:'', writein:false}))});
-      else if(s.k==='zalecenia') B.push({type:'cards', title:t.title, items:t.rows.map(r=>{ const st = anStatusOf(r[4]) || {status:String(r[4]||'').toUpperCase(), cls:'nd'}; const parts = String(r[0]||'').split(' → '); return {question:parts[0]||'—', comment:r[1]||'', owner:r[2]||'', due:r[3]||'', action:parts.slice(1).join(' → ') || (r[2]||r[3] ? 'zgodnie z treścią zalecenia' : ''), pill:String(st.status).toUpperCase(), pillCls:st.cls==='ok'?'ok':st.cls==='bad'?'':'warn', writein:false}; })});
+      else if(s.k==='trendy'){
+        const rr = t.rows.map(r=>{ const hc = parseFloat(String(r[1]||'').replace(',','.')), acc = parseFloat(r[2]), days = parseFloat(r[3]), cmp = parseFloat(String(r[4]||'').replace(',','.'));
+          return {y:r[0], hc:isNaN(hc)?null:hc, acc:isNaN(acc)?null:acc, days:isNaN(days)?null:days, cmp:isNaN(cmp)?null:cmp, wc:(!isNaN(hc)&&hc>0&&!isNaN(acc))?acc/hc*1000:null, wci:(!isNaN(acc)&&acc>0&&!isNaN(days))?days/acc:null}; });
+        B.push({type:'image', img:anChartTrends(rr), alt:'Trendy'});
+        const f = (v, dec)=>v==null ? '—' : (dec ? v.toFixed(1).replace('.',',') : String(Math.round(v)));
+        B.push({type:'grid', title:t.title, head:['Rok','Zatrudnienie','Wypadki','Wc (‰)','Wci (dni)','Dni niezdolności','Zgodność audytów'], w:[12,15,13,14,14,16,16], rows:rr.map(x=>[x.y, f(x.hc), f(x.acc), f(x.wc,1), f(x.wci,1), f(x.days), x.cmp==null?'—':f(x.cmp)+'%'])});
+      }
+      else if(s.k==='zalecenia') B.push({type:'cards', title:t.title, items:t.rows.map(r=>{ const st = anStatusOf(r[4]) || {status:String(r[4]||'').toUpperCase(), cls:'nd'}; const parts = String(r[0]||'').split(' → '); const risk = String(r[5]||'Średnie'); return {question:parts[0]||'—', comment:[r[1]||'', r[6]?'Przyczyna: '+r[6]:''].filter(Boolean).join(' · '), owner:r[2]||'', due:[r[3]||'', st.status&&st.status!=='—'?String(st.status).toLowerCase():''].filter(Boolean).join(' · '), action:parts.slice(1).join(' → ') || 'zgodnie z treścią zalecenia', riskPill:true, w1:'Stanowisko pracodawcy', w1v:r[7]||'', w2:'Data realizacji', w2v:/zrealiz/i.test(r[4]||'') ? String(r[4]).replace(/^zrealizowane\s*/i,'') : '', pill:'RYZYKO '+risk.toUpperCase(), pillCls:/wysok/i.test(risk)?'':/nisk/i.test(risk)?'ok':'warn'}; })});
       else if(s.k==='dokumentacja'){
         const ok = t.rows.filter(r=>/^jest/i.test(String(r[2]||''))), miss = t.rows.filter(r=>!/^jest/i.test(String(r[2]||'')));
         B.push({type:'progress', label:'Udokumentowane obowiązki', done:ok.length, total:t.rows.length});
@@ -23525,8 +23715,12 @@ document.addEventListener('keydown', e=>{
       else B.push({type:'rows', title:t.title, rows:anRowsOf(t)});
     });
     if(s.table) B.push({type:'rows', title:s.table.title||'', rows:anRowsOf(s.table)});
-    if(s.plan) B.push({type:'cards', items:s.plan.map(r=>({question:r.problem||r.action||'—', comment:[r.goal?'Cel / miernik: '+r.goal:'', r.cost?'Koszt orientacyjny: '+r.cost:''].filter(Boolean).join(' · '),
-      action:r.action||'', owner:r.owner||'', due:r.due?fmtDatePL(r.due):'', pill:(r.prio||'Średni').toUpperCase(), pillCls:r.prio==='Wysoki'?'':'warn', w1:'Sposób realizacji', w2:'Data realizacji'})), empty:'Brak działań w planie'});
+    if(s.plan){
+      const card = r=>({question:r.problem||r.action||'—', comment:[r.goal?'Cel / miernik: '+r.goal:'', r.cost?'Koszt orientacyjny: '+r.cost:''].filter(Boolean).join(' · '),
+        action:r.action||'', owner:r.owner||'', due:r.due?fmtDatePL(r.due):'', pill:(r.prio||'Średni').toUpperCase(), pillCls:r.prio==='Wysoki'?'':'warn', w1:'Sposób realizacji', w2:'Data realizacji'});
+      if(!s.plan.length) B.push({type:'cards', items:[], empty:'Brak działań w planie'});
+      AN_HOR.forEach(hz=>{ const L = s.plan.filter(r=>anHorizon(r)===hz.v); if(L.length) B.push({type:'cards', title:hz.t+' · '+L.length, items:L.map(card)}); });
+    }
     if(s.note) B.push({type:'text', text:s.note});
     return B;
   }
@@ -23554,15 +23748,22 @@ document.addEventListener('keydown', e=>{
       if(b.type==='tiles') return tiles(b.items);
       if(b.type==='progress') return progress(b);
       if(b.type==='text') return wtRpcText(b.text);
+      if(b.type==='banner'){ const c = {ok:['#e3f6ec','#17603f'], warn:['#fdf1df','#8a4b00'], bad:['#fde8e5','#9e2a20']}[b.cls]||['#f1efe9','#15171a'];
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 22px;border-radius:14px;background:'+c[0]+';"><span style="font-family:var(--font-mono);font-size:7.5pt;letter-spacing:.08em;text-transform:uppercase;color:'+c[1]+';">'+esc(b.label)+'</span><span style="font-family:var(--font-display);font-size:26pt;font-weight:700;line-height:1;color:'+c[1]+';">'+esc(b.value)+'</span></div>'; }
+      if(b.type==='image') return '<img src="'+b.img.url+'" alt="'+esc(b.alt||'')+'" style="width:100%;display:block;border:1px solid #e4e1da;border-radius:14px;">';
+      if(b.type==='grid'){ const th = 'style="border-bottom:1px solid #d6d3cc;padding:7px 8px;text-align:left;font-family:var(--font-mono);font-size:7pt;letter-spacing:.06em;text-transform:uppercase;color:#6b6760;font-weight:500;"', td = 'style="border-bottom:1px solid #ece9e2;padding:8px;text-align:left;font-size:10pt;color:#15171a;font-variant-numeric:tabular-nums;"';
+        return '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><colgroup>'+b.w.map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr>'+b.head.map(h=>'<th '+th+'>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+b.rows.map((r,ri)=>'<tr>'+r.map((c,ci)=>'<td '+td.replace('color:#15171a;','color:#15171a;'+(ri===b.rows.length-1?'font-weight:700;':''))+'>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>'; }
+      if(b.type==='toc') return wtRpcRows(b.items);
       return '';
     };
     const sections = [];
+    const numOf = s=>String(M.secs.filter(x=>!x.toc).indexOf(s)+1).padStart(2,'0');
     M.secs.forEach((s, i)=>{
-      const n = String(i+1).padStart(2,'0');
-      const eyebrow = s.k==='plan' ? n+' · Propozycje przedsięwzięć na rok '+(year+1) : s.k==='podsumowanie' ? n+' · Wnioski' : s.k==='ocena' ? n+' · Podsumowanie dla pracodawcy' : n+' · Analiza stanu BHP '+year;
+      const n = numOf(s);
+      const eyebrow = s.toc ? (M.a.confid==null?'Poufne — wyłącznie dla kierownictwa':M.a.confid) : s.k==='plan' ? n+' · Propozycje przedsięwzięć na rok '+(year+1) : s.k==='podsumowanie' ? n+' · Wnioski' : s.k==='ocena' ? n+' · Podsumowanie dla pracodawcy' : s.k==='zarzad' ? n+' · Dla zarządu' : n+' · Analiza stanu BHP '+year;
       const bd = anSecBadge(s, ov);
       const badge = bd ? '<span class="rpc-duepill" style="background:'+BADGE[bd.cls]+' !important;">'+esc(bd.status)+'</span>' : (s.k==='plan' && s.plan && s.plan.length ? '<span class="rpc-duepill">'+s.plan.length+' do realizacji</span>' : '');
-      const blocks = anBlocks(s);
+      const blocks = s.toc ? [{type:'toc', items:M.secs.filter(x=>!x.toc).map((x,k)=>{ const bb = anSecBadge(x, ov); return {text:x.t, status:bb?bb.status:'', cls:bb?(bb.cls==='warn'?'warn':bb.cls):'blank'}; })}] : anBlocks(s);
       if(!blocks.length) blocks.push({type:'text', text:''});
       blocks.forEach((b, j)=>{
         const sub = b.title ? '<span class="rpc-eyebrow2 gray" style="margin-top:'+(j===0?'10px':'2px')+';">'+esc(b.title)+'</span>' : '';
@@ -23575,7 +23776,7 @@ document.addEventListener('keydown', e=>{
       +'<div style="flex:1;border-top:1px dotted #8f8b84;padding-top:6px;">zapoznałem się i przyjmuję do realizacji: pracodawca<br>(data, podpis)</div></div></div>');
     const lacks = d.trOver + d.medOver;
     const html = wtRpcReport({
-      pills:['Analiza stanu BHP', 'Rok '+year, 'M.2'], title:M.p.name||'',
+      pills:['Analiza stanu BHP', 'Rok '+year, 'M.2'].concat(M.a.on.spis ? ['Poufne'] : []), title:M.p.name||'',
       meta:[{lbl:'Okres analizy', val:'01.01–31.12.'+year}, {lbl:'Opracował', val:M.sp.name||'specjalista ds. BHP'}],
       ring: recPct==null ? null : {pct:recPct, label:'Zalecenia', sub:d.recsDoneY+' z '+d.recsY.length+' zrealizowanych w '+year+' r.'},
       stats:[{label:'Pracownicy', num:d.hc!=null?d.hc:'—', cls:'total'}, {label:'Wypadki przy pracy', num:d.accWork.length, cls:d.accWork.length?'bad':'ok'},
@@ -23636,11 +23837,35 @@ document.addEventListener('keydown', e=>{
         if(it.action||it.owner||it.due) x += table([w3, w3, TOT-2*w3], tr(tcell(para(run('ZALECANE DZIAŁANIE', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(it.action||'—', {sz:18}), {after:0}), w3, {fill:C.sand, va:'top', mar:100})
             + tcell(para(run('ODPOWIEDZIALNY', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(it.owner||'', {sz:18}), {after:0}), w3, {fill:C.sand, va:'top', mar:100})
             + tcell(para(run('TERMIN', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(it.due||'', {font:MONO, sz:18}), {after:0}), TOT-2*w3, {fill:C.sand, va:'top', mar:100})), {borders:'single', after:it.writein===false?140:0});
-        if(it.writein!==false) x += table([TOT-2500, 2500], tr(tcell(para(run((it.w1||'Sposób realizacji')+': ………………………………………………', {sz:16, color:C.faint}), {after:0}), TOT-2500, {mar:100})+tcell(para(run((it.w2||'Data')+': …………', {sz:16, color:C.faint}), {after:0}), 2500, {mar:100})), {borders:'single', after:200});
+        if(it.writein!==false) x += table([TOT-2500, 2500], tr(tcell(para(run((it.w1||'Sposób realizacji')+': ', {sz:16, color:C.faint})+run(it.w1v||'………………………………………………', {sz:17, color:it.w1v?C.ink:C.faint}), {after:0}), TOT-2500, {mar:100})+tcell(para(run((it.w2||'Data')+': ', {sz:16, color:C.faint})+run(it.w2v||'…………', {sz:17, color:it.w2v?C.ink:C.faint}), {after:0}), 2500, {mar:100})), {borders:'single', after:200});
       }); return x; };
+    const media = []; let ridN = 20;
+    const imgXml = img=>{ const id = 'rId'+(++ridN), k = media.length+1; media.push({id, name:'chart'+k+'.png', data:img.url.split(',')[1]});
+      const cx = 6120000, cy = Math.round(cx*img.h/img.w);
+      return '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="160"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="'+(100+k)+'" name="Wykres '+k+'"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="'+(100+k)+'" name="chart'+k+'.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+id+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>'; };
+    const gridXml = g=>{ const ws = g.w.map(x=>Math.round(TOT*x/100)); ws[ws.length-1] = TOT - ws.slice(0,-1).reduce((a2,c)=>a2+c,0);
+      return table(ws, tr(g.head.map((h,i)=>tcell(para(run(h, {font:MONO, sz:13, color:'6B6760', caps:true}), {after:0}), ws[i], {fill:C.sand})).join(''), {header:true})
+        + g.rows.map((r,ri)=>tr(r.map((c,i)=>tcell(para(run(c, {sz:19, b:ri===g.rows.length-1}), {after:0}), ws[i])).join(''))).join(''), {borders:'single'}); };
+    const bannerXml = bn=>{ const c = ST[bn.cls]||ST.nd;
+      return table([TOT-4200, 4200], tr(tcell(para(run(bn.label, {font:MONO, sz:14, color:c[1], caps:true, sp:16}), {after:0}), TOT-4200, {fill:c[0], mar:240, marx:260})
+        + tcell(para(run(bn.value, {font:DISP, b:true, sz:44, color:c[1]}), {jc:'right', after:0}), 4200, {fill:c[0], mar:240, marx:260})), {after:200}); };
+    const numOf = s2=>String(M.secs.filter(x=>!x.toc).indexOf(s2)+1).padStart(2,'0');
+    const hasToc = M.secs.some(x=>x.toc);
+    if(hasToc){
+      const conf = M.a.confid==null ? 'Poufne — wyłącznie dla kierownictwa' : M.a.confid;
+      b = para('', {after:2200}) + para(run('ANALIZA STANU BEZPIECZEŃSTWA I HIGIENY PRACY', {font:MONO, sz:18, color:'6B6760', caps:true, sp:30}), {after:240})
+        + para(run(M.p.name||'', {font:DISP, b:true, sz:72}), {after:200}) + para(run('Rok '+year+'  ·  okres 01.01–31.12.'+year, {sz:26, color:C.soft}), {after:1600})
+        + para(run('Opracował: '+(M.sp.name||'specjalista ds. BHP'), {sz:20}), {after:60}) + para(run('Data: '+fmtDatePL(wtTodayIso()), {sz:20}), {after:60})
+        + (conf ? para(run(conf.toUpperCase(), {font:MONO, b:true, sz:16, color:C.red, sp:20}), {before:600, after:0}) : '')
+        + '<w:p><w:r><w:br w:type="page"/></w:r></w:p>'
+        + para(run('Spis treści', {font:DISP, b:true, sz:34}), {after:200})
+        + '<w:p><w:r><w:fldChar w:fldCharType="begin" w:dirty="true"/></w:r><w:r><w:instrText xml:space="preserve"> TOC \\o "1-1" \\h \\z \\u </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>Spis treści zaktualizuje się po otwarciu pliku (lub: prawy przycisk → Aktualizuj pole).</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>'
+        + '<w:p><w:r><w:br w:type="page"/></w:r></w:p>' + b;
+    }
     M.secs.forEach((s, i)=>{
-      const n = String(i+1).padStart(2,'0');
-      const eb = s.k==='plan' ? n+' · Propozycje przedsięwzięć na rok '+(year+1) : s.k==='podsumowanie' ? n+' · Wnioski' : s.k==='ocena' ? n+' · Podsumowanie dla pracodawcy' : n+' · Analiza stanu BHP '+year;
+      if(s.toc) return;
+      const n = numOf(s);
+      const eb = s.k==='zarzad' ? n+' · Dla zarządu' : s.k==='plan' ? n+' · Propozycje przedsięwzięć na rok '+(year+1) : s.k==='podsumowanie' ? n+' · Wnioski' : s.k==='ocena' ? n+' · Podsumowanie dla pracodawcy' : n+' · Analiza stanu BHP '+year;
       const bd = anSecBadge(s, ov);
       b += eyebrow(eb, s.k==='plan', 200);
       b += table([TOT-2400, 2400], tr(tcell(para(run(s.t, {font:DISP, b:true, sz:34}), {style:'Heading1', after:0}), TOT-2400, {va:'bottom'})
@@ -23653,6 +23878,9 @@ document.addEventListener('keydown', e=>{
         else if(bl.type==='tiles') b += tileTable(bl.items);
         else if(bl.type==='progress') b += progressTable(bl);
         else if(bl.type==='text') String(bl.text||'').split('\n').map(x=>x.trim()).filter(Boolean).forEach(x=>{ b += para(run(x, {sz:19}), {style:'BodyText', after:60}); });
+        else if(bl.type==='banner') b += bannerXml(bl);
+        else if(bl.type==='image') b += imgXml(bl.img);
+        else if(bl.type==='grid') b += gridXml(bl);
       });
     });
     b += para('', {after:500});
@@ -23660,8 +23888,10 @@ document.addEventListener('keydown', e=>{
       + tcell(para(run('zapoznałem się i przyjmuję do realizacji: pracodawca', {sz:16, color:C.soft}), {jc:'center', after:0})+para(run('(data, podpis)', {sz:15, color:C.faint}), {jc:'center', after:0}), TOT-(TOT/2|0))));
     b += para(run('Okresowa analiza stanu bezpieczeństwa i higieny pracy za '+year+' r. — § 2 ust. 1 pkt 3 rozporządzenia Rady Ministrów z 2.09.1997 r. w sprawie służby bhp. Stan na '+fmtDatePL(wtTodayIso())+'.', {sz:15, color:C.faint}), {before:200, after:0});
     const sect = '<w:sectPr><w:footerReference w:type="default" r:id="rId3"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
-    const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
-    const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+NS+'><w:body>'+b+sect+'</w:body></w:document>';
+    const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
+    const conf2 = hasToc ? (M.a.confid==null ? 'Poufne — wyłącznie dla kierownictwa' : M.a.confid) : '';
+    const sect2 = conf2 ? sect.replace('<w:footerReference w:type="default" r:id="rId3"/>', '<w:headerReference w:type="default" r:id="rId4"/><w:footerReference w:type="default" r:id="rId3"/>') : sect;
+    const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+NS+'><w:body>'+b+sect2+'</w:body></w:document>';
     const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:color w:val="'+C.ink+'"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="pl-PL"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'
       +'<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>'
       +'<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="BodyText"/><w:qFormat/><w:pPr><w:keepNext/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/></w:rPr></w:style>'
@@ -23669,14 +23899,16 @@ document.addEventListener('keydown', e=>{
       +'<w:style w:type="paragraph" w:styleId="Footer"><w:name w:val="footer"/><w:basedOn w:val="Normal"/><w:pPr><w:jc w:val="right"/></w:pPr><w:rPr><w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/><w:sz w:val="14"/><w:color w:val="'+C.faint+'"/></w:rPr></w:style></w:styles>';
     const footer = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:pStyle w:val="Footer"/></w:pPr><w:r><w:t xml:space="preserve">'+xe((M.p.name||'')+' · Analiza stanu BHP '+year+' · ')+'</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p></w:ftr>';
     const zip = new JSZip();
-    zip.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>');
+    zip.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>');
     zip.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>');
     zip.file('docProps/core.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>'+xe('Analiza stanu BHP '+year+' — '+(M.p.name||''))+'</dc:title><dc:creator>'+xe(M.sp.name||'BHP Audyt')+'</dc:creator></cp:coreProperties>');
     zip.file('word/document.xml', doc);
     zip.file('word/styles.xml', styles);
-    zip.file('word/settings.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:defaultTabStop w:val="708"/></w:settings>');
+    zip.file('word/settings.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'+(hasToc?'<w:updateFields w:val="true"/>':'')+'<w:defaultTabStop w:val="708"/></w:settings>');
     zip.file('word/footer1.xml', footer);
-    zip.file('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/></Relationships>');
+    zip.file('word/header1.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/><w:caps/><w:color w:val="D9463B"/><w:sz w:val="14"/></w:rPr><w:t xml:space="preserve">'+xe(conf2)+'</w:t></w:r></w:p></w:hdr>');
+    media.forEach(m=>zip.file('word/media/'+m.name, m.data, {base64:true}));
+    zip.file('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/><Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>'+media.map(m=>'<Relationship Id="'+m.id+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/'+m.name+'"/>').join('')+'</Relationships>');
     const blob = await zip.generateAsync({type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
     await wtSaveFile('Analiza_stanu_BHP_'+year+'_'+String(M.p.name||'klient').replace(/[^\wąćęłńóśźżĄĆĘŁŃÓŚŹŻ-]+/g,'_')+'.docx', blob);
     wtToast('Pobrano analizę (Word).');
@@ -30972,7 +31204,7 @@ document.addEventListener('keydown', e=>{
     if(!items.length) return '<div class="rpc-nc-empty"><span class="dot"></span>Brak pozycji</div>';
     return '<div class="rpc-nc-list">'+items.map((it,i)=>'<article class="rpc-nc-card"><div class="rpc-nc-top"><span class="rpc-nc-num">'+String(i+1).padStart(2,'0')+'</span><div class="rpc-nc-textwrap"><p class="rpc-nc-question">'+esc(it.question)+'</p>'+(it.comment?'<p class="rpc-nc-remark">'+esc(it.comment)+'</p>':'')+'</div><span class="rpc-nc-statuspill'+(it.pillCls?' '+it.pillCls:'')+'">'+esc(it.pill||pill||'NIE')+'</span></div>'
       +((it.action||it.owner||it.due)?'<div class="rpc-nc-actions"><div class="rpc-nc-actioncell"><span class="lbl">Zalecane działanie</span><span class="val">'+esc(it.action||'—')+'</span></div><div class="rpc-nc-actioncell"><span class="lbl">Odpowiedzialny</span><span class="val">'+esc(it.owner||'—')+'</span></div><div class="rpc-nc-actioncell"><span class="lbl">Termin</span><span class="val mono">'+esc(it.due||'—')+'</span></div></div>':'')
-      +(it.writein!==false?'<div class="rpc-nc-writein">'+wtRpWriteInField(it.w1||'Sposób usunięcia', '')+wtRpWriteInField(it.w2||'Data usunięcia', '')+'</div>':'')+'</article>').join('')+'</div>';
+      +(it.writein!==false?'<div class="rpc-nc-writein">'+wtRpWriteInField(it.w1||'Sposób usunięcia', it.w1v||'')+wtRpWriteInField(it.w2||'Data usunięcia', it.w2v||'')+'</div>':'')+'</article>').join('')+'</div>';
   }
   function wtRpcText(text){ return '<div class="rpc-note"><div class="rp-section-text">'+wtRpFormatSectionText(text||'')+'</div></div>'; }
   async function wtRpcExport(html, fname){
