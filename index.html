@@ -23226,6 +23226,9 @@ document.addEventListener('keydown', e=>{
     const saved = (p.analyses||{})[year];
     if(saved && saved.v===2){
       anEdit = Object.assign({cid, year, cur:'zaklad'}, anClone(saved));
+      /* sekcje zapisane jako JSON — Firestore nie przyjmuje tablic zagnieżdżonych w tablicach (kv, wiersze tabel) */
+      if(saved.secJson){ try{ anEdit.sec = JSON.parse(saved.secJson); }catch(e){ anEdit.sec = {}; } delete anEdit.secJson; }
+      anEdit.sec = anEdit.sec || {};
       AN_SECTIONS.forEach(s=>{ if(!s.special && !anEdit.sec[s.k]) { anEdit.sec[s.k] = anPrefill(cid, year, s.k); if(anEdit.on[s.k]==null) anEdit.on[s.k] = !!s.core; } });
       anEdit.plan = anEdit.plan||[]; anEdit.review = anEdit.review||[]; anEdit.custom = anEdit.custom||[];
     } else {
@@ -23366,11 +23369,11 @@ document.addEventListener('keydown', e=>{
     if(!DB || !anEdit) return false;
     const a = anEdit, p = wtProjectById(a.cid);
     const prev = (p.analyses||{})[a.year] || {};
-    const entry = {v:2, on:a.on, sec:a.sec, plan:a.plan.filter(r=>r.action||r.problem), review:a.review.filter(r=>r.action), summary:a.summary||'', custom:a.custom.filter(c=>c.title||c.text),
+    const entry = {v:2, on:a.on, secJson:JSON.stringify(a.sec), plan:a.plan.filter(r=>r.action||r.problem), review:a.review.filter(r=>r.action), summary:a.summary||'', custom:a.custom.filter(c=>c.title||c.text),
       savedAt:Date.now(), generatedAt: generated ? Date.now() : (prev.generatedAt||null)};
     const analyses = Object.assign({}, p.analyses||{}, {[a.year]: JSON.parse(JSON.stringify(entry))});
     try{ await DB.doc('client_projects/'+a.cid).update({analyses}); p.analyses = analyses; a.savedAt = entry.savedAt; if(!silent){ wtToast('Zapisano analizę.'); renderAnalysisEditor(); } return true; }
-    catch(e){ console.error(e); wtToast('Nie udało się zapisać analizy.', true); return false; }
+    catch(e){ console.error('analiza — zapis', e); wtToast('Nie udało się zapisać analizy'+(e && e.message ? ': '+e.message : '.'), true); return false; }
   };
   window.wtAnalysisToRegister = async function(){
     wtAnalysisRead();
