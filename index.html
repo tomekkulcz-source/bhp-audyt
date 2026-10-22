@@ -1406,6 +1406,54 @@ html[data-theme="dark"] .wt-modesw button[aria-pressed="true"]{color:#140806;}
 #sec-checklist.wt-pip-only .cat:not(:has(.item[data-pip])){display:none !important;}
 #sec-checklist .item[data-pip] .pbar{box-shadow:inset -3px 0 0 #1d3f8f;}
 .wt-pip-legend{margin:-6px 0 14px;color:var(--ink-soft);}
+.wt-emp-overlay .wt-emp-box.wt-an2{width:min(1180px,96vw);max-width:1180px;}
+.wt-an2-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
+.wt-an2-body{display:grid;grid-template-columns:270px minmax(0,1fr);gap:16px;align-items:start;}
+.wt-an2-nav{display:flex;flex-direction:column;gap:2px;position:sticky;top:0;border-right:1px solid var(--line);padding-right:10px;}
+.wt-an2-navitem{display:flex;align-items:center;gap:6px;border-radius:8px;padding:2px 4px;}
+.wt-an2-navitem.cur{background:var(--accent-soft);}
+.wt-an2-navitem input{flex:0 0 auto;margin:0;}
+.wt-an2-navitem button{flex:1;min-width:0;display:flex;align-items:center;gap:6px;background:none;border:0;padding:6px 2px;font:inherit;font-size:13px;color:var(--ink);text-align:left;cursor:pointer;}
+.wt-an2-navitem.off button{color:var(--ink-faint);}
+.wt-an2-navitem .num{flex:0 0 22px;color:var(--ink-faint);font-variant-numeric:tabular-nums;}
+.wt-an2-navitem .ttl{flex:1;min-width:0;}
+.wt-an2-navitem .st{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--line-strong);}
+.wt-an2-navitem .st.ok{background:var(--low);}
+.wt-an2-navitem .st.warn{background:var(--high);}
+.wt-an2-main{min-width:0;}
+.wt-an2-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;}
+.wt-an2-head h4{margin:0;font-size:17px;}
+.wt-an2-on{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--ink-soft);}
+.wt-an2-offnote{font-size:12.5px;color:var(--ink-soft);background:var(--surface-2,var(--surface));border:1px dashed var(--line-strong);border-radius:8px;padding:6px 10px;margin-bottom:8px;}
+.wt-an2-kv{display:flex;flex-direction:column;gap:6px;}
+.wt-an2-kvrow{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto;gap:6px;align-items:center;}
+.wt-an2-kvrow .wt-input,.wt-an2-table .wt-input,.wt-an2-grid .wt-input{width:100%;box-sizing:border-box;min-width:0;}
+.wt-an2-btns{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px;}
+.wt-an2-table{overflow-x:auto;}
+.wt-an2-table table{width:100%;border-collapse:collapse;}
+.wt-an2-table th{font-size:11.5px;text-align:left;color:var(--ink-soft);font-weight:600;padding:4px;border-bottom:1px solid var(--line);}
+.wt-an2-table td{padding:3px 4px;vertical-align:top;}
+.wt-an2-plan{display:flex;flex-direction:column;gap:10px;}
+.wt-an2-card{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:start;border:1px solid var(--line);border-radius:12px;padding:10px;}
+.wt-an2-card:not(:has(.wt-an-num)){grid-template-columns:minmax(0,1fr) auto;}
+.wt-an2-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px;}
+.wt-an2-grid .wide{grid-column:1/-1;}
+.wt-an2-grid label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:3px;}
+.wt-an2 .wt-report-actionbar{position:sticky;bottom:0;z-index:2;background:var(--surface);margin:12px -4px 0;padding:10px 4px 2px;border-top:1px solid var(--line);}
+.wt-an2-pager{display:flex;justify-content:space-between;gap:8px;margin-top:16px;padding-top:10px;border-top:1px solid var(--line);}
+.wt-an2-pager .wt-btn{min-width:0;max-width:49%;white-space:normal;text-align:left;line-height:1.3;}
+.wt-an2-pager .wt-btn:last-child{text-align:right;margin-left:auto;}
+@media (max-width:820px){
+  .wt-an2-body{grid-template-columns:1fr;}
+  .wt-an2-nav{position:static;border-right:0;padding-right:0;border-bottom:1px solid var(--line);padding-bottom:8px;max-height:220px;overflow:auto;}
+  .wt-an2-grid{grid-template-columns:1fr 1fr;}
+  .wt-an2-table thead{display:none;}
+  .wt-an2-table tr{display:grid;grid-template-columns:1fr;gap:4px;border:1px solid var(--line);border-radius:10px;padding:6px;margin-bottom:6px;}
+  .wt-an2-table td{padding:0;}
+  .wt-an2-table td[data-label]::before{content:attr(data-label);display:block;font-size:11px;color:var(--ink-faint);}
+  .wt-an2-kvrow{grid-template-columns:1fr auto;}
+  .wt-an2-kvrow .wt-input:nth-child(2){grid-column:1;}
+}
 .wt-clientbar{display:flex;flex-direction:column;gap:8px;padding:12px 14px;margin:0 0 16px;border:1px solid var(--line);border-radius:var(--r-md,12px);background:var(--surface);}
 .wt-clientbar-main{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;min-width:0;}
 .wt-clientbar-main .status-select{min-width:220px;max-width:100%;flex:0 1 280px;}
@@ -23003,95 +23051,456 @@ document.addEventListener('keydown', e=>{
       + (list.length ? wtTrnRowsHtml(list, false) : '<div class="wt-empty">Brak szkoleń.</div>');
   }
 
-  /* ---------------- Roczna analiza stanu BHP (M.2) ---------------- */
-  /* Roczna analiza stanu BHP — edytor: rok, wnioski oraz tabela „Zalecenia i polecenia”
-     (stwierdzony brak → zalecenie/polecenie → odpowiedzialny → termin), podpowiadana z danych.
-     Zapis w dokumencie klienta: analyses[rok] = {conclusions, recs, savedAt, generatedAt}. */
+  /* ---------------- Roczna analiza stanu BHP (M.2) — kreator sekcji ---------------- */
+  /* Analiza = sekcje (każdą można wyłączyć — nie trafia wtedy do PDF/Word i nie zostawia pustych miejsc).
+     Sekcja: pary „pozycja — wartość” (kv), tabele, „Ocena i wnioski” (note). Wszystko podpowiadane z danych
+     klienta (przycisk „Odśwież z danych”) i w pełni edytowalne. Plan poprawy na rok następny (tabela działań)
+     i rozliczenie planu z poprzedniego roku. Zapis: client_projects/{id}.analyses[rok] = {v:2, on, sec, plan,
+     review, summary, custom, savedAt, generatedAt}. Starszy zapis {conclusions, recs} przechodzi do summary/plan. */
+  const AN_SECTIONS = [
+    {k:'zaklad', t:'Dane zakładu i okres analizy', core:true},
+    {k:'zatrudnienie', t:'Stan zatrudnienia', core:true, tables:[
+      {title:'Struktura zatrudnienia (stanowiska / działy)', head:['Stanowisko / dział','Liczba pracowników'], w:[75,25]},
+      {title:'Pracownicy narażeni na czynniki szkodliwe i zagrożenia', head:['Czynnik / zagrożenie','Stanowiska','Liczba narażonych'], w:[40,40,20]}]},
+    {k:'szkolenia', t:'Szkolenia BHP', core:true, tables:[
+      {title:'Szkolenia zaległe i planowane', head:['Pracownik','Stanowisko','Szkolenie','Termin','Stan'], w:[24,22,20,14,20]}]},
+    {k:'badania', t:'Badania lekarskie profilaktyczne', core:true, tables:[
+      {title:'Badania zaległe i do wykonania', head:['Pracownik','Stanowisko','Ważne do','Stan'], w:[30,30,18,22]}]},
+    {k:'czynniki', t:'Czynniki szkodliwe — wyniki badań i pomiarów', tables:[
+      {title:'Wyniki badań i pomiarów', head:['Stanowisko','Czynnik','Wynik / krotność','Data pomiaru','Następny pomiar'], w:[22,24,22,16,16]}]},
+    {k:'wypadki', t:'Wypadki przy pracy i choroby zawodowe', core:true, tables:[
+      {title:'Wypadki przy pracy', head:['Data','Poszkodowany / stanowisko','Okoliczności i skutki','Dni niezdolności'], w:[14,26,44,16]},
+      {title:'Choroby zawodowe', head:['Pracownik / stanowisko','Choroba / czynnik','Stan postępowania'], w:[34,36,30]}]},
+    {k:'dokumentacja', t:'Kompletność dokumentacji BHP', tables:[
+      {title:'Wymagana dokumentacja', head:['Dokument / obowiązek','Podstawa prawna','Stan'], w:[50,32,18]}]},
+    {k:'soi', t:'Środki ochrony indywidualnej i zbiorowej', tables:[
+      {title:'Środki ochrony indywidualnej i odzież robocza', head:['Rodzaj','Stanowiska','Stan / uwagi'], w:[34,33,33]},
+      {title:'Środki ochrony zbiorowej', head:['Środek (osłony, wentylacja, balustrady…)','Miejsce','Stan / uwagi'], w:[40,30,30]}]},
+    {k:'zewnetrzne', t:'Kontrole zewnętrzne (PIP, PIS, UDT, PSP)', tables:[
+      {title:'Kontrole, nakazy i zalecenia organów', head:['Organ','Data','Ustalenia / nakazy','Termin','Realizacja'], w:[16,13,41,13,17]}]},
+    {k:'wewnetrzne', t:'Kontrole wewnętrzne, audyty i obchody', tables:[
+      {title:'Najczęstsze nieprawidłowości', head:['Nieprawidłowość','Liczba stwierdzeń'], w:[82,18]}]},
+    {k:'rozliczenie', t:'Realizacja planu z poprzedniego roku', special:'review'},
+    {k:'plan', t:'Plan poprawy stanu BHP na rok następny', special:'plan', core:true},
+    {k:'podsumowanie', t:'Podsumowanie i wnioski', special:'summary', core:true}
+  ];
+  const AN_REVIEW_ST = ['wykonane','częściowo','niewykonane','w toku'];
+  const AN_PRIO = ['Wysoki','Średni','Niski'];
   let anEdit = null;
   function wtAnalysisDefaultYear(){ const d = new Date(); return d.getMonth()<3 ? d.getFullYear()-1 : d.getFullYear(); }
+  function anSecDef(k){ return AN_SECTIONS.find(s=>s.k===k); }
+  function anClone(o){ return JSON.parse(JSON.stringify(o)); }
+  /* podpowiedzi z danych klienta dla jednej sekcji */
+  function anPrefill(cid, year, k){
+    const d = wtAnalysisData(cid, year), p = d.p, pr = d.pr;
+    const y = String(year), ny = String(year+1);
+    const inY = iso=>String(iso||'').slice(0,4)===y;
+    const empPos = e=>e.position||e.department||'';
+    const out = {kv:[], tables:[], note:''};
+    const T = (rows)=>out.tables.push(rows);
+    if(k==='zaklad'){
+      const sp = wtSpecialist();
+      out.kv = [['Nazwa zakładu', p.name||''], ['Adres', pr.address||''], ['NIP', pr.nip||''], ['Rodzaj działalności (PKD)', pr.pkd||''],
+        ['Kategoria ryzyka (ZUS)', pr.riskCategory||''], ['Okres analizy', '01.01–31.12.'+year], ['Opracował', sp.name||''],
+        ['Wizyty służby BHP w roku', String(d.visits)]].filter(r=>r[1]!=='');
+      out.note = '';
+    }
+    if(k==='zatrudnienie'){
+      out.kv = [['Liczba pracowników', d.hc!=null?String(d.hc):''], ['w tym kobiety', pr.women!=null&&pr.women!==''?String(pr.women):''], ['w tym młodociani', pr.young!=null&&pr.young!==''?String(pr.young):''],
+        ['w tym osoby z niepełnosprawnością', pr.disabled!=null&&pr.disabled!==''?String(pr.disabled):''], ['Pracownicy w kartotece', String(d.emps.length)]];
+      const byPos = {};
+      d.emps.forEach(e=>{ const k2 = empPos(e)||'(bez stanowiska)'; byPos[k2] = (byPos[k2]||0)+1; });
+      T(Object.keys(byPos).sort((a,b)=>byPos[b]-byPos[a]).map(k2=>[k2, String(byPos[k2])]));
+      const f1 = anF1Rows(cid);
+      const byF = {};
+      f1.forEach(r=>{ const key = (r.factor||r.kind||'').trim(); if(!key) return; const o = byF[key] = byF[key] || {pos:new Set(), n:0}; if(r.position) o.pos.add(r.position); const n = parseInt(r.exposed,10); if(!isNaN(n)) o.n += n; });
+      T(Object.keys(byF).map(f=>[f, Array.from(byF[f].pos).join(', '), byF[f].n?String(byF[f].n):'']));
+      out.note = d.hc!=null ? 'Zatrudnienie na koniec '+year+' r.: '+d.hc+' '+wtPl(d.hc,'pracownik','pracowników','pracowników')+'.' : '';
+    }
+    if(k==='szkolenia'){
+      const st = d.emps.map(e=>({e, s:wtEmpStatus(e)}));
+      const initY = d.emps.filter(e=>inY(e.initialTrainingDate)).length;
+      const planned = st.filter(x=>x.s.training && x.s.training.due && String(x.s.training.due).slice(0,4)===ny);
+      const overdue = st.filter(x=>(x.s.training && (x.s.training.cls==='crit' || x.s.training.bucket==='expired')) || x.s.initial.cls==='crit');
+      out.kv = [['Szkolenia wstępne przeprowadzone w roku', String(initY)], ['Szkolenia okresowe przeprowadzone w roku / przeszkolone osoby', d.trainings.length+' / '+d.trained],
+        ['Pracownicy bez aktualnego szkolenia (zaległe)', String(overdue.length)], ['Szkolenia okresowe do przeprowadzenia w '+ny+' r. (planowane)', String(planned.length)]];
+      T(overdue.map(x=>[wtEmpName(x.e), empPos(x.e), x.s.initial.cls==='crit'?'wstępne':'okresowe', x.s.training&&x.s.training.due?fmtDatePL(x.s.training.due):'', 'zaległe'])
+        .concat(planned.map(x=>[wtEmpName(x.e), empPos(x.e), 'okresowe', fmtDatePL(x.s.training.due), 'planowane'])));
+      out.note = overdue.length ? 'Zaległe szkolenia BHP: '+overdue.length+' — przeprowadzić niezwłocznie (art. 237³ KP).' : 'Szkolenia BHP prowadzone terminowo.';
+    }
+    if(k==='badania'){
+      const ok = d.emps.filter(e=>{ const s = wtEmpStatus(e).medical; return s && s.cls!=='crit'; }).length;
+      const due = d.emps.filter(e=>String(e.medicalValidUntil||'').slice(0,4)===ny);
+      const over = d.emps.filter(e=>wtEmpStatus(e).medical.cls==='crit');
+      out.kv = [['Pracownicy z aktualnym orzeczeniem', String(ok)], ['Badania okresowe do wykonania w '+ny+' r.', String(due.length)], ['Pracownicy bez aktualnych badań (zaległe)', String(over.length)]];
+      T(over.map(e=>[wtEmpName(e), empPos(e), e.medicalValidUntil?fmtDatePL(e.medicalValidUntil):'', 'zaległe']).concat(due.map(e=>[wtEmpName(e), empPos(e), fmtDatePL(e.medicalValidUntil), 'do wykonania'])));
+      out.note = over.length ? 'Pracownicy bez aktualnych badań: '+over.length+' — nie dopuszczać do pracy do czasu uzyskania orzeczenia (art. 229 § 4 KP).' : 'Badania profilaktyczne aktualne.';
+    }
+    if(k==='czynniki'){
+      const f1 = anF1Rows(cid);
+      const ratio = r=>{ const v = parseFloat(String(r.ratio||'').replace(',','.')); return isNaN(v)?null:v; };
+      const over = f1.filter(r=>{ const v = ratio(r); return v!==null && v>1; });
+      const late = f1.filter(r=>{ const n = wtDaysUntil(r.nextDate); return n!==null && n<0; });
+      out.kv = [['Czynniki w rejestrze (pozycje)', String(f1.length)], ['Pomiary wykonane w roku', String(f1.filter(r=>inY(r.date)).length)],
+        ['Przekroczenia NDS / NDN', String(over.length)], ['Pomiary po terminie', String(late.length)]];
+      T(f1.map(r=>[r.position||'', r.factor||r.kind||'', [r.result, r.ratio?'krotność '+r.ratio:''].filter(Boolean).join(' · '), r.date?fmtDatePL(r.date):'', r.nextDate?fmtDatePL(r.nextDate):'']));
+      out.note = over.length ? 'Przekroczenia wartości dopuszczalnych: '+over.map(r=>(r.factor||r.kind)+' ('+(r.position||'—')+')').join('; ')+' — wdrożyć program działań organizacyjno-technicznych i ograniczyć narażenie.'
+        : f1.length ? 'Nie stwierdzono przekroczeń wartości NDS/NDN.' : '';
+    }
+    if(k==='wypadki'){
+      const prev = allAccidentCases.filter(c=>c.projectId===cid && String(c.eventDate||'').slice(0,4)===String(year-1) && wtWypKind(c)==='work' && c.isWpp!=='Nie').length;
+      const wc = d.hc ? (d.accWork.length/d.hc*1000).toFixed(1) : '';
+      const wci = d.withDays ? (d.sickDays/d.withDays).toFixed(1) : '';
+      out.kv = [['Wypadki przy pracy', String(d.accWork.length)], ['w tym ciężkie, śmiertelne, zbiorowe', String(d.accSev.length)], ['Wypadki w drodze do/z pracy', String(d.accCommute)],
+        ['Dni niezdolności do pracy', String(d.sickDays)], ['Wskaźnik częstości Wc (na 1000 zatrudnionych)', wc], ['Wskaźnik ciężkości Wci (dni na wypadek)', wci],
+        ['Wypadki przy pracy w '+(year-1)+' r. (porównanie)', String(prev)], ['Przyczyny: techniczne / organizacyjne / ludzkie', d.causes.t+' / '+d.causes.o+' / '+d.causes.h],
+        ['Zdarzenia potencjalnie wypadkowe', String(d.nearMiss)], ['Choroby zawodowe: podejrzenia / stwierdzone', d.cz.length+' / '+d.czConf]];
+      T(d.accWork.map(c=>[c.eventDate?fmtDatePL(c.eventDate):'', [c.employeeName, c.position].filter(Boolean).join(' — '), [c.description, c.victimEffect||c.severity].filter(Boolean).join(' · '), c.sickDays?String(c.sickDays):'']));
+      T(d.cz.map(z=>[[z.employeeName, z.position].filter(Boolean).join(' — '), [z.diseaseName||z.disease, z.factor].filter(Boolean).join(' · '), z.decision||'w toku']));
+      out.note = d.accWork.length ? 'W '+year+' r. zarejestrowano '+d.accWork.length+' '+wtPl(d.accWork.length,'wypadek','wypadki','wypadków')+' przy pracy (rok wcześniej: '+prev+').'+(d.causes.o>=d.causes.t && d.causes.o ? ' Przeważają przyczyny organizacyjne.' : '') : 'W '+year+' r. nie zarejestrowano wypadków przy pracy.';
+    }
+    if(k==='dokumentacja'){
+      const state = p.reqState || {};
+      const reqs = wtReqCompute(p).filter(r=>r.level!=='info');
+      const rows = reqs.map(r=>{ const ok = !!(state[r.id] && state[r.id].done) || wtReqEvidence(p, r).count>0; return [r.title, r.basis||'', ok?'jest':'brak']; });
+      T(rows);
+      const miss = rows.filter(r=>r[2]==='brak').length;
+      out.kv = [['Wymagane dokumenty / obowiązki', String(rows.length)], ['Brakujące lub nieudokumentowane', String(miss)]];
+      out.note = miss ? 'Uzupełnić brakującą dokumentację ('+miss+' poz.).' : rows.length ? 'Dokumentacja BHP kompletna.' : '';
+    }
+    if(k==='soi'){ T([]); T([]); out.note = ''; }
+    if(k==='zewnetrzne'){
+      T(d.ext.map(r=>[wtRecSource(r.source).label+(r.authority?' — '+r.authority:''), r.date?fmtDatePL(r.date):'', [r.finding, r.content].filter(Boolean).join(' — '), r.deadline?fmtDatePL(r.deadline):'', r.completedDate?'zrealizowano '+fmtDatePL(r.completedDate):'w toku']));
+      out.kv = [['Kontrole / wystąpienia organów w roku', String(d.ext.length)], ['Zrealizowane', String(d.ext.filter(r=>r.completedDate).length)]];
+      out.note = d.ext.length ? '' : 'W '+year+' r. nie zarejestrowano kontroli organów zewnętrznych.';
+    }
+    if(k==='wewnetrzne'){
+      out.kv = [['Audyty (checklista) / obchody zakładu', d.audits+' / '+d.obch], ['Stwierdzone niezgodności (łącznie)', String(d.nieTotal)],
+        ['Zalecenia wydane w roku / zrealizowane', d.recsY.length+' / '+d.recsDoneY], ['Zalecenia po terminie (stan na dziś)', String(d.openOver.length)]];
+      const cnt = {};
+      allChecklistSnapshots.filter(s=>s.projectId===cid && s.createdAt && new Date(s.createdAt).getFullYear()===year).forEach(s=>(s.results||[]).forEach(r=>{ if(r.value==='NIE' && r.text){ const t = (typeof WT_TXT_NEW!=='undefined' && WT_TXT_NEW[r.text]) || r.text; cnt[t] = (cnt[t]||0)+1; } }));
+      T(Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,12).map(t=>[t, String(cnt[t])]));
+      out.note = d.openOver.length ? 'Zalecenia niezrealizowane w terminie: '+d.openOver.length+'.' : '';
+    }
+    return out;
+  }
+  function anF1Rows(cid){
+    const rows = [];
+    allVersions.filter(v=>v.registerType===CZY_TYPE && v.projectId===cid).forEach(v=>(v.rows||[]).forEach(r=>{ if(wtCzyFilled(r)) rows.push(r); }));
+    return rows;
+  }
+  /* plan poprawy — podpowiedzi z wykrytych braków */
+  function anPlanPrefill(cid, year){
+    return wtAnalysisData(cid, year).findings.map(f=>({problem:f.finding||'', action:f.action||'', goal:'', prio:'Wysoki', owner:'', due:'', cost:''}));
+  }
+  /* rozliczenie: działania z planu z poprzedniego roku + stan z rejestru zaleceń */
+  function anReviewPrefill(cid, year){
+    const p = wtProjectById(cid); const prev = (p.analyses||{})[year-1];
+    if(!prev) return [];
+    const plan = prev.v===2 ? (prev.plan||[]) : (prev.recs||[]).map(r=>({action:r.action, due:r.due}));
+    const src = 'Analiza stanu BHP '+(year-1);
+    return plan.filter(x=>x.action).map(x=>{
+      const rec = allRecommendations.find(r=>r.projectId===cid && r.docNo===src && r.content===x.action);
+      return {action:x.action, due:x.due||'', status: rec ? (rec.completedDate?'wykonane':'w toku') : '', note: rec && rec.completedDate ? 'zrealizowano '+fmtDatePL(rec.completedDate) : ''};
+    });
+  }
+  function anNew(cid, year){
+    const a = {cid, year, on:{}, sec:{}, plan:anPlanPrefill(cid, year), review:anReviewPrefill(cid, year), summary:'', custom:[], savedAt:null, cur:'zaklad'};
+    AN_SECTIONS.forEach(s=>{
+      if(s.special) return;
+      const f = anPrefill(cid, year, s.k);
+      a.sec[s.k] = f;
+      const has = f.kv.some(r=>r[1] && r[1]!=='0' && r[1]!=='0 / 0') || f.tables.some(t=>t.length);
+      a.on[s.k] = !!s.core || has;
+    });
+    a.on.rozliczenie = a.review.length>0;
+    a.on.plan = true; a.on.podsumowanie = true;
+    const d = wtAnalysisData(cid, year);
+    a.summary = d.conclusions.map(c=>'• '+c).join('\n');
+    return a;
+  }
   window.wtAnalysisOpen = function(cid, year){
     const p = wtProjectById(cid);
     if(!p) return;
     year = +year || wtAnalysisDefaultYear();
     const saved = (p.analyses||{})[year];
-    const d = wtAnalysisData(cid, year);
-    anEdit = {cid, year,
-      conclusions: saved ? saved.conclusions : d.conclusions.map(c=>'• '+c).join('\n'),
-      recs: saved ? JSON.parse(JSON.stringify(saved.recs||[])) : d.findings.map(f=>Object.assign({}, f)),
-      savedAt: saved ? saved.savedAt : null};
+    if(saved && saved.v===2){
+      anEdit = Object.assign({cid, year, cur:'zaklad'}, anClone(saved));
+      AN_SECTIONS.forEach(s=>{ if(!s.special && !anEdit.sec[s.k]) { anEdit.sec[s.k] = anPrefill(cid, year, s.k); if(anEdit.on[s.k]==null) anEdit.on[s.k] = !!s.core; } });
+      anEdit.plan = anEdit.plan||[]; anEdit.review = anEdit.review||[]; anEdit.custom = anEdit.custom||[];
+    } else {
+      anEdit = anNew(cid, year);
+      if(saved){ // starszy zapis: wnioski + zalecenia
+        if(saved.conclusions) anEdit.summary = saved.conclusions;
+        if(saved.recs && saved.recs.length) anEdit.plan = saved.recs.map(r=>({problem:r.finding||'', action:r.action||'', goal:'', prio:'Wysoki', owner:r.owner||'', due:r.due||'', cost:''}));
+        anEdit.savedAt = saved.savedAt||null; anEdit.generatedAt = saved.generatedAt||null;
+      }
+    }
     renderAnalysisEditor();
   };
+  function anSecStatus(k){
+    const a = anEdit;
+    if(!a.on[k]) return 'off';
+    if(k==='plan') return a.plan.some(r=>r.action) ? 'ok' : 'warn';
+    if(k==='rozliczenie') return a.review.length ? 'ok' : 'warn';
+    if(k==='podsumowanie') return a.summary.trim() ? 'ok' : 'warn';
+    const s = a.sec[k]; if(!s) return 'warn';
+    const filled = s.kv.some(r=>String(r[1]||'').trim()) || s.tables.some(t=>t.some(r=>r.some(c=>String(c||'').trim()))) || String(s.note||'').trim();
+    return filled ? 'ok' : 'warn';
+  }
+  const anI = (v, attrs)=>'<input class="wt-input" value="'+esc(v==null?'':v)+'" '+attrs+'>';
+  const anT = (v, attrs, rows)=>'<textarea class="wt-input" rows="'+(rows||2)+'" '+attrs+'>'+esc(v==null?'':v)+'</textarea>';
+  const anX = (onclick, title)=>'<button type="button" class="wt-iconbtn danger" title="'+(title||'Usuń')+'" onclick="'+onclick+'"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button>';
+  function anSecEditor(k){
+    const a = anEdit, def = anSecDef(k);
+    if(k==='plan'){
+      return '<p class="small">Konkretne działania na rok '+(a.year+1)+' — podpowiedziane z braków wykrytych w danych; dopisz własne. „Przenieś do rejestru zaleceń” doda je do terminarza klienta.</p>'
+        +'<div class="wt-an2-plan">'+a.plan.map((r,i)=>'<div class="wt-an2-card"><div class="wt-an-num">'+(i+1)+'</div><div class="wt-an2-grid">'
+          +'<div class="wide"><label>Stwierdzony problem / brak</label>'+anT(r.problem,'data-pl="'+i+'" data-k="problem"')+'</div>'
+          +'<div class="wide"><label>Działanie (przedsięwzięcie techniczne lub organizacyjne)</label>'+anT(r.action,'data-pl="'+i+'" data-k="action"')+'</div>'
+          +'<div class="wide"><label>Cel / miernik (po czym poznamy, że wykonano)</label>'+anI(r.goal,'data-pl="'+i+'" data-k="goal" placeholder="np. 100% pracowników z aktualnym szkoleniem"')+'</div>'
+          +'<div><label>Priorytet</label><select class="wt-input" data-pl="'+i+'" data-k="prio">'+AN_PRIO.map(x=>'<option'+(x===r.prio?' selected':'')+'>'+x+'</option>').join('')+'</select></div>'
+          +'<div><label>Odpowiedzialny</label>'+anI(r.owner,'data-pl="'+i+'" data-k="owner"')+'</div>'
+          +'<div><label>Termin</label>'+anI(r.due,'type="date" data-pl="'+i+'" data-k="due"')+'</div>'
+          +'<div><label>Koszt orientacyjny</label>'+anI(r.cost,'data-pl="'+i+'" data-k="cost" placeholder="np. 2 000 zł"')+'</div>'
+          +'</div>'+anX('window.wtAn2Del(\'plan\','+i+')')+'</div>').join('')+'</div>'
+        +'<div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2Add(\'plan\')">+ Dodaj działanie</button><button class="wt-btn ghost" onclick="window.wtAn2RefillPlan()">Podpowiedz ponownie z danych</button><button class="wt-btn ghost" onclick="window.wtAnalysisToRegister()">Przenieś do rejestru zaleceń</button></div>';
+    }
+    if(k==='rozliczenie'){
+      return '<p class="small">Działania z analizy za '+(a.year-1)+' r. — status podpowiada się z rejestru zaleceń; zmień, jeśli trzeba.</p>'
+        +(a.review.length ? '' : '<div class="wt-empty">Brak zapisanego planu z analizy za '+(a.year-1)+' r. — możesz dopisać działania ręcznie albo wyłączyć tę sekcję.</div>')
+        +'<div class="wt-an2-table"><table><thead><tr><th>Działanie z planu</th><th style="width:16%">Termin</th><th style="width:18%">Realizacja</th><th style="width:24%">Uwagi</th><th style="width:40px"></th></tr></thead><tbody>'
+        +a.review.map((r,i)=>'<tr><td>'+anT(r.action,'data-rv="'+i+'" data-k="action"')+'</td><td>'+anI(r.due,'type="date" data-rv="'+i+'" data-k="due"')+'</td><td><select class="wt-input" data-rv="'+i+'" data-k="status"><option value="">—</option>'+AN_REVIEW_ST.map(x=>'<option'+(x===r.status?' selected':'')+'>'+x+'</option>').join('')+'</select></td><td>'+anT(r.note,'data-rv="'+i+'" data-k="note"')+'</td><td>'+anX('window.wtAn2Del(\'review\','+i+')')+'</td></tr>').join('')
+        +'</tbody></table></div><div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2Add(\'review\')">+ Dodaj pozycję</button><button class="wt-btn ghost" onclick="window.wtAn2RefillReview()">Odśwież z analizy za '+(a.year-1)+' r.</button></div>';
+    }
+    if(k==='podsumowanie'){
+      return '<p class="small">Najważniejsze wnioski dla pracodawcy — podpowiedziane z danych, edytuj dowolnie. Każdy akapit lub punkt („•”) w osobnej linii.</p>'
+        +anT(a.summary,'id="wtAn2Summary" style="width:100%;"',10)
+        +'<div class="wt-emp-sec">Własne sekcje</div>'
+        +a.custom.map((c,i)=>'<div class="wt-an2-card"><div class="wt-an2-grid"><div class="wide"><label><input type="checkbox" data-cu="'+i+'" data-k="on"'+(c.on!==false?' checked':'')+'> Tytuł sekcji (uwzględniona w raporcie)</label>'+anI(c.title,'data-cu="'+i+'" data-k="title"')+'</div><div class="wide"><label>Treść</label>'+anT(c.text,'data-cu="'+i+'" data-k="text"',5)+'</div></div>'+anX('window.wtAn2Del(\'custom\','+i+')')+'</div>').join('')
+        +'<div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2Add(\'custom\')">+ Dodaj własną sekcję</button></div>';
+    }
+    const s = a.sec[k];
+    let h = '<div class="wt-an2-btns" style="margin:0 0 10px;"><button class="wt-btn ghost" onclick="window.wtAn2Refill(\''+k+'\')">Odśwież z danych klienta</button></div>';
+    h += '<div class="wt-emp-sec">Dane</div><div class="wt-an2-kv">'+s.kv.map((r,i)=>'<div class="wt-an2-kvrow">'+anI(r[0],'data-kv="'+i+'" data-c="0" placeholder="Pozycja"')+anI(r[1],'data-kv="'+i+'" data-c="1" placeholder="Wartość"')+anX('window.wtAn2Del(\'kv\','+i+')')+'</div>').join('')+'</div>'
+      +'<div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2Add(\'kv\')">+ Dodaj pozycję</button></div>';
+    (def.tables||[]).forEach((td, ti)=>{
+      const rows = s.tables[ti] || (s.tables[ti] = []);
+      h += '<div class="wt-emp-sec">'+esc(td.title)+(rows.length?' ('+rows.length+')':'')+'</div>'
+        +'<div class="wt-an2-table"><table><thead><tr>'+td.head.map(x=>'<th>'+esc(x)+'</th>').join('')+'<th style="width:40px"></th></tr></thead><tbody>'
+        +rows.map((r,ri)=>'<tr>'+td.head.map((x,ci)=>'<td data-label="'+esc(x)+'">'+(String(r[ci]||'').length>40 ? anT(r[ci],'data-tb="'+ti+'" data-r="'+ri+'" data-c="'+ci+'"') : anI(r[ci],'data-tb="'+ti+'" data-r="'+ri+'" data-c="'+ci+'"'))+'</td>').join('')+'<td>'+anX('window.wtAn2DelRow('+ti+','+ri+')')+'</td></tr>').join('')
+        +(rows.length?'':'<tr><td colspan="'+(td.head.length+1)+'" class="small" style="color:var(--ink-faint)">Brak pozycji — dodaj wiersz albo zostaw pustą (pusta tabela nie trafi do raportu).</td></tr>')
+        +'</tbody></table></div><div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2AddRow('+ti+')">+ Dodaj wiersz</button></div>';
+    });
+    h += '<div class="wt-emp-sec">Ocena i wnioski</div>'+anT(s.note,'id="wtAn2Note" style="width:100%;"',4);
+    return h;
+  }
   function renderAnalysisEditor(){
     const a = anEdit, p = wtProjectById(a.cid);
     const ov = wtEmpOverlay();
     const nowY = new Date().getFullYear();
-    const yearSel = '<select class="wt-input" style="max-width:120px;" onchange="window.wtAnalysisSwitchYear(this.value)">'+[nowY, nowY-1, nowY-2, nowY-3].map(y=>'<option'+(y===a.year?' selected':'')+'>'+y+'</option>').join('')+'</select>';
-    ov.innerHTML = '<div class="wt-emp-box wt-an-box" role="dialog" aria-modal="true">'
+    const yearSel = '<select class="wt-input" style="max-width:110px;" onchange="window.wtAnalysisSwitchYear(this.value)">'+[nowY, nowY-1, nowY-2, nowY-3].map(y=>'<option'+(y===a.year?' selected':'')+'>'+y+'</option>').join('')+'</select>';
+    const allSec = AN_SECTIONS;
+    let n = 0;
+    const nav = allSec.map(s=>{ const st = anSecStatus(s.k); const num = a.on[s.k] ? (++n)+'.' : '–';
+      return '<div class="wt-an2-navitem'+(s.k===a.cur?' cur':'')+(a.on[s.k]?'':' off')+'"><input type="checkbox" title="Uwzględnij w raporcie"'+(a.on[s.k]?' checked':'')+' onchange="window.wtAn2Toggle(\''+s.k+'\', this.checked)">'
+        +'<button type="button" onclick="window.wtAn2Go(\''+s.k+'\')"><span class="num">'+num+'</span><span class="ttl">'+esc(s.t)+'</span><span class="st '+st+'" title="'+(st==='ok'?'uzupełniona':st==='warn'?'brak danych':'wyłączona')+'"></span></button></div>'; }).join('');
+    const def = anSecDef(a.cur);
+    ov.innerHTML = '<div class="wt-emp-box wt-an-box wt-an2" role="dialog" aria-modal="true">'
       +'<div class="wt-emp-boxhead"><h3>Analiza stanu BHP — '+esc(p.name)+'</h3><button class="wt-iconbtn" title="Zamknij" onclick="window.wtEmpClose()"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button></div>'
-      +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px;"><label style="margin:0;">Rok analizy</label>'+yearSel
+      +'<div class="wt-an2-top"><label style="margin:0;">Rok</label>'+yearSel
         +(a.savedAt?'<span class="badge low"><span class="dot"></span>zapisana '+esc(fmtWhen(a.savedAt))+'</span>':'<span class="badge blue"><span class="dot"></span>nowa — podpowiedzi z danych</span>')
-        +'<button class="wt-btn ghost" style="font-size:12.5px;padding:5px 10px;" onclick="window.wtAnalysisRefill()">Podpowiedz ponownie z danych</button></div>'
-      +'<p class="small">Dokument powstanie z danych klienta w aplikacji (kontrole, zalecenia, wypadki, choroby zawodowe, szkolenia, badania, ocena ryzyka, maszyny, przeglądy). Wnioski i zalecenia możesz poprawić przed wygenerowaniem PDF — zapisują się przy kliencie.</p>'
-      +'<div class="wt-emp-sec">Wnioski</div>'
-      +'<textarea class="wt-input" id="wtAnalysisConcl" rows="6" style="width:100%;">'+esc(a.conclusions||'')+'</textarea>'
-      +'<div class="wt-emp-sec">Zalecenia i polecenia wynikające z analizy ('+a.recs.length+')</div>'
-      +'<div class="wt-an-recs">'+a.recs.map((r,i)=>'<div class="wt-an-rec">'
-        +'<div class="wt-an-num">'+(i+1)+'</div>'
-        +'<div class="wt-an-fields">'
-          +'<div class="wt-an-wide"><label>Stwierdzony brak / nieprawidłowość</label><textarea class="wt-input" rows="2" data-ar="'+i+'" data-k="finding">'+esc(r.finding||'')+'</textarea></div>'
-          +'<div class="wt-an-wide"><label>Zalecenie / polecenie</label><textarea class="wt-input" rows="2" data-ar="'+i+'" data-k="action">'+esc(r.action||'')+'</textarea></div>'
-          +'<div><label>Odpowiedzialny</label><input class="wt-input" data-ar="'+i+'" data-k="owner" value="'+esc(r.owner||'')+'"></div>'
-          +'<div><label>Termin</label><input class="wt-input" type="date" data-ar="'+i+'" data-k="due" value="'+esc(r.due||'')+'"></div>'
-        +'</div><button class="wt-iconbtn danger" title="Usuń" onclick="window.wtAnalysisDelRec('+i+')"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button></div>').join('')+'</div>'
-      +'<button class="wt-btn" style="margin-top:8px;" onclick="window.wtAnalysisAddRec()">+ Dodaj zalecenie</button>'
-      +'<p class="small" style="margin-top:8px;">W PDF pod zaleceniami zostają też puste wiersze do odręcznego dopisania kolejnych poleceń.</p>'
+        +'<span class="small" style="color:var(--ink-faint)">Odznacz sekcje, których nie chcesz w raporcie — nie zostawią pustych miejsc.</span></div>'
+      +'<div class="wt-an2-body"><nav class="wt-an2-nav" aria-label="Sekcje analizy">'+nav+'</nav>'
+      +'<div class="wt-an2-main"><div class="wt-an2-head"><h4>'+esc(def.t)+'</h4><label class="wt-an2-on"><input type="checkbox"'+(a.on[a.cur]?' checked':'')+' onchange="window.wtAn2Toggle(\''+a.cur+'\', this.checked)"> w raporcie</label></div>'
+      +(a.on[a.cur] ? '' : '<div class="wt-an2-offnote">Sekcja wyłączona — nie trafi do PDF ani Word. Możesz ją nadal edytować.</div>')
+      +anSecEditor(a.cur)
+      +'<div class="wt-an2-pager">'+anPager()+'</div></div></div>'
       +'<div class="wt-report-actionbar">'
-        +'<button class="wt-btn" onclick="window.wtAnalysisToRegister()">Przenieś zalecenia do rejestru zaleceń</button>'
         +'<button class="wt-btn" onclick="window.wtAnalysisSave()">Zapisz</button>'
-        +'<button class="wt-btn primary" onclick="window.wtAnalysisPdf()">Zapisz i generuj PDF</button>'
+        +'<button class="wt-btn" onclick="window.wtAnalysisDocx()">Word (.docx)</button>'
+        +'<button class="wt-btn primary" onclick="window.wtAnalysisPdf()">PDF</button>'
       +'</div></div>';
     ov.classList.add('show');
+  }
+  function anPager(){
+    const ks = AN_SECTIONS.map(s=>s.k), i = ks.indexOf(anEdit.cur);
+    return (i>0?'<button class="wt-btn ghost" onclick="window.wtAn2Go(\''+ks[i-1]+'\')">← '+esc(AN_SECTIONS[i-1].t)+'</button>':'<span></span>')
+      +(i<ks.length-1?'<button class="wt-btn ghost" onclick="window.wtAn2Go(\''+ks[i+1]+'\')">'+esc(AN_SECTIONS[i+1].t)+' →</button>':'');
   }
   function wtAnalysisRead(){
     const ov = document.getElementById('wt-emp-overlay');
     if(!ov || !anEdit) return;
-    const c = document.getElementById('wtAnalysisConcl'); if(c) anEdit.conclusions = c.value;
-    ov.querySelectorAll('[data-ar]').forEach(inp=>{ const r = anEdit.recs[+inp.dataset.ar]; if(r) r[inp.dataset.k] = inp.value.trim(); });
+    const a = anEdit, s = a.sec[a.cur];
+    ov.querySelectorAll('[data-kv]').forEach(inp=>{ const r = s.kv[+inp.dataset.kv]; if(r) r[+inp.dataset.c] = inp.value; });
+    ov.querySelectorAll('[data-tb]').forEach(inp=>{ const t = s.tables[+inp.dataset.tb]; const r = t && t[+inp.dataset.r]; if(r) r[+inp.dataset.c] = inp.value; });
+    const note = document.getElementById('wtAn2Note'); if(note && s) s.note = note.value;
+    ov.querySelectorAll('[data-pl]').forEach(inp=>{ const r = a.plan[+inp.dataset.pl]; if(r) r[inp.dataset.k] = inp.value; });
+    ov.querySelectorAll('[data-rv]').forEach(inp=>{ const r = a.review[+inp.dataset.rv]; if(r) r[inp.dataset.k] = inp.value; });
+    ov.querySelectorAll('[data-cu]').forEach(inp=>{ const r = a.custom[+inp.dataset.cu]; if(r) r[inp.dataset.k] = inp.type==='checkbox' ? inp.checked : inp.value; });
+    const sum = document.getElementById('wtAn2Summary'); if(sum) a.summary = sum.value;
   }
-  window.wtAnalysisSwitchYear = function(y){ wtAnalysisRead(); window.wtAnalysisOpen(anEdit.cid, +y); };
-  window.wtAnalysisAddRec = function(){ wtAnalysisRead(); anEdit.recs.push({finding:'', action:'', owner:'', due:''}); renderAnalysisEditor(); };
-  window.wtAnalysisDelRec = function(i){ wtAnalysisRead(); anEdit.recs.splice(i,1); renderAnalysisEditor(); };
-  window.wtAnalysisRefill = async function(){
-    wtAnalysisRead();
-    if(!await wtConfirm('Zastąpić wnioski i zalecenia podpowiedziami wyliczonymi z aktualnych danych?', 'Zastąp', 'primary')) return;
-    const d = wtAnalysisData(anEdit.cid, anEdit.year);
-    anEdit.conclusions = d.conclusions.map(c=>'• '+c).join('\n');
-    anEdit.recs = d.findings.map(f=>Object.assign({}, f));
-    renderAnalysisEditor();
-  };
+  window.wtAnalysisSwitchYear = async function(y){ wtAnalysisRead(); await window.wtAnalysisSave(true); window.wtAnalysisOpen(anEdit.cid, +y); };
+  window.wtAn2Go = function(k){ wtAnalysisRead(); anEdit.cur = k; renderAnalysisEditor(); const m = document.querySelector('.wt-an2-main'); if(m) m.scrollTop = 0; };
+  window.wtAn2Toggle = function(k, on){ wtAnalysisRead(); anEdit.on[k] = !!on; renderAnalysisEditor(); };
+  window.wtAn2Add = function(what){ wtAnalysisRead(); const a = anEdit;
+    if(what==='plan') a.plan.push({problem:'', action:'', goal:'', prio:'Średni', owner:'', due:'', cost:''});
+    if(what==='review') a.review.push({action:'', due:'', status:'', note:''});
+    if(what==='custom') a.custom.push({title:'', text:'', on:true});
+    if(what==='kv') a.sec[a.cur].kv.push(['','']);
+    renderAnalysisEditor(); };
+  window.wtAn2Del = function(what, i){ wtAnalysisRead(); const a = anEdit; ({plan:a.plan, review:a.review, custom:a.custom, kv:(a.sec[a.cur]||{}).kv||[]})[what].splice(i,1); renderAnalysisEditor(); };
+  window.wtAn2AddRow = function(ti){ wtAnalysisRead(); const s = anEdit.sec[anEdit.cur]; const def = anSecDef(anEdit.cur).tables[ti]; (s.tables[ti] = s.tables[ti]||[]).push(def.head.map(()=>'')); renderAnalysisEditor(); };
+  window.wtAn2DelRow = function(ti, ri){ wtAnalysisRead(); anEdit.sec[anEdit.cur].tables[ti].splice(ri,1); renderAnalysisEditor(); };
+  window.wtAn2Refill = async function(k){ wtAnalysisRead();
+    if(!await wtConfirm('Zastąpić dane, tabele i wnioski tej sekcji wartościami wyliczonymi z aktualnych danych klienta?', 'Zastąp', 'primary')) return;
+    anEdit.sec[k] = anPrefill(anEdit.cid, anEdit.year, k); renderAnalysisEditor(); };
+  window.wtAn2RefillPlan = async function(){ wtAnalysisRead();
+    if(!await wtConfirm('Dopisać do planu działania podpowiedziane z aktualnych danych (pominie te, które już są)?', 'Dopisz', 'primary')) return;
+    const have = new Set(anEdit.plan.map(r=>r.action)); anPlanPrefill(anEdit.cid, anEdit.year).forEach(r=>{ if(!have.has(r.action)) anEdit.plan.push(r); }); renderAnalysisEditor(); };
+  window.wtAn2RefillReview = async function(){ wtAnalysisRead();
+    if(!await wtConfirm('Zastąpić rozliczenie działaniami z analizy za '+(anEdit.year-1)+' r.?', 'Zastąp', 'primary')) return;
+    anEdit.review = anReviewPrefill(anEdit.cid, anEdit.year); if(anEdit.review.length) anEdit.on.rozliczenie = true; renderAnalysisEditor(); };
   window.wtAnalysisSave = async function(silent, generated){
     wtAnalysisRead();
     if(!DB || !anEdit) return false;
-    const p = wtProjectById(anEdit.cid);
-    const prev = (p.analyses||{})[anEdit.year] || {};
-    const entry = {conclusions: anEdit.conclusions||'', recs: anEdit.recs.filter(r=>r.finding||r.action), savedAt: Date.now(), generatedAt: generated ? Date.now() : (prev.generatedAt||null)};
-    const analyses = Object.assign({}, p.analyses||{}, {[anEdit.year]: entry});
-    try{ await DB.doc('client_projects/'+anEdit.cid).update({analyses}); anEdit.savedAt = entry.savedAt; if(!silent){ wtToast('Zapisano analizę.'); renderAnalysisEditor(); } return true; }
+    const a = anEdit, p = wtProjectById(a.cid);
+    const prev = (p.analyses||{})[a.year] || {};
+    const entry = {v:2, on:a.on, sec:a.sec, plan:a.plan.filter(r=>r.action||r.problem), review:a.review.filter(r=>r.action), summary:a.summary||'', custom:a.custom.filter(c=>c.title||c.text),
+      savedAt:Date.now(), generatedAt: generated ? Date.now() : (prev.generatedAt||null)};
+    const analyses = Object.assign({}, p.analyses||{}, {[a.year]: JSON.parse(JSON.stringify(entry))});
+    try{ await DB.doc('client_projects/'+a.cid).update({analyses}); p.analyses = analyses; a.savedAt = entry.savedAt; if(!silent){ wtToast('Zapisano analizę.'); renderAnalysisEditor(); } return true; }
     catch(e){ console.error(e); wtToast('Nie udało się zapisać analizy.', true); return false; }
   };
   window.wtAnalysisToRegister = async function(){
     wtAnalysisRead();
-    const list = anEdit.recs.filter(r=>r.action);
-    if(!list.length){ wtToast('Brak zaleceń z wpisaną treścią.', true); return; }
+    const list = anEdit.plan.filter(r=>r.action);
+    if(!list.length){ wtToast('Plan poprawy nie ma działań z wpisaną treścią.', true); return; }
     const src = 'Analiza stanu BHP '+anEdit.year;
     const existing = new Set(allRecommendations.filter(r=>r.projectId===anEdit.cid && r.docNo===src).map(r=>r.content));
     const todo = list.filter(r=>!existing.has(r.action));
-    if(!todo.length){ wtToast('Te zalecenia są już w rejestrze.'); return; }
-    if(!await wtConfirm('Dodać '+todo.length+' zaleceń do rejestru zaleceń i kontroli klienta (z terminami w terminarzu)?', 'Dodaj', 'primary')) return;
+    if(!todo.length){ wtToast('Te działania są już w rejestrze zaleceń.'); return; }
+    if(!await wtConfirm('Dodać '+todo.length+' działań do rejestru zaleceń i kontroli klienta (z terminami w terminarzu)?', 'Dodaj', 'primary')) return;
     try{
-      for(const r of todo) await DB.collection('recommendations').add({projectId:anEdit.cid, source:'analiza', docNo:src, date:wtTodayIso(), content:r.action, finding:r.finding||'', responsible:r.owner||'', deadline:r.due||'', createdAt:Date.now(), updatedAt:Date.now()});
-      wtToast('Dodano '+todo.length+' zaleceń do rejestru.');
-    }catch(e){ wtToast('Nie udało się dodać zaleceń.', true); }
+      for(const r of todo) await DB.collection('recommendations').add({projectId:anEdit.cid, source:'analiza', docNo:src, date:wtTodayIso(), content:r.action, finding:r.problem||'', responsible:r.owner||'', deadline:r.due||'', createdAt:Date.now(), updatedAt:Date.now()});
+      wtToast('Dodano '+todo.length+' działań do rejestru zaleceń.');
+    }catch(e){ wtToast('Nie udało się dodać działań.', true); }
+  };
+  /* model raportu (wspólny dla PDF i Word): tylko włączone sekcje, bez pustych tabel/pozycji */
+  function anModel(){
+    const a = anEdit, p = wtProjectById(a.cid), sp = wtSpecialist();
+    const secs = [];
+    AN_SECTIONS.forEach(def=>{
+      if(!a.on[def.k]) return;
+      if(def.special==='plan'){ const plan = a.plan.filter(r=>r.action||r.problem); secs.push({k:def.k, t:def.t, plan}); return; }
+      if(def.special==='review'){ const rv = a.review.filter(r=>r.action); if(rv.length) secs.push({k:def.k, t:def.t, table:{head:['Działanie z planu','Termin','Realizacja','Uwagi'], w:[46,14,16,24], rows:rv.map(r=>[r.action, r.due?fmtDatePL(r.due):'', r.status||'', r.note||''])}}); return; }
+      if(def.special==='summary') return;
+      const s = a.sec[def.k] || {kv:[], tables:[], note:''};
+      const kv = s.kv.filter(r=>String(r[0]||'').trim() && String(r[1]||'').trim());
+      const tables = (def.tables||[]).map((td,i)=>({title:td.title, head:td.head, w:td.w, rows:(s.tables[i]||[]).filter(r=>r.some(c=>String(c||'').trim()))})).filter(t=>t.rows.length);
+      const note = String(s.note||'').trim();
+      if(kv.length || tables.length || note) secs.push({k:def.k, t:def.t, kv, tables, note});
+    });
+    a.custom.filter(c=>c.on!==false && (String(c.title||'').trim() || String(c.text||'').trim())).forEach(c=>secs.push({k:'custom', t:c.title||'Sekcja', note:c.text||''}));
+    if(a.on.podsumowanie && String(a.summary||'').trim()) secs.push({k:'podsumowanie', t:'Podsumowanie i wnioski', note:a.summary});
+    return {a, p, sp, year:a.year, secs};
+  }
+  window.wtAnalysisPdf = async function(){
+    if(!await window.wtAnalysisSave(true, true)) return;
+    const M = anModel(), year = M.year;
+    const pills = '<div class="rpc-pills"><span class="rpc-pill solid">Analiza stanu BHP</span><span class="rpc-pill outline">Rok '+year+'</span><span class="rpc-pill outline">M.2</span></div>';
+    const meta = [{lbl:'Okres analizy', val:'01.01–31.12.'+year}, {lbl:'Opracował', val:M.sp.name||'specjalista ds. BHP'}, {lbl:'Data', val:fmtDatePL(wtTodayIso())}];
+    const metaGrid = '<div class="rpc-metagrid">'+meta.map(m=>'<span class="lbl">'+esc(m.lbl)+'</span>').join('')+meta.map(m=>'<span class="val">'+esc(m.val)+'</span>').join('')+'</div>';
+    const header = '<div class="rpc-header"><div class="rpc-headleft">'+pills+'<h1 class="rpc-title" style="font-size:40pt;">'+esc(M.p.name)+'</h1>'+metaGrid+'</div></div>';
+    const intro = '<div class="rp-section rpc-note"><div class="rp-section-text"><p><strong>Podstawa prawna:</strong> § 2 ust. 1 pkt 3 rozporządzenia Rady Ministrów z 2.09.1997 r. w sprawie służby bezpieczeństwa i higieny pracy — sporządzanie i przedstawianie pracodawcy, co najmniej raz w roku, okresowych analiz stanu bhp zawierających propozycje przedsięwzięć technicznych i organizacyjnych mających na celu zapobieganie zagrożeniom życia i zdrowia pracowników oraz poprawę warunków pracy.</p></div></div>';
+    const th = 'style="border:1px solid #d6d3cc;padding:5px 7px;text-align:left;font-size:9pt;background:#f1efe9;"', td = 'style="border:1px solid #d6d3cc;padding:5px 7px;text-align:left;vertical-align:top;font-size:9pt;"';
+    const tbl = t=>'<div class="rp-section" style="margin-top:8px;">'+(t.title?'<div style="font-weight:700;font-size:10pt;margin:6px 0 4px;">'+esc(t.title)+'</div>':'')+'<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><colgroup>'+t.w.map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr>'+t.head.map(h=>'<th '+th+'>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+t.rows.map(r=>'<tr>'+t.head.map((h,i)=>'<td '+td+'>'+esc(r[i]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+    const row = (label, value)=>'<div class="rpc-crow"><span class="rpc-crow-lp">•</span><div><p class="rpc-crow-q">'+esc(label)+'</p></div><span class="rpc-crow-status nd" style="min-width:48px;text-align:center;">'+esc(String(value))+'</span></div>';
+    const planCard = (n, r)=>'<article class="rpc-nc-card"><div class="rpc-nc-top"><span class="rpc-nc-num">'+String(n).padStart(2,'0')+'</span>'
+      +'<div class="rpc-nc-textwrap"><p class="rpc-nc-question">'+esc(r.action||'—')+'</p>'+(r.problem?'<p class="small" style="margin:2px 0 0;color:#6b6760 !important;">Problem: '+esc(r.problem)+'</p>':'')+'</div><span class="rpc-nc-statuspill" style="background:'+(r.prio==='Wysoki'?'#b3261e':r.prio==='Niski'?'#5f6b62':'#a86a12')+' !important;">'+esc((r.prio||'').toUpperCase())+'</span></div>'
+      +'<div class="rpc-nc-actions">'+(r.goal?'<div class="rpc-nc-actioncell"><span class="lbl">Cel / miernik</span><span class="val">'+esc(r.goal)+'</span></div>':'')
+      +'<div class="rpc-nc-actioncell"><span class="lbl">Odpowiedzialny</span><span class="val rpc-nc-owner">'+(r.owner?'<span class="rpc-nc-avatar">'+esc(wtRpInitials(r.owner))+'</span>':'')+esc(r.owner||'')+'</span></div>'
+      +'<div class="rpc-nc-actioncell"><span class="lbl">Termin</span><span class="val mono">'+esc(r.due?fmtDatePL(r.due):'')+'</span></div>'
+      +(r.cost?'<div class="rpc-nc-actioncell"><span class="lbl">Koszt orient.</span><span class="val">'+esc(r.cost)+'</span></div>':'')+'</div>'
+      +'<div class="rpc-nc-writein">'+wtRpWriteInField('Data realizacji', '')+wtRpWriteInField('Potwierdzenie (podpis)', '')+'</div></article>';
+    let body = '';
+    const tblInner = t=>(t.title?'<div style="font-weight:700;font-size:10pt;margin:6px 0 4px;">'+esc(t.title)+'</div>':'')+'<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><colgroup>'+t.w.map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr>'+t.head.map(h=>'<th '+th+'>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+t.rows.map(r=>'<tr>'+t.head.map((h,i)=>'<td '+td+'>'+esc(r[i]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+    M.secs.forEach((s, i)=>{
+      const n = i+1;
+      const head = '<div class="rpc-sechead"><div class="rpc-sechead-left"><span class="rpc-eyebrow2'+(s.k==='plan'?' red':'')+'">'+n+'. '+esc(s.k==='plan'?'Propozycje przedsięwzięć na rok '+(year+1):'Analiza stanu BHP '+year)+'</span><h2 class="rpc-h2" style="padding-bottom:5px;">'+esc(s.t)+'</h2></div>'+(s.plan&&s.plan.length?'<span class="rpc-duepill">'+s.plan.length+' do realizacji</span>':'')+'</div>';
+      /* bloki sekcji — nagłówek jedzie zawsze razem z pierwszym blokiem (bez osieroconych tytułów na dole strony) */
+      const blocks = [];
+      if(s.kv && s.kv.length) blocks.push('<div class="rpc-checklist">'+s.kv.map(r=>row(r[0], r[1])).join('')+'</div>');
+      (s.tables||[]).forEach(t=>blocks.push('<div style="margin-top:8px;">'+tblInner(t)+'</div>'));
+      if(s.table) blocks.push('<div style="margin-top:8px;">'+tblInner(s.table)+'</div>');
+      if(s.plan) s.plan.forEach((r,j)=>blocks.push('<div class="rpc-nc-list">'+planCard(j+1, r)+'</div>'));
+      if(s.note) blocks.push('<div class="rpc-note"><div class="rp-section-text">'+wtRpFormatSectionText(s.note)+'</div></div>');
+      if(!blocks.length) blocks.push('');
+      blocks.forEach((b, j)=>{ body += '<div class="rp-section"'+(j?' style="margin-top:8px;"':'')+'>'+(j===0?head:'')+b+'</div>'; });
+    });
+    const sign = '<div class="rp-section"><div style="display:flex;justify-content:space-between;gap:40px;margin-top:40px;font-size:9pt;color:#444;text-align:center;">'
+      +'<div style="flex:1;border-top:1px dotted #555;padding-top:6px;">opracował: '+esc(M.sp.name||'specjalista ds. BHP')+'<br>(data, podpis)</div>'
+      +'<div style="flex:1;border-top:1px dotted #555;padding-top:6px;">zapoznałem się i przyjmuję do realizacji: pracodawca<br>(data, podpis)</div></div></div>';
+    const html = '<div class="rp-client-report">'+header+intro+body+sign
+      +'<div class="rpc-footer2" style="padding-bottom:8px;"><p>Analiza stanu bezpieczeństwa i higieny pracy za '+year+' r. (stan na '+esc(fmtDatePL(wtTodayIso()))+').</p><span class="brand">'+esc(M.p.name)+'</span></div></div>';
+    try{ await wtHtmlToPdf(html, 'Analiza_stanu_BHP_'+year+'_'+M.p.name+'.pdf', 'portrait', 800); }
+    catch(e){ console.error(e); wtToast('Nie udało się wygenerować PDF.', true); }
+  };
+  /* Word (.docx) — ten sam model co PDF, pakiet OOXML budowany ręcznie (JSZip) */
+  window.wtAnalysisDocx = async function(){
+    if(!await window.wtAnalysisSave(true, true)) return;
+    try{ await ensureXlsxLib(); }catch(e){ wtToast('Nie udało się wczytać biblioteki do tworzenia pliku Word (wymagany internet).', true); return; }
+    const M = anModel(), year = M.year;
+    const xe = s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const wr = (t, o)=>{ o = o||{}; return '<w:r><w:rPr>'+(o.b?'<w:b/>':'')+(o.i?'<w:i/>':'')+(o.sz?'<w:sz w:val="'+o.sz+'"/><w:szCs w:val="'+o.sz+'"/>':'')+(o.color?'<w:color w:val="'+o.color+'"/>':'')+'</w:rPr><w:t xml:space="preserve">'+xe(t)+'</w:t></w:r>'; };
+    const wp = (t, o)=>{ o = o||{}; return '<w:p><w:pPr>'+(o.style?'<w:pStyle w:val="'+o.style+'"/>':'')+(o.keep?'<w:keepNext/>':'')+(o.jc?'<w:jc w:val="'+o.jc+'"/>':'')+'<w:spacing w:before="'+(o.spb||0)+'" w:after="'+(o.sp!=null?o.sp:120)+'"/></w:pPr>'+wr(t, o.r||{})+'</w:p>'; };
+    const wtable = (head, rows, widths)=>{
+      const total = 9638, ws = widths.map(w=>Math.round(total*w/100));
+      const cell = (t, i, hdr)=>'<w:tc><w:tcPr><w:tcW w:w="'+ws[i]+'" w:type="dxa"/>'+(hdr?'<w:shd w:val="clear" w:color="auto" w:fill="EDEBE6"/>':'')+'</w:tcPr><w:p><w:pPr><w:spacing w:before="20" w:after="20"/></w:pPr>'+wr(t,{b:hdr, sz:18})+'</w:p></w:tc>';
+      return '<w:tbl><w:tblPr><w:tblW w:w="'+total+'" w:type="dxa"/><w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(b=>'<w:'+b+' w:val="single" w:sz="4" w:space="0" w:color="9A968E"/>').join('')+'</w:tblBorders><w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr>'
+        +'<w:tblGrid>'+ws.map(w=>'<w:gridCol w:w="'+w+'"/>').join('')+'</w:tblGrid>'
+        +(head?'<w:tr><w:trPr><w:tblHeader/></w:trPr>'+head.map((h,i)=>cell(h,i,true)).join('')+'</w:tr>':'')+rows.map(r=>'<w:tr><w:trPr><w:cantSplit/></w:trPr>'+r.map((t,i)=>cell(t,i,false)).join('')+'</w:tr>').join('')+'</w:tbl>'+wp('', {sp:60});
+    };
+    const paras = t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean).map(x=>wp(x, {style:'BodyText'})).join('');
+    let b = '';
+    b += wp(M.p.name||'', {jc:'center', spb:600, sp:120, r:{sz:26}});
+    b += wp('ANALIZA STANU BEZPIECZEŃSTWA I HIGIENY PRACY', {style:'Title', jc:'center', spb:300, sp:120});
+    b += wp('za rok '+year, {jc:'center', sp:360, r:{b:true, sz:28}});
+    b += wp('Podstawa prawna: § 2 ust. 1 pkt 3 rozporządzenia Rady Ministrów z dnia 2 września 1997 r. w sprawie służby bezpieczeństwa i higieny pracy — okresowa analiza stanu bhp zawierająca propozycje przedsięwzięć technicznych i organizacyjnych mających na celu zapobieganie zagrożeniom życia i zdrowia pracowników oraz poprawę warunków pracy.', {style:'BodyText', r:{i:true, sz:19, color:'555555'}, sp:240});
+    b += wp('Opracował: '+(M.sp.name||'………………………')+'     Data: '+fmtDatePL(wtTodayIso()), {sp:240});
+    M.secs.forEach((s, i)=>{
+      b += wp((i+1)+'. '+s.t, {style:'Heading1', keep:true});
+      if(s.kv && s.kv.length) b += wtable(null, s.kv.map(r=>[r[0], r[1]]), [70,30]);
+      (s.tables||[]).forEach(t=>{ b += wp(t.title, {style:'Heading2', keep:true}) + wtable(t.head, t.rows.map(r=>t.head.map((h,ci)=>r[ci]||'')), t.w); });
+      if(s.table) b += wtable(s.table.head, s.table.rows, s.table.w);
+      if(s.plan && s.plan.length) b += wtable(['Lp.','Problem / działanie','Cel / miernik','Priorytet','Odpowiedzialny','Termin','Koszt'], s.plan.map((r,j)=>[String(j+1), (r.problem?r.problem+' → ':'')+(r.action||''), r.goal||'', r.prio||'', r.owner||'', r.due?fmtDatePL(r.due):'', r.cost||'']), [5,37,18,10,13,9,8]);
+      if(s.note) b += paras(s.note);
+    });
+    b += wp('', {sp:600});
+    b += wtable(null, [['opracował: '+(M.sp.name||'specjalista ds. BHP')+'\n(data, podpis)', 'zapoznałem się i przyjmuję do realizacji — pracodawca\n(data, podpis)']].map(r=>r.map(x=>x.replace('\n',' — '))), [50,50]);
+    const sect = '<w:sectPr><w:footerReference w:type="default" r:id="rId3"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
+    const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+    const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+NS+'><w:body>'+b+sect+'</w:body></w:document>';
+    const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="21"/><w:szCs w:val="21"/><w:lang w:val="pl-PL"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'
+      +'<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>'
+      +'<w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:rPr><w:b/><w:sz w:val="36"/><w:szCs w:val="36"/><w:color w:val="1F2A44"/></w:rPr></w:style>'
+      +'<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="BodyText"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="320" w:after="120"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="1F2A44"/></w:rPr></w:style>'
+      +'<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="160" w:after="80"/><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:b/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr></w:style>'
+      +'<w:style w:type="paragraph" w:styleId="BodyText"><w:name w:val="Body Text"/><w:basedOn w:val="Normal"/><w:pPr><w:jc w:val="both"/></w:pPr></w:style>'
+      +'<w:style w:type="paragraph" w:styleId="Footer"><w:name w:val="footer"/><w:basedOn w:val="Normal"/><w:pPr><w:jc w:val="center"/></w:pPr><w:rPr><w:sz w:val="16"/><w:color w:val="666666"/></w:rPr></w:style></w:styles>';
+    const footer = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:pStyle w:val="Footer"/></w:pPr>'+wr('Analiza stanu BHP '+year+' — '+(M.p.name||'')+' · strona ')+'<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p></w:ftr>';
+    const zip = new JSZip();
+    zip.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>');
+    zip.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>');
+    zip.file('docProps/core.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>'+xe('Analiza stanu BHP '+year+' — '+(M.p.name||''))+'</dc:title><dc:creator>'+xe(M.sp.name||'BHP Audyt')+'</dc:creator></cp:coreProperties>');
+    zip.file('word/document.xml', doc);
+    zip.file('word/styles.xml', styles);
+    zip.file('word/settings.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:defaultTabStop w:val="708"/></w:settings>');
+    zip.file('word/footer1.xml', footer);
+    zip.file('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/></Relationships>');
+    const blob = await zip.generateAsync({type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+    await wtSaveFile('Analiza_stanu_BHP_'+year+'_'+String(M.p.name||'klient').replace(/[^\wąćęłńóśźżĄĆĘŁŃÓŚŹŻ-]+/g,'_')+'.docx', blob);
+    wtToast('Pobrano analizę (Word).');
   };
   /* Wybór klienta — skrót z karty M.2 w Dokumentach */
   /* Wybór klienta w oknie — zamiast komunikatu „Wybierz klienta” (ślepy zaułek, zwłaszcza na telefonie,
@@ -23356,63 +23765,7 @@ document.addEventListener('keydown', e=>{
     if(!nearMiss) Fp('Brak zgłoszeń zdarzeń potencjalnie wypadkowych w '+year+' r.', 'Wprowadzić i propagować zgłaszanie zdarzeń potencjalnie wypadkowych (near miss)');
     return {findings:F, p, pr, hc, audits, obch, nieTotal, recsY, recsDoneY, openOver, ext, accWork, accSev, accCommute, sickDays, withDays, causes, nearMiss, cz, czConf, emps, trOver, medOver, orzNoAck, trainings, trained, ryz, ryzHigh, ryzReviewOver, mach, machOver, przRows, przOver, measRows, visits, conclusions:C};
   }
-  window.wtAnalysisPdf = async function(){
-    if(!await window.wtAnalysisSave(true, true)) return;
-    const a = anEdit, year = a.year;
-    const d = wtAnalysisData(a.cid, year);
-    const sp = wtSpecialist();
-    const recs = a.recs.filter(r=>r.finding||r.action);
-    const wc = d.hc ? (d.accWork.length/d.hc*1000).toFixed(1) : '—';
-    const wci = d.withDays ? (d.sickDays/d.withDays).toFixed(1) : '—';
-    const recPct = d.recsY.length ? Math.round(d.recsDoneY/d.recsY.length*100) : null;
-    const pills = '<div class="rpc-pills"><span class="rpc-pill solid">Analiza stanu BHP</span><span class="rpc-pill outline">Rok '+year+'</span><span class="rpc-pill outline">M.2</span></div>';
-    const meta = [{lbl:'Okres analizy', val:'01.01–31.12.'+year}, {lbl:'Opracował', val:sp.name||'specjalista ds. BHP'}, {lbl:'Data', val:fmtDatePL(wtTodayIso())}];
-    const metaGrid = '<div class="rpc-metagrid">'+meta.map(m=>'<span class="lbl">'+esc(m.lbl)+'</span>').join('')+meta.map(m=>'<span class="val">'+esc(m.val)+'</span>').join('')+'</div>';
-    const ringVal = recPct==null ? '—' : recPct+'%';
-    const ringGrad = recPct==null ? '#3a3d42 0 100%' : '#3ecf8e 0 '+recPct+'%, #ff6b5e '+recPct+'% 100%';
-    const ring = '<div class="rpc-ringwrap"><div class="rpc-ring" style="background:conic-gradient('+ringGrad+')"><div class="rpc-ring-inner"><span class="rpc-ring-pct">'+ringVal+'</span><span class="rpc-ring-label">Zalecenia</span></div></div>'
-      +'<span class="rpc-ring-sub">'+(d.recsY.length ? d.recsDoneY+' z '+d.recsY.length+' zrealizowanych w '+year+' r.' : 'brak zaleceń wydanych w '+year+' r.')+'</span></div>';
-    const header = '<div class="rpc-header"><div class="rpc-headleft">'+pills+'<h1 class="rpc-title" style="font-size:44pt;">'+esc(d.p.name)+'</h1>'+metaGrid+'</div>'+ring+'</div>';
-    const stat = (cls, label, num, dot)=>'<div class="rpc-stat '+cls+'"><span class="rpc-stat-label'+(dot?' withdot':'')+'">'+(dot?'<span class="dot"></span>':'')+esc(label)+'</span><span class="rpc-stat-num">'+esc(String(num))+'</span></div>';
-    const lacks = d.trOver + d.medOver;
-    const stats = '<div class="rpc-stats">'+stat('total','Pracownicy', d.hc!=null?d.hc:'—')+stat(d.accWork.length?'bad':'ok','Wypadki przy pracy', d.accWork.length, true)+stat(d.openOver.length?'bad':'ok','Zalecenia po terminie', d.openOver.length, true)+stat(lacks?'bad':'ok','Zaległe szkolenia / badania', d.trOver+' / '+d.medOver, true)+'</div>';
-    const intro = '<div class="rp-section rpc-note"><div class="rp-section-text"><p><strong>Podstawa prawna:</strong> § 2 ust. 1 pkt 3 rozporządzenia Rady Ministrów z 2.09.1997 r. w sprawie służby bezpieczeństwa i higieny pracy — sporządzanie i przedstawianie pracodawcy, co najmniej raz w roku, okresowych analiz stanu bhp zawierających propozycje przedsięwzięć technicznych i organizacyjnych mających na celu zapobieganie zagrożeniom życia i zdrowia pracowników oraz poprawę warunków pracy.</p>'
-      +(d.pr.address?'<p><strong>Zakład:</strong> '+esc(d.p.name)+', '+esc(d.pr.address)+(d.pr.riskCategory?' · kategoria ryzyka (ZUS): '+esc(d.pr.riskCategory):'')+'</p>':'')+'</div></div>';
-    let secNo = 0;
-    const row = (label, value, flag)=>{ const cls = flag==='bad' ? 'bad' : (flag==='ok' ? 'ok' : 'nd'); return '<div class="rpc-crow"><span class="rpc-crow-lp">•</span><div><p class="rpc-crow-q">'+esc(label)+'</p></div><span class="rpc-crow-status '+cls+'" style="min-width:48px;text-align:center;">'+esc(String(value))+'</span></div>'; };
-    const sec = (eyebrow, title, rows)=>{ secNo++; return '<div class="rp-section"><div class="rpc-sechead"><div class="rpc-sechead-left"><span class="rpc-eyebrow2">'+secNo+'. '+esc(eyebrow)+'</span><h2 class="rpc-h2" style="padding-bottom:5px;">'+esc(title)+'</h2></div></div><div class="rpc-checklist">'+rows.join('')+'</div></div>'; };
-    const b = (n)=>n ? 'bad' : 'ok';
-    const body =
-      sec('Dane ogólne', 'Zatrudnienie i obsługa BHP', [row('Liczba pracowników', d.hc!=null?d.hc:'—'), row('w tym kobiety / młodociani / z niepełnosprawnością', [d.pr.women||0, d.pr.young||0, d.pr.disabled||0].join(' / ')), row('Kategoria ryzyka (ZUS)', d.pr.riskCategory||'—'), row('Wizyty służby BHP w roku', d.visits)])
-      + sec('Kontrole wewnętrzne', 'Kontrole i zalecenia', [row('Audyty / obchody zakładu', d.audits+' / '+d.obch), row('Stwierdzone niezgodności (łącznie)', d.nieTotal, b(d.nieTotal)), row('Zalecenia wydane w roku / zrealizowane', d.recsY.length+' / '+d.recsDoneY), row('Zalecenia po terminie (stan na dziś)', d.openOver.length, b(d.openOver.length))])
-      + sec('Kontrole zewnętrzne', 'Organy nadzoru', d.ext.length ? d.ext.map(r=>row(wtRecSource(r.source).label+(r.authority?' — '+r.authority:'')+' ('+fmtDatePL(r.date)+')', r.completedDate?'zrealizowano':'w toku', r.completedDate?'ok':'bad')) : [row('Kontrole PIP, PIS, PSP, UDT zarejestrowane w roku', 'brak', 'ok')])
-      + sec('Wypadkowość', 'Wypadki przy pracy', [row('Wypadki przy pracy', d.accWork.length, b(d.accWork.length)), row('w tym ciężkie, śmiertelne, zbiorowe', d.accSev.length, b(d.accSev.length)), row('Wypadki w drodze do/z pracy', d.accCommute), row('Dni niezdolności do pracy', d.sickDays), row('Wskaźnik częstości Wc (na 1000 zatrudnionych)', wc), row('Wskaźnik ciężkości Wci (dni na wypadek)', wci), row('Przyczyny: techniczne / organizacyjne / ludzkie', d.causes.t+' / '+d.causes.o+' / '+d.causes.h), row('Zdarzenia potencjalnie wypadkowe (near miss)', d.nearMiss)])
-      + sec('Choroby zawodowe', 'Choroby zawodowe', [row('Zgłoszone podejrzenia / stwierdzone', d.cz.length+' / '+d.czConf, b(d.czConf))])
-      + sec('Pracownicy', 'Szkolenia i badania lekarskie', [row('Pracownicy w kartotece', d.emps.length), row('Szkolenia przeprowadzone w roku / przeszkolone osoby', d.trainings.length+' / '+d.trained), row('Pracownicy bez aktualnego szkolenia BHP', d.trOver, b(d.trOver)), row('Pracownicy bez aktualnych badań lekarskich', d.medOver, b(d.medOver)), row('Bez potwierdzenia zapoznania z oceną ryzyka', d.orzNoAck, b(d.orzNoAck))])
-      + sec('Ocena ryzyka', 'Ryzyko zawodowe', [row('Stanowiska z oceną ryzyka', d.ryz.length), row('Stanowiska z ryzykiem dużym', d.ryzHigh.length ? d.ryzHigh.map(r=>r.position||'—').join(', ') : 'brak', d.ryzHigh.length?'bad':'ok'), row('Oceny po terminie przeglądu', d.ryzReviewOver, b(d.ryzReviewOver))])
-      + sec('Środowisko pracy', 'Maszyny, pomiary i przeglądy', [row('Pomiary czynników szkodliwych w kartach przeglądów', d.measRows.length), row('Maszyny w ewidencji / po terminie kontroli', d.mach.length+' / '+d.machOver, b(d.machOver)), row('Przeglądy i kontrole po terminie (karty przeglądów)', d.przOver, b(d.przOver))]);
-    secNo++;
-    const concl = '<div class="rp-section"><div class="rpc-sechead"><div class="rpc-sechead-left"><span class="rpc-eyebrow2">'+secNo+'. Wnioski</span><h2 class="rpc-h2" style="padding-bottom:5px;">Wnioski z analizy</h2></div></div><div class="rpc-note"><div class="rp-section-text">'+wtRpFormatSectionText(String(a.conclusions||'').replace(/^•\s*/gm,'- '))+'</div></div></div>';
-    secNo++;
-    const recCard = (n, r)=>'<article class="rpc-nc-card"><div class="rpc-nc-top"><span class="rpc-nc-num">'+String(n).padStart(2,'0')+'</span>'
-      +'<div class="rpc-nc-textwrap"><p class="rpc-nc-question">'+esc(r.finding||'—')+'</p></div><span class="rpc-nc-statuspill" style="background:#15171a !important;">POLECENIE</span></div>'
-      +'<div class="rpc-nc-actions"><div class="rpc-nc-actioncell"><span class="lbl">Zalecenie / polecenie</span><span class="val">'+esc(r.action||'—')+'</span></div>'
-      +'<div class="rpc-nc-actioncell"><span class="lbl">Odpowiedzialny</span><span class="val rpc-nc-owner">'+(r.owner?'<span class="rpc-nc-avatar">'+esc(wtRpInitials(r.owner))+'</span>':'')+esc(r.owner||'')+'</span></div>'
-      +'<div class="rpc-nc-actioncell"><span class="lbl">Termin</span><span class="val mono">'+esc(r.due?fmtDatePL(r.due):'')+'</span></div></div>'
-      +'<div class="rpc-nc-writein">'+wtRpWriteInField('Data realizacji', '')+wtRpWriteInField('Potwierdzenie (podpis)', '')+'</div></article>';
-    const blankCard = n=>'<article class="rpc-nc-card"><div class="rpc-nc-top"><span class="rpc-nc-num">'+String(n).padStart(2,'0')+'</span><div class="rpc-nc-textwrap"><p class="rpc-nc-question" style="color:#8f8b84 !important;font-weight:500;">Stwierdzony brak:</p></div><span class="rpc-nc-statuspill" style="background:#8f8b84 !important;">DOPISZ</span></div>'
-      +'<div class="rpc-nc-actions"><div class="rpc-nc-actioncell" style="min-height:52px;"><span class="lbl">Zalecenie / polecenie</span><span class="val"></span></div><div class="rpc-nc-actioncell"><span class="lbl">Odpowiedzialny</span><span class="val"></span></div><div class="rpc-nc-actioncell"><span class="lbl">Termin</span><span class="val"></span></div></div></article>';
-    const recsSec = '<div class="rp-section"><div class="rpc-sechead"><div class="rpc-sechead-left"><span class="rpc-eyebrow2 red">'+secNo+'. Propozycje przedsięwzięć na rok '+(year+1)+'</span><h2 class="rpc-h2" style="padding-bottom:5px;">Zalecenia i polecenia</h2></div>'
-      +(recs.length?'<span class="rpc-duepill">'+recs.length+' do realizacji</span>':'')+'</div>'
-      +'<div class="rpc-nc-list">'+recs.map((r,i)=>recCard(i+1, r)).join('')+[1,2,3].map(k=>blankCard(recs.length+k)).join('')+'</div></div>';
-    const sign = '<div class="rp-section"><div style="display:flex;justify-content:space-between;gap:40px;margin-top:40px;font-size:9pt;color:#444;text-align:center;">'
-      +'<div style="flex:1;border-top:1px dotted #555;padding-top:6px;">opracował: '+esc(sp.name||'specjalista ds. BHP')+'<br>(data, podpis)</div>'
-      +'<div style="flex:1;border-top:1px dotted #555;padding-top:6px;">zapoznałem się i przyjmuję do realizacji: pracodawca<br>(data, podpis)</div></div></div>';
-    const html = '<div class="rp-client-report">'+header+stats+intro+body+concl+recsSec+sign
-      +'<div class="rpc-footer2" style="padding-bottom:8px;"><p>Analiza sporządzona na podstawie danych prowadzonych w narzędziu BHP Audyt (stan na '+esc(fmtDatePL(wtTodayIso()))+'). Zalecenia i polecenia należy wpisać do rejestru zaleceń i nadzorować ich realizację.</p><span class="brand">'+esc(d.p.name)+'</span></div></div>';
-    try{ await wtHtmlToPdf(html, 'Analiza_stanu_BHP_'+year+'_'+d.p.name+'.pdf', 'portrait', 800); window.wtEmpClose(); }
-    catch(e){ console.error(e); wtToast('Nie udało się wygenerować PDF.', true); }
-  };
+
 
 
   /* ============================================================================
