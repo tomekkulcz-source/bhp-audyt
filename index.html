@@ -29841,6 +29841,10 @@ document.addEventListener('keydown', e=>{
     {k:'wylacznik', l:'Przeciwpożarowy wyłącznik prądu', g:'Instalacje', m:12, b:'§ 3 ust. 3 i § 4 ust. 2 pkt 2 '+R2010},
     {k:'pompa', l:'Pompa w pompowni przeciwpożarowej', g:'Instalacje', m:12, b:'§ 3 ust. 3 '+R2010},
     {k:'kurtyna', l:'Kurtyna dymowa', g:'Instalacje', m:12, b:'§ 3 ust. 3 '+R2010},
+    {k:'przew_gastro', l:'Przewody dymowe i spalinowe — paleniska gastronomii / zbiorowego żywienia', g:'Przewody (czyszczenie)', m:1, clean:true, b:'§ 34 ust. 1 pkt 1 '+R2010+' — co najmniej raz w miesiącu, jeżeli przepisy miejscowe nie stanowią inaczej; wykonuje osoba z kwalifikacjami kominiarskimi (§ 34 ust. 3)'},
+    {k:'przew_stale', l:'Przewody dymowe i spalinowe — paliwo stałe', g:'Przewody (czyszczenie)', m:3, clean:true, b:'§ 34 ust. 1 pkt 2 '+R2010+' — co najmniej raz na 3 miesiące; kwalifikacje kominiarskie (§ 34 ust. 3)'},
+    {k:'przew_gaz', l:'Przewody dymowe i spalinowe — paliwo płynne lub gazowe', g:'Przewody (czyszczenie)', m:6, clean:true, b:'§ 34 ust. 1 pkt 3 '+R2010+' — co najmniej raz na 6 miesięcy; kwalifikacje kominiarskie (§ 34 ust. 3)'},
+    {k:'przew_went', l:'Przewody wentylacyjne (obiekt ze spalaniem paliwa)', g:'Przewody (czyszczenie)', m:12, clean:true, b:'§ 34 ust. 2 '+R2010+' — co najmniej raz w roku, jeżeli większa częstotliwość nie wynika z warunków użytkowych; kwalifikacje kominiarskie (§ 34 ust. 3)'},
     {k:'czujka', l:'Czujka autonomiczna (dymu / CO)', g:'Inne', m:12, prod:true, b:'§ 3 ust. 3a i § 28a '+R2010+' — wg instrukcji producenta'},
     {k:'inne', l:'Inne urządzenie przeciwpożarowe', g:'Inne', m:12, b:'§ 3 ust. 3 '+R2010}
   ];
@@ -29852,8 +29856,8 @@ document.addEventListener('keydown', e=>{
   /* ---- terminy urządzenia: przegląd (min(okres producenta, 12 mies.)) + próba węży (5 lat) ---- */
   function wtPpozDevDue(d){
     const t = ppozType(d.type);
-    const months = t.prod ? (ppozNum(d.intervalMonths)||12) : Math.min(ppozNum(d.intervalMonths)||12, 12);
-    const out = {service: d.lastService ? wtAddMonthsIso(d.lastService, months) : '', hose:''};
+    const months = t.prod ? (ppozNum(d.intervalMonths)||12) : t.clean ? Math.min(ppozNum(d.intervalMonths)||t.m, t.m) : Math.min(ppozNum(d.intervalMonths)||12, 12);
+    const out = {service: d.lastService ? wtAddMonthsIso(d.lastService, months) : '', hose:'', overhaul: t.ext ? (d.nextOverhaul||'') : ''};
     if(t.hose) out.hose = d.hoseTest ? wtAddMonthsIso(d.hoseTest, 60) : '';
     return out;
   }
@@ -29890,7 +29894,10 @@ document.addEventListener('keydown', e=>{
     else if(o.cyclic && users!==null && users>50){ evNeeded = true; evMonths = 12; evWhy = 'Cyklicznie zmieniająca się grupa > 50 osób — co najmniej raz w roku (do 3 mies. od rozpoczęcia korzystania)'; }
     else if(users!==null && users>50){ evNeeded = true; evWhy = 'Ponad 50 stałych użytkowników — co najmniej raz na 2 lata'; }
     else evWhy = users===null ? 'Uzupełnij liczbę stałych użytkowników' : 'Do 50 stałych użytkowników — obowiązek nie dotyczy';
-    out.evac = {needed:evNeeded, months:evMonths, why:evWhy, basis:'§ 17 ust. 1–2 i 4 '+R2010};
+    const zl2 = cat==='ZL II' || ((o.ibp && o.ibp.zones) || []).some(z=>z.cat==='ZL II');
+    if(evNeeded) evWhy += '. Zawiadom komendanta powiatowego (miejskiego) PSP najpóźniej tydzień przed (§ 17 ust. 4)'+(zl2 ? '; strefa ZL II — zakres i obszar ćwiczenia uzgodnij z komendantem PSP (§ 17 ust. 3)' : '');
+    out.evac = {needed:evNeeded, months:evMonths, why:evWhy, zl2, basis:'§ 17 ust. 1–4 '+R2010};
+    if(o.escape){ const due = o.escapeDate ? wtAddMonthsIso(o.escapeDate, 24) : ''; out.escape = {needed:true, due, st:wtPpozStatus(due, 'Brak sprawdzenia — wymagane przed rozpoczęciem działalności'), why:'Działalność rozrywkowa z ograniczoną możliwością ewakuacji uczestników (escape room i podobne) — sprawdzenie organizacji ewakuacji i wymagań ppoż. przed rozpoczęciem działalności i co najmniej raz na 2 lata, z udziałem rzeczoznawcy ds. zabezpieczeń ppoż. lub osoby z art. 4 ust. 2a ustawy; zawiadomienie PSP najpóźniej 7 dni przed; protokół', basis:'§ 17a ust. 1–4 '+R2010}; }
     if(evNeeded){ const due = o.evacDate ? wtAddMonthsIso(o.evacDate, evMonths) : ''; out.evac.due = due; out.evac.st = wtPpozStatus(due, 'Brak próbnej ewakuacji'); }
     // Gaśnice — § 32 ust. 3 (liczone dla podanej powierzchni strefy / obiektu)
     const zs = ((o.ibp && o.ibp.zones) || []).filter(z=>z.cat && ppozNum(z.area)!==null);
@@ -29923,13 +29930,16 @@ document.addEventListener('keydown', e=>{
     allPpozDevices.filter(d=>cl.has(d.projectId)).forEach(d=>{
       const t = ppozType(d.type), due = wtPpozDevDue(d), q = ppozNum(d.qty)||1;
       const lbl = t.l+(q>1?' ×'+q:'')+(d.location?' — '+d.location:'');
-      ev.push({pid:d.projectId, oid:d.objectId, kind:'dev', id:d.id, date:due.service, title:'Przegląd: '+lbl, sub:objName(d.objectId), missing:!due.service});
+      ev.push({pid:d.projectId, oid:d.objectId, kind:'dev', id:d.id, date:due.service, title:(t.clean?'Czyszczenie: ':'Przegląd: ')+lbl, sub:objName(d.objectId), missing:!due.service});
+      if(due.overhaul) ev.push({pid:d.projectId, oid:d.objectId, kind:'dev', id:d.id, date:due.overhaul, title:'Badanie / remont gaśnicy wg producenta: '+lbl, sub:objName(d.objectId), missing:false});
       if(t.hose) ev.push({pid:d.projectId, oid:d.objectId, kind:'dev', id:d.id, date:due.hose, title:'Próba ciśnieniowa węża (5 lat): '+lbl, sub:objName(d.objectId), missing:!due.hose});
     });
     allPpozObjects.filter(o=>cl.has(o.projectId)).forEach(o=>{
       const r = wtPpozObjReq(o);
       if(r.ibp.needed) ev.push({pid:o.projectId, oid:o.id, kind:'obj', id:o.id, date:r.ibp.due, title:'Aktualizacja IBP (co 2 lata)', sub:o.name||'obiekt', missing:!r.ibp.due});
       if(r.evac.needed) ev.push({pid:o.projectId, oid:o.id, kind:'obj', id:o.id, date:r.evac.due, title:'Praktyczne sprawdzenie ewakuacji', sub:o.name||'obiekt', missing:!r.evac.due});
+      if(r.evac.needed && r.evac.due) ev.push({pid:o.projectId, oid:o.id, kind:'obj', id:o.id, date:wtAddDaysIso(r.evac.due, -21), title:'Próbna ewakuacja za 3 tygodnie — ustal termin i zawiadom komendanta PSP najpóźniej tydzień przed (§ 17 ust. 4)'+(r.evac.zl2?'; ZL II — uzgodnij z PSP zakres i obszar (§ 17 ust. 3)':''), sub:o.name||'obiekt', missing:false});
+      if(r.escape && r.escape.needed) ev.push({pid:o.projectId, oid:o.id, kind:'obj', id:o.id, date:r.escape.due, title:'Sprawdzenie ewakuacji i wymagań ppoż. — escape room / gry z ograniczonym przemieszczaniem (§ 17a, z rzeczoznawcą; zawiadom PSP 7 dni wcześniej)', sub:o.name||'obiekt', missing:!r.escape.due});
     });
     allPpozPeople.filter(pp=>!pp.projectId || cl.has(pp.projectId)).forEach(pp=>{ const due = wtPpozPersonDue(pp); const r = ppozRole(pp.role); if(!due && !r.years) return;
       ev.push({pid:pp.projectId||'', oid:'', kind:'person', id:pp.id, date:due, title:(r.k==='inspektor'?'Szkolenie aktualizujące inspektora ppoż. — ':'Ważność uprawnienia — ')+pp.name, sub:r.l, missing:!due}); });
@@ -30113,17 +30123,19 @@ document.addEventListener('keydown', e=>{
       +fCheck('pzoExpl','Strefa zagrożenia wybuchem', o.explosion)
       +fCheck('pzoHigh','PM: gęstość obciążenia ogniowego > 500 MJ/m²', o.highLoad, 'wpływa na liczbę gaśnic (§ 32 ust. 3)')
       +fCheck('pzoCyc','Cyklicznie zmienia się grupa > 50 użytkowników', o.cyclic, 'np. szkoła, internat — ewakuacja co rok')
+      +fCheck('pzoEsc','Escape room lub podobna działalność (gry z ograniczonym przemieszczaniem uczestników)', o.escape, '§ 17a — sprawdzenie co 2 lata z rzeczoznawcą')
       +'</div><div class="wt-pz-grid">'
       +fInput('pzoIbp','Data ostatniej aktualizacji IBP',o.ibpDate,'date')
       +fInput('pzoIbpBy','IBP opracował(a)',o.ibpAuthor)
       +fInput('pzoEvac','Data ostatniej próbnej ewakuacji',o.evacDate,'date')
+      +fInput('pzoEscDate','Escape room: data ostatniego sprawdzenia (§ 17a)',o.escapeDate,'date')
       +fInput('pzoKob','Nr KOB / c-KOB (opcjonalnie)',o.kob)
       +'</div><label class="wt-pz-f"><span>Uwagi</span><textarea class="wt-input" id="pzoNotes" rows="2">'+esc(o.notes||'')+'</textarea></label>',
       async ()=>{
         const name = fv('pzoName'); if(!name){ wtToast('Wpisz nazwę obiektu.', true); return false; }
         if(!DB){ wtToast('Zapis wymaga otwarcia narzędzia jako strony.', true); return false; }
         const data = {projectId:o.projectId, name, address:fv('pzoAddr'), kind:fv('pzoKind'), category:fv('pzoCat'), volume:fv('pzoVol'), area:fv('pzoArea'), floors:fv('pzoFloors'), users:fv('pzoUsers'),
-          explosion:fv('pzoExpl'), highLoad:fv('pzoHigh'), cyclic:fv('pzoCyc'), ibpDate:fv('pzoIbp'), ibpAuthor:fv('pzoIbpBy'), evacDate:fv('pzoEvac'), kob:fv('pzoKob'), notes:fv('pzoNotes'), updatedAt:Date.now()};
+          explosion:fv('pzoExpl'), highLoad:fv('pzoHigh'), cyclic:fv('pzoCyc'), escape:fv('pzoEsc'), escapeDate:fv('pzoEscDate'), ibpDate:fv('pzoIbp'), ibpAuthor:fv('pzoIbpBy'), evacDate:fv('pzoEvac'), kob:fv('pzoKob'), notes:fv('pzoNotes'), updatedAt:Date.now()};
         if(id) await DB.doc('ppoz_objects/'+id).update(data);
         else { data.createdAt = Date.now(); await DB.collection('ppoz_objects').add(data); }
         wtToast('Zapisano obiekt.'); return true;
@@ -30143,12 +30155,12 @@ document.addEventListener('keydown', e=>{
   function wtPpozObjCard(o){
     const r = wtPpozObjReq(o); const devs = allPpozDevices.filter(d=>d.objectId===o.id);
     const ibpB = r.ibp.needed===null ? badge('med','IBP: brak danych') : r.ibp.needed ? badge(r.ibp.st.cls, 'IBP: '+r.ibp.st.label) : badge('blue','IBP niewymagana');
-    const evB = r.evac.needed ? badge(r.evac.st.cls, 'Ewakuacja: '+r.evac.st.label) : badge('blue','Ewakuacja: nie dotyczy');
+    const evB = (r.evac.needed ? badge(r.evac.st.cls, 'Ewakuacja: '+r.evac.st.label) : badge('blue','Ewakuacja: nie dotyczy'))+(r.escape ? badge(r.escape.st.cls, '§ 17a: '+r.escape.st.label) : '');
     let extB;
     if(r.ext.units===null) extB = badge('med','Gaśnice: brak danych');
     else if(r.ext.units===0) extB = badge('blue','Gaśnice: wg IBP');
     else extB = badge(r.ext.haveUnits>=r.ext.units ? 'low' : 'high', 'Gaśnice: '+r.ext.haveUnits+' / min. '+r.ext.units+' jedn.');
-    const devBad = devs.filter(d=>{ const du = wtPpozDevDue(d); return [du.service].concat(ppozType(d.type).hose?[du.hose]:[]).some(x=>!x || wtDaysUntil(x)<0); }).length;
+    const devBad = devs.filter(d=>{ const du = wtPpozDevDue(d); return [du.service].concat(ppozType(d.type).hose?[du.hose]:[]).concat(du.overhaul?[du.overhaul]:[]).some(x=>!x || wtDaysUntil(x)<0); }).length;
     const open = wtPzOpenObj===o.id;
     let det = '';
     if(open){
@@ -30156,6 +30168,7 @@ document.addEventListener('keydown', e=>{
       det = '<div class="wt-pz-det">'
         +row('IBP', r.ibp.needed===null ? esc(r.ibp.why) : r.ibp.needed ? 'Wymagana — '+esc(r.ibp.why)+'. '+(o.ibpDate?'Ostatnia aktualizacja '+fmtDatePL(o.ibpDate)+', następna do '+fmtDatePL(r.ibp.due):'Brak daty aktualizacji')+(o.ibpAuthor?' · opracował(a): '+esc(o.ibpAuthor):'') : 'Niewymagana — '+esc(r.ibp.why), r.ibp.basis+'; aktualizacja co najmniej raz na 2 lata (§ 6 ust. 7)')
         +row('Próbna ewakuacja', ((o.evacs||[]).length?'<div class="wt-ev-list">'+(o.evacs||[]).map((e,i)=>'<button type="button" class="wt-chipbtn" onclick="window.wtEvacOpen(\''+o.id+'\','+i+')">'+esc(fmtDatePL(e.date)||'bez daty')+(e.done?' ✓':' — planowana')+'</button>').join('')+'</div>':'')+'<button type="button" class="wt-btn ghost" style="margin:4px 0" onclick="window.wtEvacOpen(\''+o.id+'\')">+ Próbna ewakuacja (zawiadomienie PSP, protokół)</button><br>'+esc(r.evac.why)+(r.evac.needed ? '. '+(o.evacDate?'Ostatnia '+fmtDatePL(o.evacDate)+', następna do '+fmtDatePL(r.evac.due):'Brak daty')+'. Powiadom PSP najpóźniej tydzień przed (§ 17 ust. 4).' : ''), r.evac.basis)
+        +(r.escape ? row('Escape room (§ 17a)', esc(r.escape.why)+'. '+(o.escapeDate?'Ostatnie sprawdzenie '+fmtDatePL(o.escapeDate)+', następne do '+fmtDatePL(r.escape.due):'Brak daty sprawdzenia'), r.escape.basis) : '')
         +row('Gaśnice', esc(r.ext.why)+(r.ext.units ? ' · w rejestrze: '+r.ext.have+' szt. = '+r.ext.haveUnits+' jedn.' : '')+'. Odległość do gaśnicy ≤ 30 m, dostęp ≥ 1 m (§ 33 ust. 2).', r.ext.basis)
         +'<div class="wt-pz-devhead"><b>Urządzenia i gaśnice ('+devs.length+')</b><button class="wt-btn ghost" type="button" onclick="window.wtPpozEditDevice(null,\''+o.id+'\')">+ Urządzenie</button></div>'
         +(devs.length ? wtPpozDevTable(devs, false) : '<div class="wt-empty">Brak urządzeń — dodaj gaśnice, hydranty i instalacje tego obiektu.</div>')
@@ -30207,12 +30220,13 @@ document.addEventListener('keydown', e=>{
       +fInput('pzdLast','Data ostatniego przeglądu / konserwacji',d.lastService,'date')
       +fInput('pzdInt','Okres przeglądów wg producenta [mies.]',d.intervalMonths||'12','text',' inputmode="numeric"')
       +'<span id="pzdHoseWrap">'+fInput('pzdHose','Data ostatniej próby ciśnieniowej węża',d.hoseTest,'date')+'</span>'
+      +'<span id="pzdOvhWrap">'+fInput('pzdOvh','Gaśnica: następne badanie / remont wg producenta (opcjonalnie)',d.nextOverhaul,'date')+'</span>'
       +fInput('pzdBy','Serwis / konserwator',d.servicer)
       +'</div><p class="small" id="pzdHint"></p><label class="wt-pz-f"><span>Uwagi</span><textarea class="wt-input" id="pzdNotes" rows="2">'+esc(d.notes||'')+'</textarea></label>'
       +(id?'<button type="button" class="wt-btn ghost danger" onclick="window.wtPpozDeleteDevice(\''+id+'\')">Usuń urządzenie</button>':''),
       async ()=>{
         if(!DB){ wtToast('Zapis wymaga otwarcia narzędzia jako strony.', true); return false; }
-        const data = {projectId:d.projectId, objectId:fv('pzdObj'), type:fv('pzdType'), qty:fv('pzdQty')||'1', capacity:fv('pzdCap'), location:fv('pzdLoc'), serial:fv('pzdSer'), lastService:fv('pzdLast'), intervalMonths:fv('pzdInt')||'12', hoseTest:fv('pzdHose'), servicer:fv('pzdBy'), notes:fv('pzdNotes'), updatedAt:Date.now()};
+        const data = {projectId:d.projectId, objectId:fv('pzdObj'), type:fv('pzdType'), qty:fv('pzdQty')||'1', capacity:fv('pzdCap'), location:fv('pzdLoc'), serial:fv('pzdSer'), lastService:fv('pzdLast'), intervalMonths:fv('pzdInt')||'12', hoseTest:fv('pzdHose'), nextOverhaul:fv('pzdOvh'), servicer:fv('pzdBy'), notes:fv('pzdNotes'), updatedAt:Date.now()};
         if(id) await DB.doc('ppoz_devices/'+id).update(data);
         else { data.createdAt = Date.now(); await DB.collection('ppoz_devices').add(data); }
         wtToast('Zapisano urządzenie.'); return true;
@@ -30222,7 +30236,12 @@ document.addEventListener('keydown', e=>{
   window.wtPpozDevTypeHint = function(){
     const t = ppozType(fv('pzdType')); const h = document.getElementById('pzdHint'); const hw = document.getElementById('pzdHoseWrap');
     if(hw) hw.style.display = t.hose ? '' : 'none';
-    if(h) h.textContent = (t.prod ? 'Przeglądy wg instrukcji producenta. ' : 'Przegląd w okresie producenta, nie rzadziej niż raz w roku (dłuższy okres producenta jest ograniczany do 12 mies.). ')+(t.hose?'Wąż: próba ciśnieniowa raz na 5 lat. ':'')+'Podstawa: '+t.b+'.';
+    const ow = document.getElementById('pzdOvhWrap'); if(ow) ow.style.display = t.ext ? '' : 'none';
+    const il = document.querySelector('#pzdInt'); if(il && il.previousElementSibling) il.previousElementSibling.textContent = t.clean ? 'Okres czyszczenia [mies.] (krótszy, jeśli wymagają tego warunki użytkowe)' : 'Okres przeglądów wg producenta / DTR / PN [mies.]';
+    if(h) h.textContent = (t.clean ? 'Usuwanie zanieczyszczeń co najmniej co '+t.m+' mies. (dłuższy okres jest ograniczany do '+t.m+' mies.). '
+        : t.prod ? 'Przeglądy wg instrukcji producenta. '
+        : 'Przegląd w okresie producenta, nie rzadziej niż raz w roku (dłuższy okres jest ograniczany do 12 mies.). § 3 ust. 2 odsyła też do Polskich Norm i DTR — dla wielu urządzeń (np. SSP, DSO, oświetlenie awaryjne) przewidują one częstsze przeglądy lub testy: wpisz krótszy okres, jeśli tak wynika z dokumentacji. ')
+      +(t.hose?'Wąż: próba ciśnieniowa raz na 5 lat. ':'')+(t.ext?'Badanie / remont gaśnicy w terminie z instrukcji producenta trafi do terminarza. ':'')+'Podstawa: '+t.b+'.';
   };
   window.wtPpozDeleteDevice = async function(id){
     if(!DB || !await wtConfirm('Usunąć to urządzenie z rejestru?', 'Usuń', 'danger')) return;
@@ -30239,7 +30258,7 @@ document.addEventListener('keydown', e=>{
     const bar = wtPpozClientBar(); const cid = wtPpozSelClient();
     if(!cid){ box.innerHTML = bar; return; }
     let devs = allPpozDevices.filter(d=>d.projectId===cid);
-    const isBad = d=>{ const du = wtPpozDevDue(d); return [du.service].concat(ppozType(d.type).hose?[du.hose]:[]).some(x=>!x || wtDaysUntil(x)<=30); };
+    const isBad = d=>{ const du = wtPpozDevDue(d); return [du.service].concat(ppozType(d.type).hose?[du.hose]:[]).concat(du.overhaul?[du.overhaul]:[]).some(x=>!x || wtDaysUntil(x)<=30); };
     const nBad = devs.filter(isBad).length;
     if(wtPzDevFilter==='bad') devs = devs.filter(isBad);
     devs.sort((a,b)=>{ const da = wtPpozDevDue(a).service||'0000', db = wtPpozDevDue(b).service||'0000'; return da.localeCompare(db); });
@@ -31509,7 +31528,7 @@ document.addEventListener('keydown', e=>{
     wtRpcExport(html, 'Protokol_kontroli_ppoz_'+rpcSlug(p.name)+'_'+(h.date||'')+'.pdf');
   };
   /* ---- zestawienie urządzeń ppoż. ---- */
-  function wtPpozDevStateOf(d){ const t = ppozType(d.type), du = wtPpozDevDue(d); const dates = [du.service].concat(t.hose?[du.hose]:[]);
+  function wtPpozDevStateOf(d){ const t = ppozType(d.type), du = wtPpozDevDue(d); const dates = [du.service].concat(t.hose?[du.hose]:[]).concat(du.overhaul?[du.overhaul]:[]);
     if(dates.some(x=>!x)) return 'nd'; if(dates.some(x=>wtDaysUntil(x)<0)) return 'bad'; if(dates.some(x=>wtDaysUntil(x)<=30)) return 'warn'; return 'ok'; }
   function wtPpozDevRows(devs){ return devs.map(d=>{ const t = ppozType(d.type), du = wtPpozDevDue(d), st = wtPpozDevStateOf(d), q = ppozNum(d.qty)||1;
     return {text:t.l+(q>1?' ×'+q:'')+(d.capacity?' · '+d.capacity+(['gasnica_pian','gasnica_woda','gasnica_f'].includes(d.type)?' dm³':' kg'):'')+(d.location?' — '+d.location:''), note:'Ostatni przegląd: '+(fmtDatePL(d.lastService)||'brak')+' · następny: '+(fmtDatePL(du.service)||'—')+(t.hose?' · próba węża do: '+(fmtDatePL(du.hose)||'—'):'')+(d.serial?' · nr '+d.serial:''), status:{ok:'AKTUALNE',warn:'≤ 30 DNI',bad:'PO TERMINIE',nd:'BRAK DATY'}[st], cls:st}; }); }
