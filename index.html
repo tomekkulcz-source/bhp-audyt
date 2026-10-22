@@ -1406,6 +1406,26 @@ html[data-theme="dark"] .wt-modesw button[aria-pressed="true"]{color:#140806;}
 #sec-checklist.wt-pip-only .cat:not(:has(.item[data-pip])){display:none !important;}
 #sec-checklist .item[data-pip] .pbar{box-shadow:inset -3px 0 0 #1d3f8f;}
 .wt-pip-legend{margin:-6px 0 14px;color:var(--ink-soft);}
+.wt-kl-res{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;display:flex;flex-direction:column;gap:4px;}
+.wt-kl-res.ok{border-color:color-mix(in srgb,var(--low) 45%,var(--line));background:color-mix(in srgb,var(--low) 8%,transparent);}
+.wt-kl-res.warn{border-color:color-mix(in srgb,var(--high) 45%,var(--line));background:color-mix(in srgb,var(--high) 8%,transparent);}
+.wt-kl-res .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);}
+.wt-kl-res b{font-size:16px;}
+.wt-kl-res ul{margin:2px 0 0;padding-left:18px;font-size:12.5px;color:var(--ink-soft);}
+.wt-kl-zone{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 10px;}
+.wt-kl-zhead{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.wt-kl-zhead .wt-input{flex:1;min-width:0;font-weight:600;}
+.wt-kl-cat{flex:0 0 auto;font-weight:700;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink,var(--ink));}
+.wt-kl-cat.miss{background:color-mix(in srgb,var(--crit) 14%,transparent);color:var(--crit);}
+.wt-kl-why{font-size:12.5px;color:var(--ink-soft);margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--surface-2,var(--surface));line-height:1.45;}
+.wt-kl-hint{display:block;color:var(--ink-faint);margin-top:2px;}
+.wt-kl-issues{display:flex;flex-direction:column;gap:6px;}
+.wt-kl-issue{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45;}
+.wt-kl-issue .badge{flex:0 0 auto;}
+.wt-kl-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:14px 0;}
+.wt-kl-summary .lbl{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);}
+.wt-kl-summary b{font-size:14px;}
+.wt-kl-summary small.bad{display:block;color:var(--crit);margin-top:2px;}
 .wt-myperm-list{display:flex;flex-direction:column;gap:2px;}
 .wt-myperm-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:9px 2px;font:inherit;color:var(--ink);text-align:left;cursor:pointer;}
 .wt-myperm-row:last-child{border-bottom:0;}
@@ -29873,7 +29893,14 @@ document.addEventListener('keydown', e=>{
     out.evac = {needed:evNeeded, months:evMonths, why:evWhy, basis:'§ 17 ust. 1–2 i 4 '+R2010};
     if(evNeeded){ const due = o.evacDate ? wtAddMonthsIso(o.evacDate, evMonths) : ''; out.evac.due = due; out.evac.st = wtPpozStatus(due, 'Brak próbnej ewakuacji'); }
     // Gaśnice — § 32 ust. 3 (liczone dla podanej powierzchni strefy / obiektu)
-    if(cat==='ZL IV') out.ext = {units:0, why:'ZL IV — przepis § 32 ust. 3 nie określa wymaganej ilości'};
+    const zs = ((o.ibp && o.ibp.zones) || []).filter(z=>z.cat && ppozNum(z.area)!==null);
+    if(zs.length){
+      /* klasyfikacja pożarowa w IBP — gaśnice osobno dla każdej strefy (§ 32 ust. 3) */
+      let units = 0; const parts = [];
+      zs.forEach(z=>{ if(z.cat==='ZL IV') return; const dense = ['ZL I','ZL II','ZL III','ZL V'].includes(z.cat) || (z.cat==='PM' && (ppozNum(z.q)||0)>500) || o.explosion; const per = dense ? 100 : 300; const u = Math.ceil(ppozNum(z.area)/per); units += u; parts.push((z.name||z.cat)+': '+u+' (1/'+per+' m²)'); });
+      out.ext = {units, per:null, kg:units*2, why:units+' jedn. (po 2 kg / 3 dm³ środka) — liczone dla stref: '+parts.join('; ')};
+    }
+    else if(cat==='ZL IV') out.ext = {units:0, why:'ZL IV — przepis § 32 ust. 3 nie określa wymaganej ilości'};
     else if(area!==null && cat){
       const dense = ['ZL I','ZL II','ZL III','ZL V'].includes(cat) || (cat==='PM' && o.highLoad) || o.explosion;
       const per = dense ? 100 : 300;
@@ -30077,7 +30104,7 @@ document.addEventListener('keydown', e=>{
       +fInput('pzoName','Nazwa obiektu / strefy pożarowej',o.name)
       +fInput('pzoAddr','Adres / lokalizacja',o.address)
       +'<label class="wt-pz-f"><span>Rodzaj</span><select class="wt-input" id="pzoKind"><option value="budynek"'+(o.kind!=='teren'?' selected':'')+'>Budynek (lub jego część — strefa)</option><option value="teren"'+(o.kind==='teren'?' selected':'')+'>Obiekt inny niż budynek / teren / plac składowy</option></select></label>'
-      +'<label class="wt-pz-f"><span>Kategoria</span><select class="wt-input" id="pzoCat"><option value="">— wybierz —</option>'+PPOZ_CATS.map(c=>'<option'+(o.category===c?' selected':'')+'>'+c+'</option>').join('')+'</select></label>'
+      +'<label class="wt-pz-f"><span>Kategoria</span><select class="wt-input" id="pzoCat"><option value="">— wybierz —</option>'+PPOZ_CATS.map(c=>'<option'+(o.category===c?' selected':'')+'>'+c+'</option>').join('')+'</select><small>'+((o.ibp&&(o.ibp.zones||[]).length)?'Ustalana w IBP → „Klasyfikacja pożarowa” (strefa o największej powierzchni).':'Dokładną klasyfikację (grupa wysokości, kategorie stref, klasa odporności) ustalisz w IBP → „Klasyfikacja pożarowa”.')+'</small></label>'
       +fInput('pzoVol','Kubatura brutto [m³]',o.volume,'text',' inputmode="decimal"')
       +fInput('pzoArea','Powierzchnia strefy pożarowej [m²]',o.area,'text',' inputmode="decimal"')
       +fInput('pzoFloors','Liczba kondygnacji',o.floors,'text',' inputmode="numeric"')
@@ -30410,8 +30437,163 @@ document.addEventListener('keydown', e=>{
      Plany obiektu (pkt 8) dołącza się jako obrazy przy eksporcie — nie są zapisywane w bazie. */
   const IBP_PHONES = [['Numer alarmowy','112'],['Państwowa Straż Pożarna','998'],['Pogotowie ratunkowe','999'],['Policja','997'],['Pogotowie gazowe','992'],['Pogotowie energetyczne','991'],['Pogotowie wodociągowe','994']];
   const IBP_INST = [['elektr','Instalacja elektryczna'],['odgrom','Instalacja piorunochronna'],['gaz','Instalacja gazowa'],['co','Instalacja grzewcza / kotłownia'],['went','Wentylacja mechaniczna'],['klima','Klimatyzacja'],['pv','Instalacja fotowoltaiczna'],['ssp','System sygnalizacji pożarowej (SSP)'],['dso','Dźwiękowy system ostrzegawczy (DSO)'],['sug','Stałe urządzenie gaśnicze'],['oddym','Urządzenia oddymiające'],['hydr','Hydranty wewnętrzne'],['osw','Oświetlenie ewakuacyjne'],['pwp','Przeciwpożarowy wyłącznik prądu'],['drzwi','Drzwi / bramy ppoż. ze sterowaniem'],['dzwig','Dźwig dla ekip ratowniczych']];
+  /* ===================== KLASYFIKACJA POŻAROWA BUDYNKU — jedno źródło danych dla IBP i wymagań =====================
+     Podstawa: rozp. MI z 12.04.2002 r. w sprawie warunków technicznych, jakim powinny odpowiadać budynki i ich usytuowanie
+     (t.j. Dz.U. 2022 poz. 1225; obowiązywało do 19.09.2026 r. — art. 66 ustawy z 19.07.2019 r. o dostępności; nowe
+     rozporządzenie dla budynków nie zostało wydane; art. 102a–102c Prawa budowlanego): § 6 (pomiar wysokości),
+     § 8 (grupy wysokości), § 209 (ZL / PM / IN, kategorie ZL I–V), § 212 (klasy odporności pożarowej).
+     Dane: o.ibp.{heightM, floorsAbove, floorsBelow, residential, low9, hgOverride, designYear, resistActual, zones[]},
+     strefa: {name, area, people, kind:'zl'|'pm'|'in', many50, mobility, res, zz, q, under, underSep}. Wynik zapisuje
+     się z powrotem do ibp.heightGroup, ibp.resistClass, zone.cat oraz o.category / o.highLoad (używane przez resztę modułu). */
+  const KL_BASIS = 'rozp. MI z 12.04.2002 r. w sprawie warunków technicznych (t.j. Dz.U. 2022 poz. 1225)';
+  const KL_HG = {N:'N — niski', SW:'SW — średniowysoki', W:'W — wysoki', WW:'WW — wysokościowy'};
+  const KL_ORDER = ['N','SW','W','WW'];
+  const KL_CLASS = ['A','B','C','D','E']; /* od najwyższej do najniższej (§ 212 ust. 1) */
+  const KL_ZL_TABLE = {N:{'ZL I':'B','ZL II':'B','ZL III':'C','ZL IV':'D','ZL V':'C'}, SW:{'ZL I':'B','ZL II':'B','ZL III':'B','ZL IV':'C','ZL V':'B'}, W:{'ZL I':'B','ZL II':'B','ZL III':'B','ZL IV':'B','ZL V':'B'}, WW:{'ZL I':'A','ZL II':'A','ZL III':'A','ZL IV':'B','ZL V':'A'}};
+  /* § 212 ust. 4 — PM i IN: wiersz wg Q, kolumna: jedna kondygnacja nadziemna / N / SW / W / WW; null = budynek niedopuszczalny (§ 228 ust. 1) */
+  const KL_PM_TABLE = [{max:500, c:['E','D','C','B','B']}, {max:1000, c:['D','D','C','B','B']}, {max:2000, c:['C','C','C','B','B']}, {max:4000, c:['B','B','B',null,null]}, {max:Infinity, c:['A','A','A',null,null]}];
+  const klNum = v=>{ const n = parseFloat(String(v==null?'':v).replace(',','.')); return isFinite(n) ? n : null; };
+  const klHigher = (a, b)=>!a ? b : !b ? a : (KL_CLASS.indexOf(a) <= KL_CLASS.indexOf(b) ? a : b);
+  function klHgByHeight(h){ if(h===null) return null; return h<=12 ? 'N' : h<=25 ? 'SW' : h<=55 ? 'W' : 'WW'; }
+  function klHgByStoreys(n){ if(n===null) return null; return n<=4 ? 'N' : n<=9 ? 'SW' : n<=18 ? 'W' : null; }
+  function klZone(z){
+    /* zgodność ze starszym zapisem stref (tylko kategoria w polu tekstowym) */
+    const old = String(z.cat||'').trim().toUpperCase();
+    const kind = z.kind || (old==='PM' ? 'pm' : old==='IN' ? 'in' : old.startsWith('ZL') ? 'zl' : '');
+    const out = Object.assign({}, z, {kind});
+    if(!z.kind && old.startsWith('ZL')){ out.many50 = old==='ZL I'; out.mobility = old==='ZL II'; out.res = old==='ZL IV'; out.zz = old==='ZL V'; out.legacyCat = old; }
+    return out;
+  }
+  function klZoneCat(z){
+    if(z.kind==='pm') return {cat:'PM', why:'Strefa produkcyjna lub magazynowa (§ 209 ust. 1 pkt 2) — także garaże, kotłownie, rozdzielnie, stacje transformatorowe itp. (§ 209 ust. 3)'};
+    if(z.kind==='in') return {cat:'IN', why:'Strefa inwentarska — służąca do hodowli inwentarza (§ 209 ust. 1 pkt 3)'};
+    if(z.kind!=='zl') return {cat:'', why:'Wybierz przeznaczenie strefy'};
+    if(z.mobility) return {cat:'ZL II', why:'Przeznaczona przede wszystkim do użytku ludzi o ograniczonej zdolności poruszania się, np. szpital, żłobek, przedszkole, dom dla osób starszych (§ 209 ust. 2 pkt 2)'};
+    if(z.many50) return {cat:'ZL I', why:'Zawiera pomieszczenia przeznaczone do jednoczesnego przebywania PONAD 50 osób niebędących ich stałymi użytkownikami (§ 209 ust. 2 pkt 1)'};
+    if(z.res) return {cat:'ZL IV', why:'Mieszkalna (§ 209 ust. 2 pkt 4)'};
+    if(z.zz) return {cat:'ZL V', why:'Zamieszkania zbiorowego, niezakwalifikowana do ZL I i ZL II (§ 209 ust. 2 pkt 5)'};
+    return {cat:'ZL III', why:'Użyteczności publicznej, niezakwalifikowana do ZL I i ZL II (§ 209 ust. 2 pkt 3)'};
+  }
+  function klCompute(o, ibpIn){
+    const ibp = ibpIn || ibpOf(o);
+    const h = klNum(ibp.heightM), fa = klNum(ibp.floorsAbove), fb = klNum(ibp.floorsBelow);
+    const zones = (ibp.zones||[]).map(klZone);
+    const residential = ibp.residential!=null ? !!ibp.residential : (zones.length>0 && zones.every(z=>z.kind==='zl' && z.res));
+    const byH = klHgByHeight(h), byS = residential ? klHgByStoreys(fa) : null;
+    let auto = null; const hgWhy = [];
+    if(byH) hgWhy.push('Wysokość '+String(h).replace('.',',')+' m → '+KL_HG[byH]+' (§ 8 pkt '+(KL_ORDER.indexOf(byH)+1)+': '+['do 12 m włącznie','ponad 12 m do 25 m włącznie','ponad 25 m do 55 m włącznie','powyżej 55 m'][KL_ORDER.indexOf(byH)]+')');
+    if(residential && fa!==null) hgWhy.push('Budynek mieszkalny: '+fa+' kondygnacji nadziemnych → '+(byS?KL_HG[byS]:'ponad 18 kondygnacji — decyduje wysokość')+' (§ 8: mieszkalne do 4 / ponad 4 do 9 / ponad 9 do 18 kondygnacji)');
+    if(byH && byS) auto = KL_ORDER.indexOf(byS) < KL_ORDER.indexOf(byH) && byH!=='WW' ? byS : byH;
+    else auto = byH || byS;
+    if(byH && byS && auto!==byH) hgWhy.push('Dla budynku mieszkalnego § 8 dopuszcza kryterium liczby kondygnacji („lub”) — przyjęto '+KL_HG[auto]+'. Zweryfikuj z projektem budowlanym.');
+    const hg = ibp.hgOverride || auto;
+    const issues = [];
+    const add = (lvl, t)=>issues.push({lvl, t});
+    if(h===null) add('err', 'Brak wysokości budynku — zmierz ją zgodnie z § 6 (od poziomu terenu przy najniżej położonym wejściu na pierwszej kondygnacji nadziemnej do górnej powierzchni najwyżej położonego stropu z izolacją, bez maszynowni dźwigów i pomieszczeń technicznych).');
+    if(fa===null) add('err', 'Brak liczby kondygnacji nadziemnych.');
+    if(ibp.hgOverride && auto && ibp.hgOverride!==auto) add('warn', 'Grupa wysokości ustawiona ręcznie ('+ibp.hgOverride+') różni się od wyliczonej z danych ('+auto+') — upewnij się, że wynika to z projektu budowlanego.');
+    if(!zones.length) add('err', 'Brak stref pożarowych — dodaj co najmniej jedną strefę (cały budynek może być jedną strefą).');
+    const col = (fa===1) ? 0 : (hg ? 1+KL_ORDER.indexOf(hg) : null);
+    const zl = []; let bld = null;
+    zones.forEach((z, i)=>{
+      const c = klZoneCat(z); z.cat = c.cat; z.catWhy = c.why;
+      const nm = z.name || ('Strefa '+(i+1));
+      if(z.legacyCat && c.cat!==z.legacyCat) add('warn', nm+': zapisana wcześniej kategoria '+z.legacyCat+' — sprawdź odpowiedzi na pytania o przeznaczenie.');
+      if(!z.kind) add('err', nm+': wybierz przeznaczenie strefy (ZL / PM / IN).');
+      if(klNum(z.area)===null) add('warn', nm+': brak powierzchni strefy.');
+      if(z.kind==='zl' && z.many50 && klNum(z.people)!==null && klNum(z.people)<=50) add('warn', nm+': zaznaczono ponad 50 osób, a podana liczba osób to '+z.people+' — ZL I wymaga PONAD 50 osób niebędących stałymi użytkownikami.');
+      if(z.kind==='zl' && !z.many50 && !z.mobility && klNum(z.people)!==null && klNum(z.people)>50 && !z.res && !z.zz) add('warn', nm+': podano '+z.people+' osób — jeśli to osoby niebędące stałymi użytkownikami w jednym pomieszczeniu, strefa jest ZL I.');
+      let req = null, reqWhy = '';
+      if(c.cat.startsWith('ZL') && hg){
+        req = KL_ZL_TABLE[hg][c.cat]; reqWhy = c.cat+', budynek '+hg+' → „'+req+'” (§ 212 ust. 2)';
+        if(['ZL I','ZL II','ZL III'].includes(c.cat) && fa!==null && fa<=2){
+          const low = fa===1 ? 'D' : (ibp.low9 ? (c.cat==='ZL III' ? 'D' : 'C') : null);
+          if(low && KL_CLASS.indexOf(low) > KL_CLASS.indexOf(req)){ reqWhy += '; dopuszczalne obniżenie do „'+low+'” — '+fa+' kondygnacja nadziemna'+(fa===2?' (strop nad pierwszą kondygnacją ≤ 9 m)':'')+' (§ 212 ust. 3)'; z.reqLow = low; }
+        }
+        if(z.under && !z.underSep) add('warn', nm+': strefa ZL w części podziemnej — klasę ustala się przyjmując sumę kondygnacji / wysokości części podziemnej i nadziemnej, chyba że część podziemna jest oddzielona elementami co najmniej REI 120 i ma bezpośrednie wyjścia na zewnątrz (§ 212 ust. 5).');
+      } else if((c.cat==='PM' || c.cat==='IN') && col!==null){
+        const q = klNum(z.q);
+        if(q===null){ add('err', nm+': podaj gęstość obciążenia ogniowego Q [MJ/m²] — decyduje o klasie odporności pożarowej (§ 212 ust. 4).'); }
+        else { const row = KL_PM_TABLE.find(r=>q<=r.max); req = row.c[col]; const cl = col===0 ? 'jedna kondygnacja nadziemna' : 'budynek wielokondygnacyjny '+hg;
+          if(req===null){ add('err', nm+': Q = '+q+' MJ/m² w budynku '+hg+' — takie budynki nie mogą występować (§ 212 ust. 4 w zw. z § 228 ust. 1).'); reqWhy = 'niedopuszczalne'; }
+          else reqWhy = c.cat+', Q = '+String(q).replace('.',',')+' MJ/m², '+cl+' → „'+req+'” (§ 212 ust. 4)'; }
+      }
+      z.req = req; z.reqWhy = reqWhy;
+      if(req) bld = klHigher(bld, req);
+      if(c.cat.startsWith('ZL')) zl.push(z);
+    });
+    if(zl.length && zones.some(z=>z.cat==='PM')) add('info', 'W budynku z częścią ZL są strefy PM — pomieszczenia produkcyjne, magazynowe lub techniczne niepowiązane funkcjonalnie z częścią ZL powinny stanowić odrębną strefę pożarową z odrębnie ustaloną klasą (§ 212 ust. 8).');
+    if(new Set(zones.map(z=>z.cat).filter(Boolean)).size>1) add('info', 'Strefy różnych kategorii — w budynku wielokondygnacyjnym klasy ustala się odrębnie dla kondygnacji (§ 212 ust. 6); część budynku nie może mieć klasy niższej niż część nad nią, a część podziemna — niższej niż „C” (§ 212 ust. 7).');
+    const sumA = zones.reduce((s,z)=>s+(klNum(z.area)||0),0), objA = klNum(o.area);
+    if(objA!==null && sumA>0 && Math.abs(sumA-objA)>Math.max(5, objA*0.02)) add('warn', 'Suma powierzchni stref ('+sumA+' m²) różni się od powierzchni obiektu w danych obiektu ('+objA+' m²).');
+    const act = ibp.resistActual || '';
+    if(act && bld && KL_CLASS.indexOf(act) > KL_CLASS.indexOf(bld)) add('err', 'Faktyczna klasa odporności pożarowej „'+act+'” jest niższa od wymaganej „'+bld+'”. Sprawdź możliwość obniżenia (§ 212 ust. 3) albo ekspertyzę rzeczoznawcy / zgodę na odstępstwo.');
+    if(!act && bld) add('warn', 'Wpisz faktyczną klasę odporności pożarowej budynku (z projektu, decyzji lub ekspertyzy), aby porównać ją z wymaganą.');
+    /* kategoria „główna” obiektu dla reszty modułu: strefa o największej powierzchni */
+    const main = zones.filter(z=>z.cat).sort((a,b)=>(klNum(b.area)||0)-(klNum(a.area)||0))[0];
+    return {h, fa, fb, residential, byH, byS, auto, hg, hgWhy, zones, bld, act, issues, mainCat: main ? main.cat : '', highLoad: zones.some(z=>z.cat==='PM' && (klNum(z.q)||0)>500)};
+  }
+  /* zapisuje wyniki do pól używanych przez IBP, analizę wymagań, gaśnice i karty obiektu */
+  function klSync(o){
+    const ibp = wtIbpPending || ibpOf(o); const r = klCompute(o, ibp);
+    let ch = false;
+    if((ibp.heightGroup||'')!==(r.hg||'')){ ibp.heightGroup = r.hg||''; ch = true; }
+    if((ibp.resistClass||'')!==(r.bld||'')){ ibp.resistClass = r.bld||''; ch = true; }
+    (ibp.zones||[]).forEach((z,i)=>{ const c = r.zones[i] ? r.zones[i].cat : ''; if((z.cat||'')!==c){ z.cat = c; ch = true; } if(!z.kind && r.zones[i] && r.zones[i].kind){ const rz = r.zones[i]; Object.assign(z, {kind:rz.kind, many50:!!rz.many50, mobility:!!rz.mobility, res:!!rz.res, zz:!!rz.zz}); ch = true; } });
+    if(ch){ wtIbpPending = ibp; o.ibp = ibp; clearTimeout(wtIbpSaveT); wtIbpSaveT = setTimeout(()=>wtIbpFlush(), 700); }
+    if(r.mainCat && o.category!==r.mainCat) window.wtIbpObjField('category', r.mainCat);
+    if(r.zones.length && !!o.highLoad!==r.highLoad) window.wtIbpObjField('highLoad', r.highLoad);
+    return r;
+  }
+  window.wtKlZoneAdd = function(){ const o = wtIbpObj(); if(!o) return; const ibp = wtIbpPending || ibpOf(o); ibp.zones = (ibp.zones||[]).concat([{name:'', area:'', people:'', kind:'', many50:false, mobility:false, res:false, zz:false, q:'', under:false, underSep:false, cat:''}]); wtIbpPending = ibp; o.ibp = ibp; wtIbpFlush(); wtIbpRender(); };
+  function klUI(o, ibp){
+    const r = klSync(o);
+    const chk = (path, label, val, hint)=>'<label class="wt-pz-c"><input type="checkbox"'+(val?' checked':'')+' onchange="window.wtIbpSet(\''+path+'\',this.checked);window.wtIbpRerenderSoon()"><span>'+label+(hint?'<small>'+hint+'</small>':'')+'</span></label>';
+    const inp = (path, label, val, hint, ph)=>'<label class="wt-pz-f"><span>'+label+'</span><input class="wt-input" inputmode="decimal" value="'+esc(val==null?'':val)+'" placeholder="'+esc(ph||'')+'" onchange="window.wtIbpSet(\''+path+'\',this.value);window.wtIbpRerenderSoon()">'+(hint?'<small>'+hint+'</small>':'')+'</label>';
+    const res = (label, val, why, cls)=>'<div class="wt-kl-res '+(cls||'')+'"><span class="lbl">'+esc(label)+'</span><b>'+esc(val||'—')+'</b>'+(why&&why.length?'<ul>'+[].concat(why).map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'')+'</div>';
+    let h = '<div class="wt-ibp-note" style="margin-bottom:12px;">Klasyfikacja decyduje o wszystkich dalszych wymaganiach (IBP, gaśnice, hydranty, SSP, DSO, oddymianie). Wartości progowe: '+KL_BASIS+', obowiązującego do 19.09.2026 r. — nowe rozporządzenie dla budynków nie zostało wydane; istniejące budynki ocenia się według przepisów, na podstawie których je zaprojektowano (w razie wątpliwości — rzeczoznawca ds. zabezpieczeń przeciwpożarowych).</div>';
+    h += '<h4 class="wt-ibp-h">1. Wysokość i kondygnacje (§ 6, § 8)</h4><div class="wt-pz-grid">'
+      + inp('heightM', 'Wysokość budynku [m]', ibp.heightM, 'Mierz wg § 6: od poziomu terenu przy najniżej położonym wejściu na 1. kondygnacji nadziemnej do górnej powierzchni najwyżej położonego stropu (z izolacją), bez maszynowni dźwigów i pomieszczeń technicznych — albo do najwyższego punktu stropodachu / przekrycia nad pomieszczeniami na pobyt ludzi.', 'np. 14,2')
+      + inp('floorsAbove', 'Kondygnacje nadziemne', ibp.floorsAbove) + inp('floorsBelow', 'Kondygnacje podziemne', ibp.floorsBelow)
+      + inp('designYear', 'Rok projektu / pozwolenia na budowę', ibp.designYear, 'Według przepisów z tego okresu ocenia się istniejący budynek.')
+      + '</div><div class="wt-ibp-chks">'+chk('residential', 'Budynek mieszkalny (dla mieszkalnych § 8 dopuszcza kryterium liczby kondygnacji)', r.residential)
+      + (r.fa===2 ? chk('low9', 'Strop nad pierwszą kondygnacją nadziemną na wysokości ≤ 9 m nad terenem', ibp.low9, 'Warunek obniżenia klasy dla budynków 2-kondygnacyjnych ZL I–III (§ 212 ust. 3)') : '')+'</div>'
+      + res('Grupa wysokości', r.hg ? KL_HG[r.hg] : '', r.hgWhy, r.hg ? 'ok' : 'warn')
+      + '<label class="wt-pz-f" style="max-width:420px;"><span>Zmień grupę ręcznie (tylko gdy wynika z projektu)</span><select class="wt-input" onchange="window.wtIbpSet(\'hgOverride\',this.value);window.wtIbpRerenderSoon()"><option value="">Automatycznie z danych'+(r.auto?' ('+r.auto+')':'')+'</option>'+KL_ORDER.map(g=>'<option value="'+g+'"'+(ibp.hgOverride===g?' selected':'')+'>'+KL_HG[g]+'</option>').join('')+'</select></label>';
+    h += '<h4 class="wt-ibp-h">2. Strefy pożarowe i przeznaczenie (§ 209)</h4>'
+      + '<p class="small">Każda strefa pożarowa osobno. Cały budynek może być jedną strefą. Kategoria wynika z odpowiedzi — nie wybierasz jej z listy.</p>'
+      + r.zones.map((z,i)=>{ const p = 'zones.'+i+'.';
+        return '<div class="wt-kl-zone"><div class="wt-kl-zhead"><input class="wt-input" value="'+esc(z.name||'')+'" placeholder="Nazwa strefy (np. część biurowa, hala magazynowa)" onchange="window.wtIbpSet(\''+p+'name\',this.value)"><span class="wt-kl-cat '+(z.cat?'':'miss')+'">'+esc(z.cat||'?')+'</span><button type="button" class="wt-btn ghost danger" title="Usuń strefę" onclick="window.wtIbpListDel(\'zones\','+i+')">×</button></div>'
+          + '<div class="wt-pz-grid">'+inp(p+'area', 'Powierzchnia strefy [m²]', z.area)+inp(p+'people', 'Maks. liczba osób jednocześnie', z.people)
+          + '<label class="wt-pz-f"><span>Przeznaczenie</span><select class="wt-input" onchange="window.wtIbpSet(\''+p+'kind\',this.value);window.wtIbpRerenderSoon()"><option value="">— wybierz —</option><option value="zl"'+(z.kind==='zl'?' selected':'')+'>ZL — mieszkalna, zamieszkania zbiorowego, użyteczności publicznej</option><option value="pm"'+(z.kind==='pm'?' selected':'')+'>PM — produkcyjna, magazynowa (także garaż, kotłownia, rozdzielnia…)</option><option value="in"'+(z.kind==='in'?' selected':'')+'>IN — inwentarska</option></select></label>'
+          + (z.kind==='pm'||z.kind==='in' ? inp(p+'q', 'Gęstość obciążenia ogniowego Q [MJ/m²]', z.q, '<a class="jump" onclick="window.wtIbpQCalc('+i+')">Kalkulator Q →</a>') : '')+'</div>'
+          + (z.kind==='zl' ? '<div class="wt-ibp-chks">'
+            + chk(p+'mobility', 'Przeznaczona przede wszystkim dla osób o ograniczonej zdolności poruszania się (szpital, żłobek, przedszkole, dom dla osób starszych)', z.mobility)
+            + chk(p+'many50', 'Są pomieszczenia do jednoczesnego przebywania PONAD 50 osób niebędących ich stałymi użytkownikami (np. sala konferencyjna, sklep, restauracja)', z.many50, 'Liczy się przeznaczenie pomieszczenia, nie liczba pracowników strefy.')
+            + chk(p+'res', 'Mieszkalna', z.res) + chk(p+'zz', 'Zamieszkania zbiorowego (hotel, internat, akademik, hostel…)', z.zz)
+            + chk(p+'under', 'Strefa w części podziemnej', z.under) + (z.under ? chk(p+'underSep', 'Część podziemna oddzielona elementami ≥ REI 120 i ma bezpośrednie wyjścia na zewnątrz (§ 212 ust. 5)', z.underSep) : '')
+            + '<small class="wt-kl-hint">Bez zaznaczeń — ZL III (użyteczności publicznej, np. biuro, przychodnia, szkoła).</small></div>' : '')
+          + (z.cat ? '<div class="wt-kl-why"><b>'+esc(z.cat)+'</b> — '+esc(z.catWhy)+(z.reqWhy?'<br><b>Wymagana klasa odporności:</b> '+esc(z.reqWhy):'')+'</div>' : '')
+          + '</div>'; }).join('')
+      + '<button type="button" class="wt-btn" onclick="window.wtKlZoneAdd()">+ Strefa pożarowa</button>';
+    h += '<h4 class="wt-ibp-h">3. Klasa odporności pożarowej (§ 212)</h4>'
+      + res('Wymagana klasa odporności pożarowej (najwyższa z wymaganych dla stref)', r.bld ? '„'+r.bld+'”' : '', r.zones.filter(z=>z.reqWhy).map(z=>(z.name||'strefa')+': '+z.reqWhy), r.bld ? 'ok' : 'warn')
+      + '<label class="wt-pz-f" style="max-width:420px;"><span>Faktyczna klasa odporności pożarowej (z projektu, decyzji lub ekspertyzy)</span><select class="wt-input" onchange="window.wtIbpSet(\'resistActual\',this.value);window.wtIbpRerenderSoon()"><option value="">— nieznana —</option>'+KL_CLASS.map(c=>'<option'+(ibp.resistActual===c?' selected':'')+'>'+c+'</option>').join('')+'</select></label>';
+    const lvlCls = {err:'crit', warn:'high', info:'blue'}, lvlLbl = {err:'błąd', warn:'uwaga', info:'info'};
+    h += '<h4 class="wt-ibp-h">4. Kontrola spójności</h4>'
+      + (r.issues.length ? '<div class="wt-kl-issues">'+r.issues.map(x=>'<div class="wt-kl-issue"><span class="badge '+lvlCls[x.lvl]+'"><span class="dot"></span>'+lvlLbl[x.lvl]+'</span><span>'+esc(x.t)+'</span></div>').join('')+'</div>' : '<div class="wt-kl-res ok"><b>Klasyfikacja kompletna i spójna.</b></div>');
+    return h;
+  }
+  window.wtKlIssues = function(o){ return klCompute(o).issues; };
+  /* przed eksportem IBP: błędy klasyfikacji wymagają świadomego potwierdzenia */
+  async function klGateExport(o){
+    const errs = klCompute(o).issues.filter(x=>x.lvl==='err');
+    if(!errs.length) return true;
+    return await wtConfirm('Klasyfikacja pożarowa obiektu ma '+errs.length+' '+wtPl(errs.length,'błąd','błędy','błędów')+' (np. '+errs[0].t.slice(0,140)+'…). Od klasyfikacji zależą wszystkie wymagania w IBP. Wygenerować mimo to?', 'Generuj mimo to');
+  }
   const IBP_STEPS = [
     {k:'dane', t:'Obiekt i właściciel', law:'§ 6 ust. 1 pkt 1 i 8 lit. a–b, e'},
+    {k:'klas', t:'Klasyfikacja pożarowa', law:'§ 6, 8, 209, 212 rozp. o warunkach technicznych'},
     {k:'warunki', t:'Warunki ochrony ppoż.', law:'§ 6 ust. 1 pkt 1'},
     {k:'wyposazenie', t:'Wyposażenie i przeglądy', law:'§ 6 ust. 1 pkt 2'},
     {k:'pozar', t:'Postępowanie na wypadek pożaru', law:'§ 6 ust. 1 pkt 3'},
@@ -30468,7 +30650,7 @@ document.addEventListener('keydown', e=>{
     if(k==='warunki'){
       const parts = [];
       parts.push('Obiekt „'+name+'”'+(addr?' przy '+addr:'')+' jest użytkowany jako: '+(ibp.purpose||'[przeznaczenie i rodzaj prowadzonej działalności]')+'. '
-        +(o.category?'Obiekt (strefa) zakwalifikowany jest do kategorii: '+o.category+(o.category.startsWith('ZL')?' (kategoria zagrożenia ludzi)':o.category==='PM'?' (produkcyjno-magazynowy)':' (inwentarski)')+'. ':'')
+        +(()=>{ const cats = Array.from(new Set((ibp.zones||[]).map(z=>z.cat).filter(Boolean))); const lbl = c=>c+(c.startsWith('ZL')?' (kategoria zagrożenia ludzi)':c==='PM'?' (produkcyjno-magazynowy)':' (inwentarski)'); if(cats.length>1) return 'Obiekt podzielono na strefy pożarowe zakwalifikowane do kategorii: '+cats.map(lbl).join(', ')+' (§ 209 rozporządzenia w sprawie warunków technicznych). '; const c1 = cats[0] || o.category; return c1 ? 'Obiekt (strefa) zakwalifikowany jest do kategorii: '+lbl(c1)+'. ' : ''; })()
         +(ibp.heightGroup?'Grupa wysokości budynku: '+ibp.heightGroup+(nz(ibp.heightM)?' (wysokość '+ibp.heightM+' m)':'')+'. ':'')
         +(nz(ibp.floorsAbove)||nz(ibp.floorsBelow)?'Liczba kondygnacji: nadziemnych '+(ibp.floorsAbove||'0')+', podziemnych '+(ibp.floorsBelow||'0')+'. ':'')
         +(nz(o.volume)?'Kubatura brutto: '+o.volume+' m³. ':'')+(nz(ibp.areaBuilt)?'Powierzchnia zabudowy: '+ibp.areaBuilt+' m². ':'')+(nz(o.area)?'Powierzchnia strefy pożarowej / użytkowa: '+o.area+' m². ':'')
@@ -30494,7 +30676,7 @@ document.addEventListener('keydown', e=>{
         parts.push('Obiekt wyposażony jest w następujące urządzenia przeciwpożarowe i gaśnice: '+Object.entries(by).map(([t,n])=>t+' — '+n+' szt').join('; ')+'. Szczegółowy wykaz z lokalizacją i terminami przeglądów zawiera załącznik „Wykaz urządzeń przeciwpożarowych i gaśnic”.');
       } else parts.push('[Uzupełnij rejestr urządzeń i gaśnic obiektu w aplikacji — wykaz zostanie wstawiony automatycznie.]');
       if((ibp.zones||[]).length){ const zz = ibp.zones.map(z=>{ const c_ = String(z.cat||'').trim().toUpperCase(), a = ppozNum(z.area)||0, qq = ppozNum(z.q)||0; if(c_==='ZL IV' || !a) return null; const dense = ['ZL I','ZL II','ZL III','ZL V'].includes(c_) || (c_==='PM' && qq>500) || z.ex; const per = dense?100:300; return (z.name||c_)+' ('+c_+', '+a+' m²'+(z.sug?', chroniona stałym urządzeniem gaśniczym — nie wlicza się':'')+'): '+(z.sug?'—':'min. '+Math.ceil(a/per)+' jedn. (1 na '+per+' m²)'); }).filter(Boolean); if(zz.length) parts.push('Wymagana liczba jednostek środka gaśniczego w strefach pożarowych (§ 32 ust. 3): '+zz.join('; ')+'.'); }
-      else if(r.ext && r.ext.units) parts.push('Wymagane wyposażenie w gaśnice: 1 jednostka masy środka gaśniczego 2 kg (lub 3 dm³) na każde '+r.ext.per+' m² powierzchni strefy pożarowej (§ 32 ust. 3) — dla powierzchni '+o.area+' m² co najmniej '+r.ext.units+' jednostek. Rodzaj gaśnic dostosowuje się do grup pożarów mogących wystąpić w obiekcie (§ 32 ust. 2). Gaśnice rozmieszcza się w miejscach łatwo dostępnych i widocznych, przy wejściach, na klatkach schodowych, korytarzach i przy wyjściach na zewnątrz, w miejscach nienarażonych na uszkodzenia mechaniczne i działanie źródeł ciepła, w obiektach wielokondygnacyjnych — w tych samych miejscach na każdej kondygnacji (jeżeli pozwalają na to warunki), tak aby odległość z każdego miejsca, w którym może przebywać człowiek, do najbliższej gaśnicy nie przekraczała 30 m, z dostępem o szerokości co najmniej 1 m (§ 33).');
+      else if(r.ext && r.ext.units) parts.push('Wymagane wyposażenie w gaśnice: 1 jednostka masy środka gaśniczego 2 kg (lub 3 dm³) '+(r.ext.per ? 'na każde '+r.ext.per+' m² powierzchni strefy pożarowej (§ 32 ust. 3) — dla powierzchni '+o.area+' m² co najmniej '+r.ext.units+' jednostek.' : 'na każde 100 m² (strefy ZL I, ZL II, ZL III, ZL V, PM o Q > 500 MJ/m², strefy zagrożenia wybuchem) albo 300 m² (pozostałe PM i IN) powierzchni strefy pożarowej (§ 32 ust. 3) — łącznie co najmniej '+r.ext.units+' jednostek ('+r.ext.why.replace(/^.*?stref: /,'')+').')+' Rodzaj gaśnic dostosowuje się do grup pożarów mogących wystąpić w obiekcie (§ 32 ust. 2). Gaśnice rozmieszcza się w miejscach łatwo dostępnych i widocznych, przy wejściach, na klatkach schodowych, korytarzach i przy wyjściach na zewnątrz, w miejscach nienarażonych na uszkodzenia mechaniczne i działanie źródeł ciepła, w obiektach wielokondygnacyjnych — w tych samych miejscach na każdej kondygnacji (jeżeli pozwalają na to warunki), tak aby odległość z każdego miejsca, w którym może przebywać człowiek, do najbliższej gaśnicy nie przekraczała 30 m, z dostępem o szerokości co najmniej 1 m (§ 33).');
       parts.push(ibpReqText(o, ibp));
       parts.push('Urządzenia przeciwpożarowe i gaśnice poddaje się przeglądom technicznym i czynnościom konserwacyjnym zgodnie z zasadami i w sposób określony w Polskich Normach, dokumentacji techniczno-ruchowej i instrukcjach producentów, w okresach ustalonych przez producenta, nie rzadziej jednak niż raz w roku (§ 3 ust. 2–3). Węże hydrantów wewnętrznych poddaje się raz na 5 lat próbie ciśnieniowej na maksymalne ciśnienie robocze (§ 3 ust. 4). Autonomiczne czujki dymu i tlenku węgla montuje się, konserwuje i eksploatuje wg instrukcji producenta (§ 3 ust. 3a). Przeglądy wykonują osoby lub firmy posiadające odpowiednie kwalifikacje, a ich wyniki dokumentuje się protokołami oraz wpisem do książki obiektu budowlanego (tablica V).');
       parts.push('Urządzenia przeciwpożarowe i gaśnice utrzymuje się w stanie pełnej sprawności technicznej i funkcjonalnej (§ 4 ust. 2 pkt 1). Miejsca ich usytuowania oraz elementy sterujące oznakowuje się znakami zgodnymi z Polskimi Normami (§ 4 ust. 2 pkt 4).'+(ibp.fireWallMark?' Miejsce połączenia ściany oddzielenia przeciwpożarowego ze ścianą zewnętrzną i dachem oznakowuje się w sposób określony w załączniku nr 1 do rozporządzenia (§ 4 ust. 2 pkt 6).':'')+((ibp.q||{}).shelter?' Punkt schronienia oznakowuje się znakiem obrony cywilnej i tabliczką „PUNKT SCHRONIENIA” wg załącznika nr 1a (§ 4 ust. 2 pkt 7).':''));
@@ -30554,11 +30736,9 @@ document.addEventListener('keydown', e=>{
   /* ---- kompletność (§ 6 ust. 1 pkt 1–9) ---- */
   function ibpCompleteness(c){
     const {o, ibp, devs} = c; const miss = [];
-    if(!o.category) miss.push(['dane','Kategoria obiektu (ZL / PM / IN)']);
+    klCompute(o, ibp).issues.filter(x=>x.lvl==='err').forEach(x=>miss.push(['klas', x.t]));
     if(!nz(ibp.purpose)) miss.push(['dane','Przeznaczenie i rodzaj działalności']);
     if(!nz(ibp.ownerName) && !(wtProjectById(o.projectId)||{}).name) miss.push(['dane','Właściciel / zarządca']);
-    if(!nz(o.area) && !(ibp.zones||[]).length) miss.push(['dane','Powierzchnia / strefy pożarowe']);
-    if(!ibp.heightGroup) miss.push(['dane','Grupa wysokości']);
     if(!nz(ibp.water)) miss.push(['warunki','Zaopatrzenie w wodę (hydranty zewnętrzne)']);
     if(!nz(ibp.fireRoad)) miss.push(['warunki','Drogi pożarowe / dojazd']);
     if(o.explosion && !nz(ibp.explosionDesc)) miss.push(['warunki','Opis stref zagrożenia wybuchem']);
@@ -30846,7 +31026,8 @@ document.addEventListener('keydown', e=>{
     const objs = allPpozObjects.filter(o=>o.projectId===cid);
     if(!objs.length){ box.innerHTML = bar+'<div class="wt-empty">Najpierw dodaj obiekt w sekcji „Klienci i obiekty” — generator IBP korzysta z jego danych.</div>'; return; }
     if(!objs.some(o=>o.id===wtIbpObjId)) wtIbpObjId = objs[0].id;
-    const o = wtIbpObj(); const c = ibpCtx(o); const ibp = c.ibp;
+    const o0 = wtIbpObj(); try{ klSync(o0); }catch(e){ console.error('klasyfikacja', e); }
+    const o = o0; const c = ibpCtx(o); const ibp = c.ibp;
     const miss = ibpCompleteness(c);
     const req = c.r.ibp;
     const reqNote = req.needed===false ? '<div class="wt-ibp-note">Dla tego obiektu IBP nie jest wymagana ('+esc(req.why)+', § 6 ust. 8) — możesz ją jednak opracować jako dobrą praktykę.</div>' : req.needed===null ? '<div class="wt-ibp-note">Uzupełnij kategorię i kubaturę obiektu, aby ustalić, czy IBP jest wymagana (§ 6 ust. 8).</div>' : '';
@@ -30862,22 +31043,19 @@ document.addEventListener('keydown', e=>{
         +ibf('ownerNip','NIP', ibp.ownerNip)
         +ibf('ownerRep','Osoba reprezentująca / odpowiedzialna', ibp.ownerRep)
         +ibf('purpose','Przeznaczenie obiektu i rodzaj działalności', ibp.purpose, {full:true, ph:'np. budynek biurowo-magazynowy — handel hurtowy artykułami AGD'})
-        +'</div><h4 class="wt-ibp-h">Parametry budynku</h4><div class="wt-pz-grid">'
-        +'<label class="wt-pz-f"><span>Kategoria obiektu / strefy</span><select class="wt-input" onchange="window.wtIbpObjField(\'category\',this.value);window.wtIbpRerenderSoon()"><option value="">—</option>'+PPOZ_CATS.map(x=>'<option'+(o.category===x?' selected':'')+'>'+x+'</option>').join('')+'</select><small>ZL I — ≥ 50 osób niebędących stałymi użytkownikami; ZL II — dla osób o ograniczonej zdolności poruszania się; ZL III — użyteczności publicznej (pozostałe); ZL IV — mieszkalne; ZL V — zamieszkania zbiorowego; PM — produkcyjne i magazynowe; IN — inwentarskie.</small></label>'
-        +ibf('heightGroup','Grupa wysokości', ibp.heightGroup, {sel:[['N','N — niski (do 12 m)'],['SW','SW — średniowysoki (12–25 m)'],['W','W — wysoki (25–55 m)'],['WW','WW — wysokościowy (pow. 55 m)']]})
-        +ibf('heightM','Wysokość budynku [m]', ibp.heightM)
-        +ibf('floorsAbove','Kondygnacje nadziemne', ibp.floorsAbove)
-        +ibf('floorsBelow','Kondygnacje podziemne', ibp.floorsBelow)
+        +'</div>'+(()=>{ const r = klCompute(o, ibp); const errs = r.issues.filter(x=>x.lvl==='err').length;
+          return '<div class="wt-kl-summary"><div><span class="lbl">Klasyfikacja pożarowa</span><b>'+esc([r.hg?KL_HG[r.hg]:'grupa wysokości —', r.zones.map(z=>z.cat).filter(Boolean).join(' + ')||'kategoria —', r.bld?'klasa odporności wymagana „'+r.bld+'”':''].filter(Boolean).join(' · '))+'</b>'+(errs?'<small class="bad">'+errs+' '+wtPl(errs,'błąd','błędy','błędów')+' do poprawienia</small>':'')+'</div><button type="button" class="wt-btn primary" onclick="window.wtIbpStepGo(\'klas\')">'+(r.zones.length?'Sprawdź / zmień klasyfikację':'Ustal klasyfikację')+' →</button></div>'; })()
+        +'<h4 class="wt-ibp-h">Parametry budynku</h4><div class="wt-pz-grid">'
         +ibf('areaBuilt','Powierzchnia zabudowy [m²]', ibp.areaBuilt)
         +'<label class="wt-pz-f"><span>Kubatura brutto [m³]</span><input class="wt-input" value="'+esc(o.volume||'')+'" onchange="window.wtIbpObjField(\'volume\',this.value)"></label>'
         +'<label class="wt-pz-f"><span>Powierzchnia strefy / użytkowa [m²]</span><input class="wt-input" value="'+esc(o.area||'')+'" onchange="window.wtIbpObjField(\'area\',this.value)"></label>'
-        +ibf('resistClass','Klasa odporności pożarowej budynku', ibp.resistClass, {sel:['A','B','C','D','E']})
         +ibf('year','Rok oddania do użytkowania', ibp.year)
         +ibf('construction','Konstrukcja, materiały, pokrycie dachu', ibp.construction, {full:true, area:true, rows:2, ph:'np. żelbetowa szkieletowa, ściany z bloczków silikatowych, dach — płyta warstwowa z rdzeniem z wełny mineralnej (NRO)'})
         +ibf('neighbors','Odległości od obiektów sąsiednich', ibp.neighbors, {full:true, area:true, rows:2})
-        +'</div><h4 class="wt-ibp-h">Strefy pożarowe</h4>'
-        +ibpList('zones', [['name','Strefa / część obiektu',2],['cat','Kategoria'],['area','Pow. [m²]'],['q','Q [MJ/m²]'],['people','Liczba osób']], ibp.zones, {name:'',cat:'',area:'',q:'',people:''}, '+ Strefa pożarowa')+((ibp.zones||[]).length?'<div class="wt-ibp-qbtns"><span class="small">Kalkulator gęstości obciążenia ogniowego:</span>'+ibp.zones.map((z,i)=>'<button type="button" class="wt-btn ghost" onclick="window.wtIbpQCalc('+i+')">'+esc(z.name||('Strefa '+(i+1)))+'</button>').join('')+'</div>':'')
+        +'</div>'
         +reqNote;
+    } else if(st==='klas'){
+      body = klUI(o, ibp);
     } else if(st==='warunki'){
       body = '<div class="wt-pz-grid">'
         +ibf('technology','Proces technologiczny / magazynowanie (składowanie)', ibp.technology, {full:true, area:true, rows:3})
@@ -30991,7 +31169,7 @@ document.addEventListener('keydown', e=>{
       +'<w:tr><w:trPr><w:tblHeader/></w:trPr>'+head.map((h,i)=>cell(h,i,true)).join('')+'</w:tr>'+rows.map(r=>'<w:tr><w:trPr><w:cantSplit/></w:trPr>'+r.map((t,i)=>cell(t,i,false)).join('')+'</w:tr>').join('')+'</w:tbl>';
   }
   window.wtIbpDocx = async function(){
-    const o = wtIbpObj(); if(!o) return; await wtIbpFlush();
+    const o = wtIbpObj(); if(!o) return; if(!await klGateExport(o)) return; await wtIbpFlush();
     try{ await ensureXlsxLib(); }catch(e){ wtToast('Nie udało się wczytać biblioteki do tworzenia pliku Word (wymagany internet).', true); return; }
     const M = ibpDocModel(o); const zip = new JSZip();
     const media = []; let rid = 10;
@@ -31055,7 +31233,7 @@ document.addEventListener('keydown', e=>{
   };
   /* ---- eksport PDF ---- */
   window.wtIbpPdf = async function(){
-    const o = wtIbpObj(); if(!o) return; await wtIbpFlush();
+    const o = wtIbpObj(); if(!o) return; if(!await klGateExport(o)) return; await wtIbpFlush();
     const M = ibpDocModel(o);
     const pb = '<div class="wt-pdf-break"></div>';
     const td = 'style="border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;font-size:10.5px"';
@@ -31367,7 +31545,7 @@ document.addEventListener('keydown', e=>{
   };
   /* ---- IBP (PDF) ---- */
   window.wtIbpPdf = async function(){
-    const o = wtIbpObj(); if(!o) return; await wtIbpFlush();
+    const o = wtIbpObj(); if(!o) return; if(!await klGateExport(o)) return; await wtIbpFlush();
     const M = ibpDocModel(o); const r = wtPpozObjReq(o); const miss = ibpCompleteness(ibpCtx(o));
     const sections = M.ch.map((c,i)=>wtRpcSection(c.law?c.law+' rozporządzenia':'Instrukcja', (i+1)+'. '+c.t, wtRpcText(c.p.filter(x=>String(x).trim()).join('\n\n').replace(/\n(\d+\))/g,'\n$1'))));
     M.ann.forEach((a,i)=>{ let body = a.intro ? wtRpcText(a.intro) : '';
