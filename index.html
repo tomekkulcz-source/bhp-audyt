@@ -23408,90 +23408,157 @@ document.addEventListener('keydown', e=>{
     if(a.on.podsumowanie && String(a.summary||'').trim()) secs.push({k:'podsumowanie', t:'Podsumowanie i wnioski', note:a.summary});
     return {a, p, sp, year:a.year, secs};
   }
+  /* Wspólny wygląd z raportami z audytu / obchodu: model sekcji → wiersze listy kontrolnej (tekst, uwaga, status)
+     i karty działań — używane przez PDF (wtRpcReport) i Word (ten sam układ w OOXML). */
+  function anStatusOf(v){
+    const t = String(v||'').trim(), l = t.toLowerCase();
+    if(!t) return {status:'—', cls:'blank'};
+    if(/^(brak|zaległ|niewykon|niezrealiz|przekr|nie$)/.test(l)) return {status:t.length>14?t.split(/[ ,(]/)[0]:t, cls:'bad'};
+    if(/^(jest|wykonan|zrealiz|aktualn|w normie|tak$|zgodn)/.test(l)) return {status:t.length>14?t.split(/[ ,(]/)[0]:t, cls:'ok'};
+    if(/^(planowan|w toku|częściow|do wykonania|do uzupełn)/.test(l)) return {status:t.length>14?t.split(/[ ,(]/)[0]:t, cls:'warn'};
+    return t.length<=16 ? {status:t, cls:'nd'} : null;
+  }
+  function anKvRow(label, value){
+    const v = String(value||'').trim();
+    const neg = /zaległ|po terminie|bez aktualn|przekroczen|brakując|ciężkie|niezrealiz|stwierdzone niezgodności|bez potwierdzenia/i.test(label);
+    const num = parseFloat(v.replace(',','.'));
+    let cls = 'nd';
+    if(neg && !isNaN(num)) cls = num>0 ? 'bad' : 'ok';
+    if(v.length>16) return {text:label, note:v, status:'—', cls:'blank'};
+    return {text:label, status:v, cls};
+  }
+  function anTableRows(t){
+    const last = t.head.length-1, statusCol = /stan|realizacja/i.test(t.head[last]) ? last : (t.head.length===2 ? 1 : -1);
+    return t.rows.map(r=>{
+      const cells = t.head.map((h,i)=>String(r[i]||'').trim());
+      let text = cells[0], rest = cells.slice(1);
+      if(t.head.length>=3 && statusCol!==1 && rest[0] && cells[0].length<40){ text = cells[0]+' — '+rest[0]; rest = rest.slice(1); }
+      let st = null;
+      if(statusCol>=0){ st = anStatusOf(cells[statusCol]); rest = rest.filter(x=>x!==cells[statusCol]); if(!st){ rest.push(cells[statusCol]); st = {status:'—', cls:'blank'}; } }
+      else {
+        const m = cells.join(' ').match(/krotność\s*([0-9]+[,.]?[0-9]*)/i);
+        if(m){ const k = parseFloat(m[1].replace(',','.')); st = k>1 ? {status:'> NDS', cls:'bad'} : {status:'W NORMIE', cls:'ok'}; }
+        else st = {status:'—', cls:'blank'};
+      }
+      const labels = t.head.map(h=>h);
+      const note = rest.map((x,i)=>x).filter(Boolean).join(' · ');
+      return {text: text||'—', note, status: st.status, cls: st.cls};
+    });
+  }
   window.wtAnalysisPdf = async function(){
     if(!await window.wtAnalysisSave(true, true)) return;
-    const M = anModel(), year = M.year;
-    const pills = '<div class="rpc-pills"><span class="rpc-pill solid">Analiza stanu BHP</span><span class="rpc-pill outline">Rok '+year+'</span><span class="rpc-pill outline">M.2</span></div>';
-    const meta = [{lbl:'Okres analizy', val:'01.01–31.12.'+year}, {lbl:'Opracował', val:M.sp.name||'specjalista ds. BHP'}, {lbl:'Data', val:fmtDatePL(wtTodayIso())}];
-    const metaGrid = '<div class="rpc-metagrid">'+meta.map(m=>'<span class="lbl">'+esc(m.lbl)+'</span>').join('')+meta.map(m=>'<span class="val">'+esc(m.val)+'</span>').join('')+'</div>';
-    const header = '<div class="rpc-header"><div class="rpc-headleft">'+pills+'<h1 class="rpc-title" style="font-size:40pt;">'+esc(M.p.name)+'</h1>'+metaGrid+'</div></div>';
-    const intro = '<div class="rp-section rpc-note"><div class="rp-section-text"><p><strong>Podstawa prawna:</strong> § 2 ust. 1 pkt 3 rozporządzenia Rady Ministrów z 2.09.1997 r. w sprawie służby bezpieczeństwa i higieny pracy — sporządzanie i przedstawianie pracodawcy, co najmniej raz w roku, okresowych analiz stanu bhp zawierających propozycje przedsięwzięć technicznych i organizacyjnych mających na celu zapobieganie zagrożeniom życia i zdrowia pracowników oraz poprawę warunków pracy.</p></div></div>';
-    const th = 'style="border:1px solid #d6d3cc;padding:5px 7px;text-align:left;font-size:9pt;background:#f1efe9;"', td = 'style="border:1px solid #d6d3cc;padding:5px 7px;text-align:left;vertical-align:top;font-size:9pt;"';
-    const tbl = t=>'<div class="rp-section" style="margin-top:8px;">'+(t.title?'<div style="font-weight:700;font-size:10pt;margin:6px 0 4px;">'+esc(t.title)+'</div>':'')+'<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><colgroup>'+t.w.map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr>'+t.head.map(h=>'<th '+th+'>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+t.rows.map(r=>'<tr>'+t.head.map((h,i)=>'<td '+td+'>'+esc(r[i]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
-    const row = (label, value)=>'<div class="rpc-crow"><span class="rpc-crow-lp">•</span><div><p class="rpc-crow-q">'+esc(label)+'</p></div><span class="rpc-crow-status nd" style="min-width:48px;text-align:center;">'+esc(String(value))+'</span></div>';
-    const planCard = (n, r)=>'<article class="rpc-nc-card"><div class="rpc-nc-top"><span class="rpc-nc-num">'+String(n).padStart(2,'0')+'</span>'
-      +'<div class="rpc-nc-textwrap"><p class="rpc-nc-question">'+esc(r.action||'—')+'</p>'+(r.problem?'<p class="small" style="margin:2px 0 0;color:#6b6760 !important;">Problem: '+esc(r.problem)+'</p>':'')+'</div><span class="rpc-nc-statuspill" style="background:'+(r.prio==='Wysoki'?'#b3261e':r.prio==='Niski'?'#5f6b62':'#a86a12')+' !important;">'+esc((r.prio||'').toUpperCase())+'</span></div>'
-      +'<div class="rpc-nc-actions">'+(r.goal?'<div class="rpc-nc-actioncell"><span class="lbl">Cel / miernik</span><span class="val">'+esc(r.goal)+'</span></div>':'')
-      +'<div class="rpc-nc-actioncell"><span class="lbl">Odpowiedzialny</span><span class="val rpc-nc-owner">'+(r.owner?'<span class="rpc-nc-avatar">'+esc(wtRpInitials(r.owner))+'</span>':'')+esc(r.owner||'')+'</span></div>'
-      +'<div class="rpc-nc-actioncell"><span class="lbl">Termin</span><span class="val mono">'+esc(r.due?fmtDatePL(r.due):'')+'</span></div>'
-      +(r.cost?'<div class="rpc-nc-actioncell"><span class="lbl">Koszt orient.</span><span class="val">'+esc(r.cost)+'</span></div>':'')+'</div>'
-      +'<div class="rpc-nc-writein">'+wtRpWriteInField('Data realizacji', '')+wtRpWriteInField('Potwierdzenie (podpis)', '')+'</div></article>';
-    let body = '';
-    const tblInner = t=>(t.title?'<div style="font-weight:700;font-size:10pt;margin:6px 0 4px;">'+esc(t.title)+'</div>':'')+'<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><colgroup>'+t.w.map(w=>'<col style="width:'+w+'%">').join('')+'</colgroup><thead><tr>'+t.head.map(h=>'<th '+th+'>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+t.rows.map(r=>'<tr>'+t.head.map((h,i)=>'<td '+td+'>'+esc(r[i]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+    const M = anModel(), year = M.year, d = wtAnalysisData(M.a.cid, year);
+    const recPct = d.recsY.length ? Math.round(d.recsDoneY/d.recsY.length*100) : null;
+    const lacks = d.trOver + d.medOver;
+    const sections = [];
+    /* Podział stron (canvasToPdfBlob) obsługuje w jednej .rp-section JEDNĄ listę wierszy (.rpc-checklist / .rpc-nc-list)
+       z nagłówkiem — każda kolejna lista w tej samej sekcji wypadała z PDF. Dlatego każda lista i każdy tekst to osobna
+       .rp-section; pierwsza niesie nagłówek sekcji, kolejne tabele — własny nadtytuł (powtarzany na nowej stronie). */
+    const sub = (eyebrow, inner)=>'<div class="rp-section"><div class="rpc-sechead-left" style="padding-top:2px;"><span class="rpc-eyebrow2 gray">'+esc(eyebrow)+'</span></div>'+inner+'</div>';
     M.secs.forEach((s, i)=>{
-      const n = i+1;
-      const head = '<div class="rpc-sechead"><div class="rpc-sechead-left"><span class="rpc-eyebrow2'+(s.k==='plan'?' red':'')+'">'+n+'. '+esc(s.k==='plan'?'Propozycje przedsięwzięć na rok '+(year+1):'Analiza stanu BHP '+year)+'</span><h2 class="rpc-h2" style="padding-bottom:5px;">'+esc(s.t)+'</h2></div>'+(s.plan&&s.plan.length?'<span class="rpc-duepill">'+s.plan.length+' do realizacji</span>':'')+'</div>';
-      /* bloki sekcji — nagłówek jedzie zawsze razem z pierwszym blokiem (bez osieroconych tytułów na dole strony) */
-      const blocks = [];
-      if(s.kv && s.kv.length) blocks.push('<div class="rpc-checklist">'+s.kv.map(r=>row(r[0], r[1])).join('')+'</div>');
-      (s.tables||[]).forEach(t=>blocks.push('<div style="margin-top:8px;">'+tblInner(t)+'</div>'));
-      if(s.table) blocks.push('<div style="margin-top:8px;">'+tblInner(s.table)+'</div>');
-      if(s.plan) s.plan.forEach((r,j)=>blocks.push('<div class="rpc-nc-list">'+planCard(j+1, r)+'</div>'));
-      if(s.note) blocks.push('<div class="rpc-note"><div class="rp-section-text">'+wtRpFormatSectionText(s.note)+'</div></div>');
-      if(!blocks.length) blocks.push('');
-      blocks.forEach((b, j)=>{ body += '<div class="rp-section"'+(j?' style="margin-top:8px;"':'')+'>'+(j===0?head:'')+b+'</div>'; });
+      const n = String(i+1).padStart(2,'0');
+      const eyebrow = s.k==='plan' ? n+' · Propozycje przedsięwzięć na rok '+(year+1) : s.k==='podsumowanie' ? n+' · Wnioski' : n+' · Analiza stanu BHP '+year;
+      const parts = [];
+      if(s.kv && s.kv.length) parts.push({list:wtRpcRows(s.kv.map(r=>anKvRow(r[0], r[1])))});
+      (s.tables||[]).forEach(t=>parts.push({title:t.title, list:wtRpcRows(anTableRows(t))}));
+      if(s.table) parts.push({list:wtRpcRows(anTableRows(s.table))});
+      if(s.plan) parts.push({list: s.plan.length ? wtRpcCards(s.plan.map(r=>({question:r.problem||r.action||'—', comment:[r.goal?'Cel / miernik: '+r.goal:'', r.cost?'Koszt orientacyjny: '+r.cost:''].filter(Boolean).join(' · '),
+          action:r.action||'', owner:r.owner||'', due:r.due?fmtDatePL(r.due):'', pill:(r.prio||'Średni').toUpperCase(), pillCls:r.prio==='Wysoki'?'':'warn', w1:'Sposób realizacji', w2:'Data realizacji'})))
+        : '<div class="rpc-nc-empty"><span class="dot"></span>Brak działań w planie</div>'});
+      if(s.note) parts.push({text:wtRpcText(s.note)});
+      if(!parts.length) parts.push({text:''});
+      parts.forEach((p, j)=>{
+        const inner = p.list || p.text;
+        if(j===0) sections.push('<div class="rp-section"><div class="rpc-sechead-left" style="padding-top:6px;"><span class="rpc-eyebrow2 '+(s.k==='plan'?'red':'gray')+'">'+esc(eyebrow)+'</span><h2 class="rpc-h2">'+esc(s.t)+'</h2>'+(p.title?'<span class="rpc-eyebrow2 gray" style="margin-top:10px;">'+esc(p.title)+'</span>':'')+'</div>'+inner+'</div>');
+        else if(p.title) sections.push(sub(p.title, inner));
+        else sections.push('<div class="rp-section">'+inner+'</div>');
+      });
     });
-    const sign = '<div class="rp-section"><div style="display:flex;justify-content:space-between;gap:40px;margin-top:40px;font-size:9pt;color:#444;text-align:center;">'
-      +'<div style="flex:1;border-top:1px dotted #555;padding-top:6px;">opracował: '+esc(M.sp.name||'specjalista ds. BHP')+'<br>(data, podpis)</div>'
-      +'<div style="flex:1;border-top:1px dotted #555;padding-top:6px;">zapoznałem się i przyjmuję do realizacji: pracodawca<br>(data, podpis)</div></div></div>';
-    const html = '<div class="rp-client-report">'+header+intro+body+sign
-      +'<div class="rpc-footer2" style="padding-bottom:8px;"><p>Analiza stanu bezpieczeństwa i higieny pracy za '+year+' r. (stan na '+esc(fmtDatePL(wtTodayIso()))+').</p><span class="brand">'+esc(M.p.name)+'</span></div></div>';
-    try{ await wtHtmlToPdf(html, 'Analiza_stanu_BHP_'+year+'_'+M.p.name+'.pdf', 'portrait', 800); }
-    catch(e){ console.error(e); wtToast('Nie udało się wygenerować PDF.', true); }
+    sections.push('<div class="rp-section"><div style="display:flex;justify-content:space-between;gap:40px;margin-top:34px;font-size:9pt;color:#5d5a55;text-align:center;">'
+      +'<div style="flex:1;border-top:1px dotted #8f8b84;padding-top:6px;">opracował: '+esc(M.sp.name||'specjalista ds. BHP')+'<br>(data, podpis)</div>'
+      +'<div style="flex:1;border-top:1px dotted #8f8b84;padding-top:6px;">zapoznałem się i przyjmuję do realizacji: pracodawca<br>(data, podpis)</div></div></div>');
+    const html = wtRpcReport({
+      pills:['Analiza stanu BHP', 'Rok '+year, 'M.2'], title:M.p.name||'',
+      meta:[{lbl:'Okres analizy', val:'01.01–31.12.'+year}, {lbl:'Opracował', val:M.sp.name||'specjalista ds. BHP'}],
+      ring: recPct==null ? null : {pct:recPct, label:'Zalecenia', sub:d.recsDoneY+' z '+d.recsY.length+' zrealizowanych w '+year+' r.'},
+      stats:[{label:'Pracownicy', num:d.hc!=null?d.hc:'—', cls:'total'}, {label:'Wypadki przy pracy', num:d.accWork.length, cls:d.accWork.length?'bad':'ok'},
+        {label:'Zalecenia po terminie', num:d.openOver.length, cls:d.openOver.length?'bad':'ok'}, {label:'Zaległe szkolenia / badania', num:d.trOver+' / '+d.medOver, cls:lacks?'bad':'ok'}],
+      sections,
+      footer:'Okresowa analiza stanu bezpieczeństwa i higieny pracy za '+year+' r. — § 2 ust. 1 pkt 3 rozporządzenia Rady Ministrów z 2.09.1997 r. w sprawie służby bhp (analiza zawiera propozycje przedsięwzięć technicznych i organizacyjnych). Stan na '+fmtDatePL(wtTodayIso())+'.',
+      brand:M.p.name||''});
+    await wtRpcExport(html, 'Analiza_stanu_BHP_'+year+'_'+(M.p.name||'')+'.pdf');
   };
-  /* Word (.docx) — ten sam model co PDF, pakiet OOXML budowany ręcznie (JSZip) */
+  /* Word (.docx) — ten sam układ co PDF: ciemny nagłówek, kafelki, sekcje z nadtytułem, wiersze ze statusem, karty działań */
   window.wtAnalysisDocx = async function(){
     if(!await window.wtAnalysisSave(true, true)) return;
     try{ await ensureXlsxLib(); }catch(e){ wtToast('Nie udało się wczytać biblioteki do tworzenia pliku Word (wymagany internet).', true); return; }
-    const M = anModel(), year = M.year;
+    const M = anModel(), year = M.year, d = wtAnalysisData(M.a.cid, year);
+    const C = {ink:'15171A', paper:'F4F2EC', soft:'5D5A55', faint:'8F8B84', line:'E4E1DA', sand:'F1EFE9', okBg:'E3F6EC', ok:'17603F', badBg:'FDE8E5', bad:'9E2A20', warnBg:'FDF1DF', warn:'8A4B00', red:'D9463B'};
+    const ST = {ok:[C.okBg,C.ok], bad:[C.badBg,C.bad], warn:[C.warnBg,C.warn], nd:[C.sand,C.soft], blank:[C.sand,C.faint]};
     const xe = s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const wr = (t, o)=>{ o = o||{}; return '<w:r><w:rPr>'+(o.b?'<w:b/>':'')+(o.i?'<w:i/>':'')+(o.sz?'<w:sz w:val="'+o.sz+'"/><w:szCs w:val="'+o.sz+'"/>':'')+(o.color?'<w:color w:val="'+o.color+'"/>':'')+'</w:rPr><w:t xml:space="preserve">'+xe(t)+'</w:t></w:r>'; };
-    const wp = (t, o)=>{ o = o||{}; return '<w:p><w:pPr>'+(o.style?'<w:pStyle w:val="'+o.style+'"/>':'')+(o.keep?'<w:keepNext/>':'')+(o.jc?'<w:jc w:val="'+o.jc+'"/>':'')+'<w:spacing w:before="'+(o.spb||0)+'" w:after="'+(o.sp!=null?o.sp:120)+'"/></w:pPr>'+wr(t, o.r||{})+'</w:p>'; };
-    const wtable = (head, rows, widths)=>{
-      const total = 9638, ws = widths.map(w=>Math.round(total*w/100));
-      const cell = (t, i, hdr)=>'<w:tc><w:tcPr><w:tcW w:w="'+ws[i]+'" w:type="dxa"/>'+(hdr?'<w:shd w:val="clear" w:color="auto" w:fill="EDEBE6"/>':'')+'</w:tcPr><w:p><w:pPr><w:spacing w:before="20" w:after="20"/></w:pPr>'+wr(t,{b:hdr, sz:18})+'</w:p></w:tc>';
-      return '<w:tbl><w:tblPr><w:tblW w:w="'+total+'" w:type="dxa"/><w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(b=>'<w:'+b+' w:val="single" w:sz="4" w:space="0" w:color="9A968E"/>').join('')+'</w:tblBorders><w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr>'
-        +'<w:tblGrid>'+ws.map(w=>'<w:gridCol w:w="'+w+'"/>').join('')+'</w:tblGrid>'
-        +(head?'<w:tr><w:trPr><w:tblHeader/></w:trPr>'+head.map((h,i)=>cell(h,i,true)).join('')+'</w:tr>':'')+rows.map(r=>'<w:tr><w:trPr><w:cantSplit/></w:trPr>'+r.map((t,i)=>cell(t,i,false)).join('')+'</w:tr>').join('')+'</w:tbl>'+wp('', {sp:60});
-    };
-    const paras = t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean).map(x=>wp(x, {style:'BodyText'})).join('');
-    let b = '';
-    b += wp(M.p.name||'', {jc:'center', spb:600, sp:120, r:{sz:26}});
-    b += wp('ANALIZA STANU BEZPIECZEŃSTWA I HIGIENY PRACY', {style:'Title', jc:'center', spb:300, sp:120});
-    b += wp('za rok '+year, {jc:'center', sp:360, r:{b:true, sz:28}});
-    b += wp('Podstawa prawna: § 2 ust. 1 pkt 3 rozporządzenia Rady Ministrów z dnia 2 września 1997 r. w sprawie służby bezpieczeństwa i higieny pracy — okresowa analiza stanu bhp zawierająca propozycje przedsięwzięć technicznych i organizacyjnych mających na celu zapobieganie zagrożeniom życia i zdrowia pracowników oraz poprawę warunków pracy.', {style:'BodyText', r:{i:true, sz:19, color:'555555'}, sp:240});
-    b += wp('Opracował: '+(M.sp.name||'………………………')+'     Data: '+fmtDatePL(wtTodayIso()), {sp:240});
+    const run = (t, o)=>{ o = o||{}; return '<w:r><w:rPr>'+(o.font?'<w:rFonts w:ascii="'+o.font+'" w:hAnsi="'+o.font+'" w:cs="'+o.font+'"/>':'')+(o.b?'<w:b/>':'')+(o.caps?'<w:caps/>':'')+(o.sp?'<w:spacing w:val="'+o.sp+'"/>':'')+'<w:color w:val="'+(o.color||C.ink)+'"/><w:sz w:val="'+(o.sz||20)+'"/><w:szCs w:val="'+(o.sz||20)+'"/></w:rPr><w:t xml:space="preserve">'+xe(t)+'</w:t></w:r>'; };
+    const para = (runs, o)=>{ o = o||{}; return '<w:p><w:pPr>'+(o.style?'<w:pStyle w:val="'+o.style+'"/>':'')+(o.keep?'<w:keepNext/>':'')+(o.jc?'<w:jc w:val="'+o.jc+'"/>':'')+'<w:spacing w:before="'+(o.before||0)+'" w:after="'+(o.after!=null?o.after:80)+'"/></w:pPr>'+runs+'</w:p>'; };
+    const TOT = 9638;
+    const tcell = (content, w, o)=>{ o = o||{}; return '<w:tc><w:tcPr><w:tcW w:w="'+w+'" w:type="dxa"/>'+(o.fill?'<w:shd w:val="clear" w:color="auto" w:fill="'+o.fill+'"/>':'')+(o.span?'<w:gridSpan w:val="'+o.span+'"/>':'')+'<w:vAlign w:val="'+(o.va||'center')+'"/>'+(o.mar?'<w:tcMar><w:top w:w="'+o.mar+'" w:type="dxa"/><w:bottom w:w="'+o.mar+'" w:type="dxa"/><w:left w:w="'+(o.marx||140)+'" w:type="dxa"/><w:right w:w="'+(o.marx||140)+'" w:type="dxa"/></w:tcMar>':'')+'</w:tcPr>'+content+'</w:tc>'; };
+    const table = (widths, rowsXml, o)=>{ o = o||{}; const b = o.borders || 'none';
+      return '<w:tbl><w:tblPr><w:tblW w:w="'+TOT+'" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(x=>'<w:'+x+' w:val="'+(b==='none'?'nil':'single')+'" w:sz="4" w:space="0" w:color="'+C.line+'"/>').join('')+'</w:tblBorders><w:tblCellMar><w:top w:w="60" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:left w:w="120" w:type="dxa"/><w:right w:w="120" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>'+widths.map(w=>'<w:gridCol w:w="'+w+'"/>').join('')+'</w:tblGrid>'+rowsXml+'</w:tbl>'+para('', {after:o.after!=null?o.after:160}); };
+    const tr = (cells, o)=>'<w:tr><w:trPr><w:cantSplit/>'+(o&&o.header?'<w:tblHeader/>':'')+'</w:trPr>'+cells+'</w:tr>';
+    const MONO = 'Consolas', DISP = 'Calibri';
+    /* nagłówek: ciemny blok jak .rpc-header */
+    const ringTxt = d.recsY.length ? Math.round(d.recsDoneY/d.recsY.length*100)+'%' : '—';
+    const head = table([TOT*0.74|0, TOT-(TOT*0.74|0)], tr(
+      tcell(para(run('ANALIZA STANU BHP   ·   ROK '+year+'   ·   M.2', {font:MONO, sz:14, color:'D8D5CC', sp:20}), {after:200})
+        + para(run(M.p.name||'', {font:DISP, b:true, sz:56, color:C.paper}), {after:200})
+        + para(run('Okres analizy  ', {sz:14, color:'A3A09A'})+run('01.01–31.12.'+year, {font:MONO, sz:17, color:C.paper})+run('     Opracował  ', {sz:14, color:'A3A09A'})+run(M.sp.name||'specjalista ds. BHP', {font:MONO, sz:17, color:C.paper})+run('     Data  ', {sz:14, color:'A3A09A'})+run(fmtDatePL(wtTodayIso()), {font:MONO, sz:17, color:C.paper}), {after:0}),
+        TOT*0.74|0, {fill:C.ink, mar:360, marx:420, va:'top'})
+      + tcell(para(run(ringTxt, {font:DISP, b:true, sz:52, color:C.paper}), {jc:'center', after:40}) + para(run('ZALECENIA', {sz:13, color:'A3A09A', sp:20}), {jc:'center', after:40})
+        + para(run(d.recsY.length ? d.recsDoneY+' z '+d.recsY.length+' zrealizowanych' : 'brak zaleceń w roku', {sz:15, color:'D8D5CC'}), {jc:'center', after:0}), TOT-(TOT*0.74|0), {fill:C.ink, mar:360}) ), {after:200});
+    /* kafelki */
+    const tiles = [['Pracownicy', d.hc!=null?d.hc:'—', 'total'], ['Wypadki przy pracy', d.accWork.length, d.accWork.length?'bad':'ok'], ['Zalecenia po terminie', d.openOver.length, d.openOver.length?'bad':'ok'], ['Zaległe szkolenia / badania', d.trOver+' / '+d.medOver, (d.trOver+d.medOver)?'bad':'ok']];
+    const tw = TOT/4|0;
+    const tileRow = tr(tiles.map(t=>{ const c = t[2]==='total' ? [C.sand, C.ink] : ST[t[2]]; return tcell(para(run(t[0], {sz:15, color:t[2]==='total'?C.soft:c[1]}), {after:60})+para(run(String(t[1]), {font:DISP, b:true, sz:40, color:c[1]}), {after:0}), tw, {fill:c[0], mar:200, marx:200, va:'top'}); }).join(''));
+    let b = head + table([tw,tw,tw,tw], tileRow, {after:240});
+    /* sekcje */
+    const rowsTable = rows=>table([620, TOT-620-1700, 1700], rows.map((r,i)=>{ const c = ST[r.cls]||ST.nd;
+      return tr(tcell(para(run(String(i+1).padStart(2,'0'), {font:MONO, sz:15, color:C.faint}), {after:0}), 620, {va:'top'})
+        + tcell(para(run(r.text, {sz:19}), {after:r.note?20:0})+(r.note?para(run(r.note, {sz:16, color:C.soft}), {after:0}):''), TOT-620-1700, {va:'top'})
+        + tcell(para(run(r.status||'—', {font:MONO, b:true, sz:15, color:c[1]}), {jc:'center', after:0}), 1700, {fill:c[0]})); }).join(''), {borders:'single'});
+    const eyebrow = (t, red)=>para(run(t, {font:MONO, sz:14, color:red?C.red:'6B6760', caps:true, sp:16}), {keep:true, before:120, after:20});
+    const h2 = t=>para(run(t, {font:DISP, b:true, sz:36}), {style:'Heading1', keep:true, after:120});
     M.secs.forEach((s, i)=>{
-      b += wp((i+1)+'. '+s.t, {style:'Heading1', keep:true});
-      if(s.kv && s.kv.length) b += wtable(null, s.kv.map(r=>[r[0], r[1]]), [70,30]);
-      (s.tables||[]).forEach(t=>{ b += wp(t.title, {style:'Heading2', keep:true}) + wtable(t.head, t.rows.map(r=>t.head.map((h,ci)=>r[ci]||'')), t.w); });
-      if(s.table) b += wtable(s.table.head, s.table.rows, s.table.w);
-      if(s.plan && s.plan.length) b += wtable(['Lp.','Problem / działanie','Cel / miernik','Priorytet','Odpowiedzialny','Termin','Koszt'], s.plan.map((r,j)=>[String(j+1), (r.problem?r.problem+' → ':'')+(r.action||''), r.goal||'', r.prio||'', r.owner||'', r.due?fmtDatePL(r.due):'', r.cost||'']), [5,37,18,10,13,9,8]);
-      if(s.note) b += paras(s.note);
+      const n = String(i+1).padStart(2,'0');
+      b += eyebrow(s.k==='plan' ? n+' · Propozycje przedsięwzięć na rok '+(year+1) : s.k==='podsumowanie' ? n+' · Wnioski' : n+' · Analiza stanu BHP '+year, s.k==='plan') + h2(s.t);
+      if(s.kv && s.kv.length) b += rowsTable(s.kv.map(r=>anKvRow(r[0], r[1])));
+      (s.tables||[]).forEach(t=>{ b += eyebrow(t.title) + rowsTable(anTableRows(t)); });
+      if(s.table) b += rowsTable(anTableRows(s.table));
+      if(s.plan) s.plan.forEach((r, j)=>{
+        const pill = (r.prio||'Średni').toUpperCase(), pc = r.prio==='Wysoki' ? [C.badBg, C.bad] : [C.warnBg, C.warn];
+        const sub = [r.goal?'Cel / miernik: '+r.goal:'', r.cost?'Koszt orientacyjny: '+r.cost:''].filter(Boolean).join(' · ');
+        const w3 = TOT/3|0;
+        b += table([620, TOT-620-1700, 1700], tr(tcell(para(run(String(j+1).padStart(2,'0'), {font:DISP, b:true, sz:30}), {after:0}), 620, {va:'top', mar:120})
+            + tcell(para(run(r.problem||r.action||'—', {b:true, sz:20}), {after:sub?40:0})+(sub ? para(run(sub, {sz:16, color:C.soft}), {after:0}) : ''), TOT-620-1700, {va:'top', mar:120})
+            + tcell(para(run(pill, {font:MONO, b:true, sz:15, color:pc[1]}), {jc:'center', after:0}), 1700, {fill:pc[0]})), {borders:'single', after:0});
+        b += table([w3, w3, TOT-2*w3], tr(tcell(para(run('ZALECANE DZIAŁANIE', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(r.action||'—', {sz:18}), {after:0}), w3, {fill:C.sand, va:'top', mar:100})
+            + tcell(para(run('ODPOWIEDZIALNY', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(r.owner||'', {sz:18}), {after:0}), w3, {fill:C.sand, va:'top', mar:100})
+            + tcell(para(run('TERMIN', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(r.due?fmtDatePL(r.due):'', {font:MONO, sz:18}), {after:0}), TOT-2*w3, {fill:C.sand, va:'top', mar:100})), {borders:'single', after:0});
+        b += table([TOT-2500, 2500], tr(tcell(para(run('Sposób realizacji: ………………………………………………', {sz:16, color:C.faint}), {after:0}), TOT-2500, {mar:100})+tcell(para(run('Data realizacji: …………', {sz:16, color:C.faint}), {after:0}), 2500, {mar:100})), {borders:'single', after:200});
+      });
+      if(s.note) String(s.note).split('\n').map(x=>x.trim()).filter(Boolean).forEach(x=>{ b += para(run(x, {sz:19}), {style:'BodyText', after:60}); });
     });
-    b += wp('', {sp:600});
-    b += wtable(null, [['opracował: '+(M.sp.name||'specjalista ds. BHP')+'\n(data, podpis)', 'zapoznałem się i przyjmuję do realizacji — pracodawca\n(data, podpis)']].map(r=>r.map(x=>x.replace('\n',' — '))), [50,50]);
+    b += para('', {after:500});
+    b += table([TOT/2|0, TOT-(TOT/2|0)], tr(tcell(para(run('opracował: '+(M.sp.name||'specjalista ds. BHP'), {sz:16, color:C.soft}), {jc:'center', after:0})+para(run('(data, podpis)', {sz:15, color:C.faint}), {jc:'center', after:0}), TOT/2|0)
+      + tcell(para(run('zapoznałem się i przyjmuję do realizacji: pracodawca', {sz:16, color:C.soft}), {jc:'center', after:0})+para(run('(data, podpis)', {sz:15, color:C.faint}), {jc:'center', after:0}), TOT-(TOT/2|0))));
+    b += para(run('Okresowa analiza stanu bezpieczeństwa i higieny pracy za '+year+' r. — § 2 ust. 1 pkt 3 rozporządzenia Rady Ministrów z 2.09.1997 r. w sprawie służby bhp. Stan na '+fmtDatePL(wtTodayIso())+'.', {sz:15, color:C.faint}), {before:200, after:0});
+    /* tabele dwu-wierszowe w kartach działań mają 3 kolumny w 2. wierszu — siatka 3-kolumnowa obsłuży gridSpan */
     const sect = '<w:sectPr><w:footerReference w:type="default" r:id="rId3"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
     const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
     const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+NS+'><w:body>'+b+sect+'</w:body></w:document>';
-    const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="21"/><w:szCs w:val="21"/><w:lang w:val="pl-PL"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'
+    const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:color w:val="'+C.ink+'"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="pl-PL"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'
       +'<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>'
-      +'<w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:rPr><w:b/><w:sz w:val="36"/><w:szCs w:val="36"/><w:color w:val="1F2A44"/></w:rPr></w:style>'
-      +'<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="BodyText"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="320" w:after="120"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="1F2A44"/></w:rPr></w:style>'
-      +'<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="160" w:after="80"/><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:b/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr></w:style>'
+      +'<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="BodyText"/><w:qFormat/><w:pPr><w:keepNext/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/></w:rPr></w:style>'
       +'<w:style w:type="paragraph" w:styleId="BodyText"><w:name w:val="Body Text"/><w:basedOn w:val="Normal"/><w:pPr><w:jc w:val="both"/></w:pPr></w:style>'
-      +'<w:style w:type="paragraph" w:styleId="Footer"><w:name w:val="footer"/><w:basedOn w:val="Normal"/><w:pPr><w:jc w:val="center"/></w:pPr><w:rPr><w:sz w:val="16"/><w:color w:val="666666"/></w:rPr></w:style></w:styles>';
-    const footer = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:pStyle w:val="Footer"/></w:pPr>'+wr('Analiza stanu BHP '+year+' — '+(M.p.name||'')+' · strona ')+'<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p></w:ftr>';
+      +'<w:style w:type="paragraph" w:styleId="Footer"><w:name w:val="footer"/><w:basedOn w:val="Normal"/><w:pPr><w:jc w:val="right"/></w:pPr><w:rPr><w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/><w:sz w:val="14"/><w:color w:val="'+C.faint+'"/></w:rPr></w:style></w:styles>';
+    const footer = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:pStyle w:val="Footer"/></w:pPr><w:r><w:t xml:space="preserve">'+xe((M.p.name||'')+' · Analiza stanu BHP '+year+' · ')+'</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p></w:ftr>';
     const zip = new JSZip();
     zip.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>');
     zip.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>');
