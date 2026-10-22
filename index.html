@@ -23229,7 +23229,11 @@ document.addEventListener('keydown', e=>{
       /* sekcje zapisane jako JSON — Firestore nie przyjmuje tablic zagnieżdżonych w tablicach (kv, wiersze tabel) */
       if(saved.secJson){ try{ anEdit.sec = JSON.parse(saved.secJson); }catch(e){ anEdit.sec = {}; } delete anEdit.secJson; }
       anEdit.sec = anEdit.sec || {};
-      AN_SECTIONS.forEach(s=>{ if(!s.special && !anEdit.sec[s.k]) { anEdit.sec[s.k] = anPrefill(cid, year, s.k); if(anEdit.on[s.k]==null) anEdit.on[s.k] = !!s.core; } });
+      /* Sekcje bez ręcznych zmian (edited) zawsze z AKTUALNYCH danych klienta — zapis nie może „zamrozić” danych z dnia
+         pierwszego zapisu (wcześniej po pierwszym Zapisz/PDF nowe dane klienta nigdy już nie trafiały do raportu). */
+      AN_SECTIONS.forEach(s=>{ if(s.special) return; const cur = anEdit.sec[s.k];
+        if(!cur || !cur.edited) anEdit.sec[s.k] = anPrefill(cid, year, s.k);
+        if(anEdit.on[s.k]==null) anEdit.on[s.k] = !!s.core; });
       anEdit.plan = anEdit.plan||[]; anEdit.review = anEdit.review||[]; anEdit.custom = anEdit.custom||[];
     } else {
       anEdit = anNew(cid, year);
@@ -23284,7 +23288,9 @@ document.addEventListener('keydown', e=>{
         +'<div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2Add(\'custom\')">+ Dodaj własną sekcję</button></div>';
     }
     const s = a.sec[k];
-    let h = '<div class="wt-an2-btns" style="margin:0 0 10px;"><button class="wt-btn ghost" onclick="window.wtAn2Refill(\''+k+'\')">Odśwież z danych klienta</button></div>';
+    let h = s.edited
+      ? '<div class="wt-an2-offnote" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between;"><span>Sekcja zawiera Twoje zmiany — dane klienta nie odświeżają się w niej same.</span><button class="wt-btn ghost" onclick="window.wtAn2Refill(\''+k+'\')">Odśwież z danych klienta</button></div>'
+      : '<div class="small" style="margin:0 0 10px;color:var(--ink-faint);">Dane pobierane na bieżąco z danych klienta (kartoteka, rejestry, wypadki, kontrole). Po ręcznej zmianie sekcja zachowa Twoją wersję.</div>';
     h += '<div class="wt-emp-sec">Dane</div><div class="wt-an2-kv">'+s.kv.map((r,i)=>'<div class="wt-an2-kvrow">'+anI(r[0],'data-kv="'+i+'" data-c="0" placeholder="Pozycja"')+anI(r[1],'data-kv="'+i+'" data-c="1" placeholder="Wartość"')+anX('window.wtAn2Del(\'kv\','+i+')')+'</div>').join('')+'</div>'
       +'<div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2Add(\'kv\')">+ Dodaj pozycję</button></div>';
     (def.tables||[]).forEach((td, ti)=>{
@@ -23325,6 +23331,8 @@ document.addEventListener('keydown', e=>{
         +'<button class="wt-btn primary" onclick="window.wtAnalysisPdf()">PDF</button>'
       +'</div></div>';
     ov.classList.add('show');
+    const main = ov.querySelector('.wt-an2-main');
+    if(main) main.addEventListener('input', e=>{ const t = e.target; if(t && (t.dataset.kv!=null || t.dataset.tb!=null || t.id==='wtAn2Note')){ const s = anEdit.sec[anEdit.cur]; if(s) s.edited = true; } });
   }
   function anPager(){
     const ks = AN_SECTIONS.map(s=>s.k), i = ks.indexOf(anEdit.cur);
@@ -23350,11 +23358,11 @@ document.addEventListener('keydown', e=>{
     if(what==='plan') a.plan.push({problem:'', action:'', goal:'', prio:'Średni', owner:'', due:'', cost:''});
     if(what==='review') a.review.push({action:'', due:'', status:'', note:''});
     if(what==='custom') a.custom.push({title:'', text:'', on:true});
-    if(what==='kv') a.sec[a.cur].kv.push(['','']);
+    if(what==='kv'){ a.sec[a.cur].kv.push(['','']); a.sec[a.cur].edited = true; }
     renderAnalysisEditor(); };
-  window.wtAn2Del = function(what, i){ wtAnalysisRead(); const a = anEdit; ({plan:a.plan, review:a.review, custom:a.custom, kv:(a.sec[a.cur]||{}).kv||[]})[what].splice(i,1); renderAnalysisEditor(); };
-  window.wtAn2AddRow = function(ti){ wtAnalysisRead(); const s = anEdit.sec[anEdit.cur]; const def = anSecDef(anEdit.cur).tables[ti]; (s.tables[ti] = s.tables[ti]||[]).push(def.head.map(()=>'')); renderAnalysisEditor(); };
-  window.wtAn2DelRow = function(ti, ri){ wtAnalysisRead(); anEdit.sec[anEdit.cur].tables[ti].splice(ri,1); renderAnalysisEditor(); };
+  window.wtAn2Del = function(what, i){ wtAnalysisRead(); const a = anEdit; ({plan:a.plan, review:a.review, custom:a.custom, kv:(a.sec[a.cur]||{}).kv||[]})[what].splice(i,1); if(what==='kv' && a.sec[a.cur]) a.sec[a.cur].edited = true; renderAnalysisEditor(); };
+  window.wtAn2AddRow = function(ti){ wtAnalysisRead(); const s = anEdit.sec[anEdit.cur]; const def = anSecDef(anEdit.cur).tables[ti]; (s.tables[ti] = s.tables[ti]||[]).push(def.head.map(()=>'')); s.edited = true; renderAnalysisEditor(); };
+  window.wtAn2DelRow = function(ti, ri){ wtAnalysisRead(); anEdit.sec[anEdit.cur].tables[ti].splice(ri,1); anEdit.sec[anEdit.cur].edited = true; renderAnalysisEditor(); };
   window.wtAn2Refill = async function(k){ wtAnalysisRead();
     if(!await wtConfirm('Zastąpić dane, tabele i wnioski tej sekcji wartościami wyliczonymi z aktualnych danych klienta?', 'Zastąp', 'primary')) return;
     anEdit.sec[k] = anPrefill(anEdit.cid, anEdit.year, k); renderAnalysisEditor(); };
