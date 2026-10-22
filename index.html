@@ -1440,6 +1440,11 @@ html[data-theme="dark"] .wt-modesw button[aria-pressed="true"]{color:#140806;}
 .wt-an2-grid .wide{grid-column:1/-1;}
 .wt-an2-grid label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:3px;}
 .wt-an2 .wt-report-actionbar{position:sticky;bottom:0;z-index:2;background:var(--surface);margin:12px -4px 0;padding:10px 4px 2px;border-top:1px solid var(--line);}
+.wt-an2-ov{display:flex;flex-direction:column;gap:6px;margin:6px 0 12px;}
+.wt-an2-ovrow{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px;}
+.wt-an2-ovrow .ttl{font-weight:600;font-size:13px;}
+.wt-an2-ovrow .det{font-size:12.5px;color:var(--ink-soft);}
+@media (max-width:600px){.wt-an2-ovrow{grid-template-columns:1fr auto;}.wt-an2-ovrow .det{grid-column:1/-1;grid-row:2;}}
 .wt-an2-pager{display:flex;justify-content:space-between;gap:8px;margin-top:16px;padding-top:10px;border-top:1px solid var(--line);}
 .wt-an2-pager .wt-btn{min-width:0;max-width:49%;white-space:normal;text-align:left;line-height:1.3;}
 .wt-an2-pager .wt-btn:last-child{text-align:right;margin-left:auto;}
@@ -2226,6 +2231,7 @@ table.wt-rj-table .wt-rj-computed-empty{color:var(--ink-faint);}
   color:#15171a !important;}
 #rj-print-host .rp-client-report .rpc-nc-remark{margin:0;padding-left:10px;border-left:2px solid #d9463b;
   font-size:9pt;color:#4b4843 !important;}
+#rj-print-host .rp-client-report .rpc-nc-statuspill.ok{background:#e3f6ec !important;color:#17603f !important;}
 #rj-print-host .rp-client-report .rpc-nc-statuspill{padding:3px 9px;border-radius:999px;background:#d9463b;
   color:#fff !important;font-family:var(--font-mono);font-size:7.5pt;font-weight:600;letter-spacing:.04em;
   align-self:start;white-space:nowrap;}
@@ -23059,6 +23065,7 @@ document.addEventListener('keydown', e=>{
      review, summary, custom, savedAt, generatedAt}. Starszy zapis {conclusions, recs} przechodzi do summary/plan. */
   const AN_SECTIONS = [
     {k:'zaklad', t:'Dane zakładu i okres analizy', core:true},
+    {k:'ocena', t:'Ocena ogólna stanu BHP', special:'overview', core:true},
     {k:'zatrudnienie', t:'Stan zatrudnienia', core:true, tables:[
       {title:'Struktura zatrudnienia (stanowiska / działy)', head:['Stanowisko / dział','Liczba pracowników'], w:[75,25]},
       {title:'Pracownicy narażeni na czynniki szkodliwe i zagrożenia', head:['Czynnik / zagrożenie','Stanowiska','Liczba narażonych'], w:[40,40,20]}]},
@@ -23079,7 +23086,10 @@ document.addEventListener('keydown', e=>{
     {k:'zewnetrzne', t:'Kontrole zewnętrzne (PIP, PIS, UDT, PSP)', tables:[
       {title:'Kontrole, nakazy i zalecenia organów', head:['Organ','Data','Ustalenia / nakazy','Termin','Realizacja'], w:[16,13,41,13,17]}]},
     {k:'wewnetrzne', t:'Kontrole wewnętrzne, audyty i obchody', tables:[
-      {title:'Najczęstsze nieprawidłowości', head:['Nieprawidłowość','Liczba stwierdzeń'], w:[82,18]}]},
+      {title:'Najczęstsze nieprawidłowości', head:['Nieprawidłowość','Liczba stwierdzeń'], w:[82,18]},
+      {title:'Audyty i obchody w roku', head:['Data','Rodzaj','Zgodność','Niezgodności'], w:[20,40,20,20]}]},
+    {k:'zalecenia', t:'Zalecenia z audytów, obchodów i kontroli', core:true, tables:[
+      {title:'Zalecenia wydane w roku i otwarte', head:['Zalecenie','Źródło i data','Odpowiedzialny','Termin','Stan'], w:[40,24,14,10,12]}]},
     {k:'rozliczenie', t:'Realizacja planu z poprzedniego roku', special:'review'},
     {k:'plan', t:'Plan poprawy stanu BHP na rok następny', special:'plan', core:true},
     {k:'podsumowanie', t:'Podsumowanie i wnioski', special:'summary', core:true}
@@ -23149,8 +23159,8 @@ document.addEventListener('keydown', e=>{
     }
     if(k==='wypadki'){
       const prev = allAccidentCases.filter(c=>c.projectId===cid && String(c.eventDate||'').slice(0,4)===String(year-1) && wtWypKind(c)==='work' && c.isWpp!=='Nie').length;
-      const wc = d.hc ? (d.accWork.length/d.hc*1000).toFixed(1) : '';
-      const wci = d.withDays ? (d.sickDays/d.withDays).toFixed(1) : '';
+      const wc = d.hc ? (d.accWork.length/d.hc*1000).toFixed(1).replace('.',',') : '';
+      const wci = d.withDays ? (d.sickDays/d.withDays).toFixed(1).replace('.',',') : '';
       out.kv = [['Wypadki przy pracy', String(d.accWork.length)], ['w tym ciężkie, śmiertelne, zbiorowe', String(d.accSev.length)], ['Wypadki w drodze do/z pracy', String(d.accCommute)],
         ['Dni niezdolności do pracy', String(d.sickDays)], ['Wskaźnik częstości Wc (na 1000 zatrudnionych)', wc], ['Wskaźnik ciężkości Wci (dni na wypadek)', wci],
         ['Wypadki przy pracy w '+(year-1)+' r. (porównanie)', String(prev)], ['Przyczyny: techniczne / organizacyjne / ludzkie', d.causes.t+' / '+d.causes.o+' / '+d.causes.h],
@@ -23180,7 +23190,19 @@ document.addEventListener('keydown', e=>{
       const cnt = {};
       allChecklistSnapshots.filter(s=>s.projectId===cid && s.createdAt && new Date(s.createdAt).getFullYear()===year).forEach(s=>(s.results||[]).forEach(r=>{ if(r.value==='NIE' && r.text){ const t = (typeof WT_TXT_NEW!=='undefined' && WT_TXT_NEW[r.text]) || r.text; cnt[t] = (cnt[t]||0)+1; } }));
       T(Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,12).map(t=>[t, String(cnt[t])]));
+      T(allChecklistSnapshots.filter(s=>s.projectId===cid && s.createdAt && new Date(s.createdAt).getFullYear()===year).sort((a,b)=>a.createdAt-b.createdAt).map(s=>{
+        const res = s.results||[], tk = res.filter(r=>r.value==='TAK').length, ni = res.filter(r=>r.value==='NIE').length;
+        return [fmtDatePL(new Date(s.createdAt).toISOString().slice(0,10)), s.source==='obc'?'Obchód zakładu':s.source==='stan'?'Kontrola stanowiska'+(s.position?' — '+s.position:''):'Audyt (checklista)', (tk+ni)?Math.round(tk/(tk+ni)*100)+'%':'—', String(ni)]; }));
       out.note = d.openOver.length ? 'Zalecenia niezrealizowane w terminie: '+d.openOver.length+'.' : '';
+    }
+    if(k==='zalecenia'){
+      const items = wtCollectRecommendations().filter(it=>it.projectId===cid && (inY(it.date) || !it.completedDate) && it.kind!=='masz');
+      items.sort((a,b)=>(b.status?b.status.rank:0)-(a.status?a.status.rank:0) || String(a.deadline||'9').localeCompare(String(b.deadline||'9')));
+      T(items.map(it=>[it.text||'', [it.source, it.date?fmtDatePL(it.date):''].filter(Boolean).join(' · '), it.responsible||'', it.deadline?fmtDatePL(it.deadline):'',
+        it.completedDate ? 'zrealizowane '+fmtDatePL(it.completedDate) : (it.status ? it.status.label : 'otwarte')]));
+      const done = items.filter(it=>it.completedDate).length, over = items.filter(it=>!it.completedDate && it.status && it.status.rank>=4).length;
+      out.kv = [['Zalecenia (wydane w roku i otwarte)', String(items.length)], ['Zrealizowane', String(done)], ['W toku', String(items.length-done-over)], ['Po terminie', String(over)]];
+      out.note = over ? 'Zalecenia po terminie: '+over+' — wyznaczyć nowe terminy i nadzorować realizację.' : items.length ? 'Zalecenia realizowane terminowo.' : '';
     }
     return out;
   }
@@ -23214,7 +23236,7 @@ document.addEventListener('keydown', e=>{
       a.on[s.k] = !!s.core || has;
     });
     a.on.rozliczenie = a.review.length>0;
-    a.on.plan = true; a.on.podsumowanie = true;
+    a.on.plan = true; a.on.podsumowanie = true; a.on.ocena = true;
     const d = wtAnalysisData(cid, year);
     a.summary = d.conclusions.map(c=>'• '+c).join('\n');
     return a;
@@ -23235,6 +23257,7 @@ document.addEventListener('keydown', e=>{
         if(!cur || !cur.edited) anEdit.sec[s.k] = anPrefill(cid, year, s.k);
         if(anEdit.on[s.k]==null) anEdit.on[s.k] = !!s.core; });
       anEdit.plan = anEdit.plan||[]; anEdit.review = anEdit.review||[]; anEdit.custom = anEdit.custom||[];
+      if(anEdit.on.ocena==null) anEdit.on.ocena = true;
     } else {
       anEdit = anNew(cid, year);
       if(saved){ // starszy zapis: wnioski + zalecenia
@@ -23251,6 +23274,7 @@ document.addEventListener('keydown', e=>{
     if(k==='plan') return a.plan.some(r=>r.action) ? 'ok' : 'warn';
     if(k==='rozliczenie') return a.review.length ? 'ok' : 'warn';
     if(k==='podsumowanie') return a.summary.trim() ? 'ok' : 'warn';
+    if(k==='ocena') return 'ok';
     const s = a.sec[k]; if(!s) return 'warn';
     const filled = s.kv.some(r=>String(r[1]||'').trim()) || s.tables.some(t=>t.some(r=>r.some(c=>String(c||'').trim()))) || String(s.note||'').trim();
     return filled ? 'ok' : 'warn';
@@ -23279,6 +23303,13 @@ document.addEventListener('keydown', e=>{
         +'<div class="wt-an2-table"><table><thead><tr><th>Działanie z planu</th><th style="width:16%">Termin</th><th style="width:18%">Realizacja</th><th style="width:24%">Uwagi</th><th style="width:40px"></th></tr></thead><tbody>'
         +a.review.map((r,i)=>'<tr><td>'+anT(r.action,'data-rv="'+i+'" data-k="action"')+'</td><td>'+anI(r.due,'type="date" data-rv="'+i+'" data-k="due"')+'</td><td><select class="wt-input" data-rv="'+i+'" data-k="status"><option value="">—</option>'+AN_REVIEW_ST.map(x=>'<option'+(x===r.status?' selected':'')+'>'+x+'</option>').join('')+'</select></td><td>'+anT(r.note,'data-rv="'+i+'" data-k="note"')+'</td><td>'+anX('window.wtAn2Del(\'review\','+i+')')+'</td></tr>').join('')
         +'</tbody></table></div><div class="wt-an2-btns"><button class="wt-btn" onclick="window.wtAn2Add(\'review\')">+ Dodaj pozycję</button><button class="wt-btn ghost" onclick="window.wtAn2RefillReview()">Odśwież z analizy za '+(a.year-1)+' r.</button></div>';
+    }
+    if(k==='ocena'){
+      const ov = anOverview(a.cid, a.year);
+      const cls = {ok:'low', warn:'high', bad:'crit'};
+      return '<p class="small">Stan obszarów liczony z danych klienta — w raporcie zaraz po danych zakładu, a etykiety stanu pojawiają się też przy tytułach sekcji.</p>'
+        +'<div class="wt-an2-ov">'+ov.map(o=>'<div class="wt-an2-ovrow"><span class="ttl">'+esc(o.area)+'</span><span class="det">'+esc(o.detail)+'</span><span class="badge '+cls[o.cls]+'"><span class="dot"></span>'+esc(o.status.toLowerCase())+'</span></div>').join('')+'</div>'
+        +'<div class="wt-emp-sec">Komentarz dla pracodawcy (opcjonalnie)</div>'+anT(a.overviewNote,'id="wtAn2OvNote" style="width:100%;"',4);
     }
     if(k==='podsumowanie'){
       return '<p class="small">Najważniejsze wnioski dla pracodawcy — podpowiedziane z danych, edytuj dowolnie. Każdy akapit lub punkt („•”) w osobnej linii.</p>'
@@ -23350,6 +23381,7 @@ document.addEventListener('keydown', e=>{
     ov.querySelectorAll('[data-rv]').forEach(inp=>{ const r = a.review[+inp.dataset.rv]; if(r) r[inp.dataset.k] = inp.value; });
     ov.querySelectorAll('[data-cu]').forEach(inp=>{ const r = a.custom[+inp.dataset.cu]; if(r) r[inp.dataset.k] = inp.type==='checkbox' ? inp.checked : inp.value; });
     const sum = document.getElementById('wtAn2Summary'); if(sum) a.summary = sum.value;
+    const ovn = document.getElementById('wtAn2OvNote'); if(ovn) a.overviewNote = ovn.value;
   }
   window.wtAnalysisSwitchYear = async function(y){ wtAnalysisRead(); await window.wtAnalysisSave(true); window.wtAnalysisOpen(anEdit.cid, +y); };
   window.wtAn2Go = function(k){ wtAnalysisRead(); anEdit.cur = k; renderAnalysisEditor(); const m = document.querySelector('.wt-an2-main'); if(m) m.scrollTop = 0; };
@@ -23377,7 +23409,7 @@ document.addEventListener('keydown', e=>{
     if(!DB || !anEdit) return false;
     const a = anEdit, p = wtProjectById(a.cid);
     const prev = (p.analyses||{})[a.year] || {};
-    const entry = {v:2, on:a.on, secJson:JSON.stringify(a.sec), plan:a.plan.filter(r=>r.action||r.problem), review:a.review.filter(r=>r.action), summary:a.summary||'', custom:a.custom.filter(c=>c.title||c.text),
+    const entry = {v:2, on:a.on, secJson:JSON.stringify(a.sec), plan:a.plan.filter(r=>r.action||r.problem), review:a.review.filter(r=>r.action), summary:a.summary||'', overviewNote:a.overviewNote||'', custom:a.custom.filter(c=>c.title||c.text),
       savedAt:Date.now(), generatedAt: generated ? Date.now() : (prev.generatedAt||null)};
     const analyses = Object.assign({}, p.analyses||{}, {[a.year]: JSON.parse(JSON.stringify(entry))});
     try{ await DB.doc('client_projects/'+a.cid).update({analyses}); p.analyses = analyses; a.savedAt = entry.savedAt; if(!silent){ wtToast('Zapisano analizę.'); renderAnalysisEditor(); } return true; }
@@ -23406,6 +23438,7 @@ document.addEventListener('keydown', e=>{
       if(def.special==='plan'){ const plan = a.plan.filter(r=>r.action||r.problem); secs.push({k:def.k, t:def.t, plan}); return; }
       if(def.special==='review'){ const rv = a.review.filter(r=>r.action); if(rv.length) secs.push({k:def.k, t:def.t, table:{head:['Działanie z planu','Termin','Realizacja','Uwagi'], w:[46,14,16,24], rows:rv.map(r=>[r.action, r.due?fmtDatePL(r.due):'', r.status||'', r.note||''])}}); return; }
       if(def.special==='summary') return;
+      if(def.special==='overview'){ secs.push({k:def.k, t:def.t, overview:anOverview(a.cid, a.year), note:String(a.overviewNote||'').trim()}); return; }
       const s = a.sec[def.k] || {kv:[], tables:[], note:''};
       const kv = s.kv.filter(r=>String(r[0]||'').trim() && String(r[1]||'').trim());
       const tables = (def.tables||[]).map((td,i)=>({title:td.title, head:td.head, w:td.w, rows:(s.tables[i]||[]).filter(r=>r.some(c=>String(c||'').trim()))})).filter(t=>t.rows.length);
@@ -23416,26 +23449,24 @@ document.addEventListener('keydown', e=>{
     if(a.on.podsumowanie && String(a.summary||'').trim()) secs.push({k:'podsumowanie', t:'Podsumowanie i wnioski', note:a.summary});
     return {a, p, sp, year:a.year, secs};
   }
-  /* Wspólny wygląd z raportami z audytu / obchodu: model sekcji → wiersze listy kontrolnej (tekst, uwaga, status)
-     i karty działań — używane przez PDF (wtRpcReport) i Word (ten sam układ w OOXML). */
+  /* ===== Prezentacja raportu analizy: zamiast jednej tabeli wszędzie — bloki dobrane do treści ===== */
+  const AN_NUM_RE = /^[0-9]+([.,][0-9]+)?(\s*\/\s*[0-9]+([.,][0-9]+)?)*\s*%?$/;
+  const AN_NEG_RE = /zaległ|po terminie|bez aktualn|przekroczen|brakując|ciężkie|niezrealiz|niezgodności|bez potwierdzenia|wypadki przy pracy$|dni niezdolności|choroby zawodowe/i;
   function anStatusOf(v){
     const t = String(v||'').trim(), l = t.toLowerCase();
+    const short = t.length>14 ? t.split(/[ ,(]/)[0] : t;
     if(!t) return {status:'—', cls:'blank'};
-    if(/^(brak|zaległ|niewykon|niezrealiz|przekr|nie$)/.test(l)) return {status:t.length>14?t.split(/[ ,(]/)[0]:t, cls:'bad'};
-    if(/^(jest|wykonan|zrealiz|aktualn|w normie|tak$|zgodn)/.test(l)) return {status:t.length>14?t.split(/[ ,(]/)[0]:t, cls:'ok'};
-    if(/^(planowan|w toku|częściow|do wykonania|do uzupełn)/.test(l)) return {status:t.length>14?t.split(/[ ,(]/)[0]:t, cls:'warn'};
+    if(/^(brak|zaległ|niewykon|niezrealiz|przekr|nie$|\d+ dni po terminie|po terminie)/.test(l)) return {status:/po terminie/.test(l)?'PO TERMINIE':short, cls:'bad'};
+    if(/^(jest|wykonan|zrealiz|aktualn|w normie|tak$|zgodn)/.test(l)) return {status:short, cls:'ok'};
+    if(/^(planowan|w toku|częściow|do wykonania|do uzupełn|otwarte|termin za)/.test(l)) return {status:/^termin za/.test(l)?'W TERMINIE':/^otwarte/.test(l)?'OTWARTE':short, cls:'warn'};
     return t.length<=16 ? {status:t, cls:'nd'} : null;
   }
-  function anKvRow(label, value){
-    const v = String(value||'').trim();
-    const neg = /zaległ|po terminie|bez aktualn|przekroczen|brakując|ciężkie|niezrealiz|stwierdzone niezgodności|bez potwierdzenia/i.test(label);
-    const num = parseFloat(v.replace(',','.'));
-    let cls = 'nd';
-    if(neg && !isNaN(num)) cls = num>0 ? 'bad' : 'ok';
-    if(v.length>16) return {text:label, note:v, status:'—', cls:'blank'};
-    return {text:label, status:v, cls};
+  function anTileCls(label, value){
+    const num = parseFloat(String(value).replace(',','.'));
+    if(AN_NEG_RE.test(label) && !isNaN(num)) return num>0 ? 'bad' : 'ok';
+    return 'total';
   }
-  function anTableRows(t){
+  function anRowsOf(t){
     const last = t.head.length-1, statusCol = /stan|realizacja/i.test(t.head[last]) ? last : (t.head.length===2 ? 1 : -1);
     return t.rows.map(r=>{
       const cells = t.head.map((h,i)=>String(r[i]||'').trim());
@@ -23448,43 +23479,101 @@ document.addEventListener('keydown', e=>{
         if(m){ const k = parseFloat(m[1].replace(',','.')); st = k>1 ? {status:'> NDS', cls:'bad'} : {status:'W NORMIE', cls:'ok'}; }
         else st = {status:'—', cls:'blank'};
       }
-      const labels = t.head.map(h=>h);
-      const note = rest.map((x,i)=>x).filter(Boolean).join(' · ');
-      return {text: text||'—', note, status: st.status, cls: st.cls};
+      return {text:text||'—', note:rest.filter(Boolean).join(' · '), status:st.status, cls:st.cls};
     });
+  }
+  /* ocena ogólna — stan obszarów (używana też jako etykiety przy tytułach sekcji) */
+  function anOverview(cid, year){
+    const d = wtAnalysisData(cid, year), p = d.p;
+    const L = [];
+    const add = (k, area, cls, detail)=>L.push({k, area, cls, status:cls==='ok'?'W PORZĄDKU':cls==='bad'?'KRYTYCZNY':'WYMAGA UWAGI', detail});
+    add('szkolenia', 'Szkolenia BHP', d.trOver ? 'bad' : 'ok', d.trOver ? d.trOver+' '+wtPl(d.trOver,'pracownik','pracowników','pracowników')+' bez aktualnego szkolenia' : 'Szkolenia aktualne');
+    add('badania', 'Badania lekarskie', d.medOver ? 'bad' : 'ok', d.medOver ? d.medOver+' '+wtPl(d.medOver,'pracownik','pracowników','pracowników')+' bez aktualnych badań' : 'Orzeczenia aktualne');
+    add('wypadki', 'Wypadkowość', d.accSev.length ? 'bad' : d.accWork.length ? 'warn' : 'ok', d.accWork.length ? d.accWork.length+' '+wtPl(d.accWork.length,'wypadek','wypadki','wypadków')+' przy pracy'+(d.accSev.length?', w tym '+d.accSev.length+' ciężki/śmiertelny/zbiorowy':'') : 'Brak wypadków przy pracy');
+    const reqs = wtReqCompute(p).filter(r=>r.level!=='info'), state = p.reqState||{};
+    const docOk = reqs.filter(r=>!!(state[r.id] && state[r.id].done) || wtReqEvidence(p, r).count>0).length;
+    const docPct = reqs.length ? Math.round(docOk/reqs.length*100) : 100;
+    add('dokumentacja', 'Dokumentacja BHP', docPct>=90 ? 'ok' : docPct>=60 ? 'warn' : 'bad', docOk+' z '+reqs.length+' wymaganych dokumentów ('+docPct+'%)');
+    const recs = wtCollectRecommendations().filter(it=>it.projectId===cid);
+    const over = recs.filter(it=>!it.completedDate && it.status && it.status.rank>=4).length, open = recs.filter(it=>!it.completedDate).length;
+    add('zalecenia', 'Realizacja zaleceń', over ? 'bad' : open ? 'warn' : 'ok', over ? over+' po terminie, '+open+' otwartych' : open ? open+' otwartych, wszystkie w terminie' : 'Wszystkie zalecenia zrealizowane');
+    const f1 = anF1Rows(cid);
+    if(f1.length){ const ex = f1.filter(r=>{ const v = parseFloat(String(r.ratio||'').replace(',','.')); return !isNaN(v) && v>1; }).length, late = f1.filter(r=>{ const n = wtDaysUntil(r.nextDate); return n!==null && n<0; }).length;
+      add('czynniki', 'Czynniki szkodliwe', ex ? 'bad' : late ? 'warn' : 'ok', ex ? ex+' przekroczeń NDS/NDN' : late ? late+' pomiarów po terminie' : 'Wyniki w normie, pomiary w terminie'); }
+    return L;
+  }
+  /* bloki sekcji (wspólne dla PDF i Word) */
+  function anBlocks(s){
+    const B = [];
+    if(s.overview){ B.push({type:'rows', rows:s.overview.map(o=>({text:o.area, note:o.detail, status:o.status, cls:o.cls==='warn'?'warn':o.cls}))}); }
+    if(s.kv && s.kv.length){
+      let num = s.kv.filter(r=>AN_NUM_RE.test(String(r[1]).trim()) && String(r[0]).length<70);
+      if(num.length<2) num = [];   /* pojedyncza liczba — w liście danych, nie jako samotny kafelek */
+      const txt = s.kv.filter(r=>!num.includes(r));
+      if(txt.length) B.push({type:'deflist', items:txt.map(r=>[r[0], r[1]])});
+      if(num.length) B.push({type:'tiles', items:num.map(r=>({label:r[0], num:String(r[1]).replace(/(\d)\.(\d)/g,'$1,$2'), cls:anTileCls(r[0], r[1])}))});
+    }
+    (s.tables||[]).forEach(t=>{
+      if(s.k==='wypadki' && /Wypadki/.test(t.title)) B.push({type:'cards', title:t.title, items:t.rows.map(r=>({question:[r[0], r[1]].filter(Boolean).join(' — '), comment:r[2]||'', pill:r[3]?r[3]+' dni':'—', pillCls:'', writein:false}))});
+      else if(s.k==='zalecenia') B.push({type:'cards', title:t.title, items:t.rows.map(r=>{ const st = anStatusOf(r[4]) || {status:String(r[4]||'').toUpperCase(), cls:'nd'}; const parts = String(r[0]||'').split(' → '); return {question:parts[0]||'—', comment:r[1]||'', owner:r[2]||'', due:r[3]||'', action:parts.slice(1).join(' → ') || (r[2]||r[3] ? 'zgodnie z treścią zalecenia' : ''), pill:String(st.status).toUpperCase(), pillCls:st.cls==='ok'?'ok':st.cls==='bad'?'':'warn', writein:false}; })});
+      else if(s.k==='dokumentacja'){
+        const ok = t.rows.filter(r=>/^jest/i.test(String(r[2]||''))), miss = t.rows.filter(r=>!/^jest/i.test(String(r[2]||'')));
+        B.push({type:'progress', label:'Udokumentowane obowiązki', done:ok.length, total:t.rows.length});
+        if(miss.length) B.push({type:'rows', title:'Do uzupełnienia ('+miss.length+')', rows:miss.map(r=>({text:r[0], note:r[1]||'', status:'BRAK', cls:'bad'}))});
+        if(ok.length) B.push({type:'rows', title:'Udokumentowane ('+ok.length+')', rows:ok.map(r=>({text:r[0], note:r[1]||'', status:'JEST', cls:'ok'}))});
+      }
+      else B.push({type:'rows', title:t.title, rows:anRowsOf(t)});
+    });
+    if(s.table) B.push({type:'rows', title:s.table.title||'', rows:anRowsOf(s.table)});
+    if(s.plan) B.push({type:'cards', items:s.plan.map(r=>({question:r.problem||r.action||'—', comment:[r.goal?'Cel / miernik: '+r.goal:'', r.cost?'Koszt orientacyjny: '+r.cost:''].filter(Boolean).join(' · '),
+      action:r.action||'', owner:r.owner||'', due:r.due?fmtDatePL(r.due):'', pill:(r.prio||'Średni').toUpperCase(), pillCls:r.prio==='Wysoki'?'':'warn', w1:'Sposób realizacji', w2:'Data realizacji'})), empty:'Brak działań w planie'});
+    if(s.note) B.push({type:'text', text:s.note});
+    return B;
+  }
+  function anSecBadge(s, ov){
+    const map = {szkolenia:'szkolenia', badania:'badania', wypadki:'wypadki', dokumentacja:'dokumentacja', zalecenia:'zalecenia', wewnetrzne:'zalecenia', czynniki:'czynniki'};
+    const o = ov.find(x=>x.k===map[s.k]); return o || null;
   }
   window.wtAnalysisPdf = async function(){
     if(!await window.wtAnalysisSave(true, true)) return;
-    const M = anModel(), year = M.year, d = wtAnalysisData(M.a.cid, year);
+    const M = anModel(), year = M.year, d = wtAnalysisData(M.a.cid, year), ov = anOverview(M.a.cid, year);
     const recPct = d.recsY.length ? Math.round(d.recsDoneY/d.recsY.length*100) : null;
-    const lacks = d.trOver + d.medOver;
+    const BADGE = {ok:'#17603f', warn:'#a86a12', bad:'#b3261e'};
+    const deflist = items=>'<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 28px;padding:16px 18px;border:1px solid #e4e1da;border-radius:14px;">'
+      +items.map(r=>'<div style="min-width:0;"><div style="font-family:var(--font-mono);font-size:7pt;letter-spacing:.08em;text-transform:uppercase;color:#6b6760;">'+esc(r[0])+'</div><div style="font-size:10.5pt;font-weight:600;color:#15171a;margin-top:2px;overflow-wrap:anywhere;">'+esc(r[1])+'</div></div>').join('')+'</div>';
+    const tiles = items=>{ let h = ''; for(let i=0;i<items.length;i+=4){ const ch = items.slice(i,i+4);
+        h += '<div class="rpc-stats" style="grid-template-columns:repeat(4,minmax(0,1fr));'+(i?'margin-top:10px;':'')+'">'+ch.map(t=>'<div class="rpc-stat '+t.cls+'"><span class="rpc-stat-label'+(t.cls!=='total'?' withdot':'')+'">'+(t.cls!=='total'?'<span class="dot"></span>':'')+esc(t.label)+'</span><span class="rpc-stat-num" style="font-size:'+(t.num.length>7?'16pt':'24pt')+';">'+esc(t.num)+'</span></div>').join('')+'</div>'; }
+      return '<div>'+h+'</div>'; };
+    const progress = b=>{ const pct = b.total ? Math.round(b.done/b.total*100) : 0;
+      return '<div style="padding:16px 18px;border-radius:14px;background:#f1efe9;"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font-size:9pt;color:#5d5a55;">'+esc(b.label)+'</span><span style="font-family:var(--font-display);font-weight:700;font-size:18pt;color:#15171a;">'+b.done+' <span style="font-size:10pt;color:#8f8b84;">z '+b.total+' · '+pct+'%</span></span></div>'
+        +'<div style="height:10px;border-radius:999px;background:#fde8e5;margin-top:10px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:#1f9d65;border-radius:999px;"></div></div></div>'; };
+    const blockHtml = b=>{
+      if(b.type==='rows') return wtRpcRows(b.rows);
+      if(b.type==='cards') return b.items.length ? wtRpcCards(b.items) : '<div class="rpc-nc-empty"><span class="dot"></span>'+esc(b.empty||'Brak pozycji')+'</div>';
+      if(b.type==='deflist') return deflist(b.items);
+      if(b.type==='tiles') return tiles(b.items);
+      if(b.type==='progress') return progress(b);
+      if(b.type==='text') return wtRpcText(b.text);
+      return '';
+    };
     const sections = [];
-    /* Podział stron (canvasToPdfBlob) obsługuje w jednej .rp-section JEDNĄ listę wierszy (.rpc-checklist / .rpc-nc-list)
-       z nagłówkiem — każda kolejna lista w tej samej sekcji wypadała z PDF. Dlatego każda lista i każdy tekst to osobna
-       .rp-section; pierwsza niesie nagłówek sekcji, kolejne tabele — własny nadtytuł (powtarzany na nowej stronie). */
-    const sub = (eyebrow, inner)=>'<div class="rp-section"><div class="rpc-sechead-left" style="padding-top:2px;"><span class="rpc-eyebrow2 gray">'+esc(eyebrow)+'</span></div>'+inner+'</div>';
     M.secs.forEach((s, i)=>{
       const n = String(i+1).padStart(2,'0');
-      const eyebrow = s.k==='plan' ? n+' · Propozycje przedsięwzięć na rok '+(year+1) : s.k==='podsumowanie' ? n+' · Wnioski' : n+' · Analiza stanu BHP '+year;
-      const parts = [];
-      if(s.kv && s.kv.length) parts.push({list:wtRpcRows(s.kv.map(r=>anKvRow(r[0], r[1])))});
-      (s.tables||[]).forEach(t=>parts.push({title:t.title, list:wtRpcRows(anTableRows(t))}));
-      if(s.table) parts.push({list:wtRpcRows(anTableRows(s.table))});
-      if(s.plan) parts.push({list: s.plan.length ? wtRpcCards(s.plan.map(r=>({question:r.problem||r.action||'—', comment:[r.goal?'Cel / miernik: '+r.goal:'', r.cost?'Koszt orientacyjny: '+r.cost:''].filter(Boolean).join(' · '),
-          action:r.action||'', owner:r.owner||'', due:r.due?fmtDatePL(r.due):'', pill:(r.prio||'Średni').toUpperCase(), pillCls:r.prio==='Wysoki'?'':'warn', w1:'Sposób realizacji', w2:'Data realizacji'})))
-        : '<div class="rpc-nc-empty"><span class="dot"></span>Brak działań w planie</div>'});
-      if(s.note) parts.push({text:wtRpcText(s.note)});
-      if(!parts.length) parts.push({text:''});
-      parts.forEach((p, j)=>{
-        const inner = p.list || p.text;
-        if(j===0) sections.push('<div class="rp-section"><div class="rpc-sechead-left" style="padding-top:6px;"><span class="rpc-eyebrow2 '+(s.k==='plan'?'red':'gray')+'">'+esc(eyebrow)+'</span><h2 class="rpc-h2">'+esc(s.t)+'</h2>'+(p.title?'<span class="rpc-eyebrow2 gray" style="margin-top:10px;">'+esc(p.title)+'</span>':'')+'</div>'+inner+'</div>');
-        else if(p.title) sections.push(sub(p.title, inner));
-        else sections.push('<div class="rp-section">'+inner+'</div>');
+      const eyebrow = s.k==='plan' ? n+' · Propozycje przedsięwzięć na rok '+(year+1) : s.k==='podsumowanie' ? n+' · Wnioski' : s.k==='ocena' ? n+' · Podsumowanie dla pracodawcy' : n+' · Analiza stanu BHP '+year;
+      const bd = anSecBadge(s, ov);
+      const badge = bd ? '<span class="rpc-duepill" style="background:'+BADGE[bd.cls]+' !important;">'+esc(bd.status)+'</span>' : (s.k==='plan' && s.plan && s.plan.length ? '<span class="rpc-duepill">'+s.plan.length+' do realizacji</span>' : '');
+      const blocks = anBlocks(s);
+      if(!blocks.length) blocks.push({type:'text', text:''});
+      blocks.forEach((b, j)=>{
+        const sub = b.title ? '<span class="rpc-eyebrow2 gray" style="margin-top:'+(j===0?'10px':'2px')+';">'+esc(b.title)+'</span>' : '';
+        if(j===0) sections.push('<div class="rp-section"><div class="rpc-sechead"><div class="rpc-sechead-left"><span class="rpc-eyebrow2 '+(s.k==='plan'?'red':'gray')+'">'+esc(eyebrow)+'</span><h2 class="rpc-h2">'+esc(s.t)+'</h2>'+sub+'</div>'+badge+'</div>'+blockHtml(b)+'</div>');
+        else sections.push('<div class="rp-section">'+(sub?'<div class="rpc-sechead-left">'+sub+'</div>':'')+blockHtml(b)+'</div>');
       });
     });
     sections.push('<div class="rp-section"><div style="display:flex;justify-content:space-between;gap:40px;margin-top:34px;font-size:9pt;color:#5d5a55;text-align:center;">'
       +'<div style="flex:1;border-top:1px dotted #8f8b84;padding-top:6px;">opracował: '+esc(M.sp.name||'specjalista ds. BHP')+'<br>(data, podpis)</div>'
       +'<div style="flex:1;border-top:1px dotted #8f8b84;padding-top:6px;">zapoznałem się i przyjmuję do realizacji: pracodawca<br>(data, podpis)</div></div></div>');
+    const lacks = d.trOver + d.medOver;
     const html = wtRpcReport({
       pills:['Analiza stanu BHP', 'Rok '+year, 'M.2'], title:M.p.name||'',
       meta:[{lbl:'Okres analizy', val:'01.01–31.12.'+year}, {lbl:'Opracował', val:M.sp.name||'specjalista ds. BHP'}],
@@ -23496,68 +23585,80 @@ document.addEventListener('keydown', e=>{
       brand:M.p.name||''});
     await wtRpcExport(html, 'Analiza_stanu_BHP_'+year+'_'+(M.p.name||'')+'.pdf');
   };
-  /* Word (.docx) — ten sam układ co PDF: ciemny nagłówek, kafelki, sekcje z nadtytułem, wiersze ze statusem, karty działań */
+  /* Word (.docx) — ten sam układ bloków co PDF */
   window.wtAnalysisDocx = async function(){
     if(!await window.wtAnalysisSave(true, true)) return;
     try{ await ensureXlsxLib(); }catch(e){ wtToast('Nie udało się wczytać biblioteki do tworzenia pliku Word (wymagany internet).', true); return; }
-    const M = anModel(), year = M.year, d = wtAnalysisData(M.a.cid, year);
-    const C = {ink:'15171A', paper:'F4F2EC', soft:'5D5A55', faint:'8F8B84', line:'E4E1DA', sand:'F1EFE9', okBg:'E3F6EC', ok:'17603F', badBg:'FDE8E5', bad:'9E2A20', warnBg:'FDF1DF', warn:'8A4B00', red:'D9463B'};
-    const ST = {ok:[C.okBg,C.ok], bad:[C.badBg,C.bad], warn:[C.warnBg,C.warn], nd:[C.sand,C.soft], blank:[C.sand,C.faint]};
+    const M = anModel(), year = M.year, d = wtAnalysisData(M.a.cid, year), ov = anOverview(M.a.cid, year);
+    const C = {ink:'15171A', paper:'F4F2EC', soft:'5D5A55', faint:'8F8B84', line:'E4E1DA', sand:'F1EFE9', okBg:'E3F6EC', ok:'17603F', badBg:'FDE8E5', bad:'9E2A20', warnBg:'FDF1DF', warn:'8A4B00', red:'D9463B', green:'1F9D65'};
+    const ST = {ok:[C.okBg,C.ok], bad:[C.badBg,C.bad], warn:[C.warnBg,C.warn], nd:[C.sand,C.soft], blank:[C.sand,C.faint], total:[C.sand,C.ink]};
+    const BADGE = {ok:C.ok, warn:'A86A12', bad:'B3261E'};
     const xe = s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const run = (t, o)=>{ o = o||{}; return '<w:r><w:rPr>'+(o.font?'<w:rFonts w:ascii="'+o.font+'" w:hAnsi="'+o.font+'" w:cs="'+o.font+'"/>':'')+(o.b?'<w:b/>':'')+(o.caps?'<w:caps/>':'')+(o.sp?'<w:spacing w:val="'+o.sp+'"/>':'')+'<w:color w:val="'+(o.color||C.ink)+'"/><w:sz w:val="'+(o.sz||20)+'"/><w:szCs w:val="'+(o.sz||20)+'"/></w:rPr><w:t xml:space="preserve">'+xe(t)+'</w:t></w:r>'; };
+    const MONO = 'Consolas', DISP = 'Calibri';
+    const run = (t, o)=>{ o = o||{}; return '<w:r><w:rPr>'+(o.font?'<w:rFonts w:ascii="'+o.font+'" w:hAnsi="'+o.font+'" w:cs="'+o.font+'"/>':'')+(o.b?'<w:b/>':'')+(o.caps?'<w:caps/>':'')+(o.sp?'<w:spacing w:val="'+o.sp+'"/>':'')+'<w:color w:val="'+(o.color||C.ink)+'"/><w:sz w:val="'+(o.sz||20)+'"/><w:szCs w:val="'+(o.sz||20)+'"/>'+(o.hl?'<w:shd w:val="clear" w:color="auto" w:fill="'+o.hl+'"/>':'')+'</w:rPr><w:t xml:space="preserve">'+xe(t)+'</w:t></w:r>'; };
     const para = (runs, o)=>{ o = o||{}; return '<w:p><w:pPr>'+(o.style?'<w:pStyle w:val="'+o.style+'"/>':'')+(o.keep?'<w:keepNext/>':'')+(o.jc?'<w:jc w:val="'+o.jc+'"/>':'')+'<w:spacing w:before="'+(o.before||0)+'" w:after="'+(o.after!=null?o.after:80)+'"/></w:pPr>'+runs+'</w:p>'; };
     const TOT = 9638;
-    const tcell = (content, w, o)=>{ o = o||{}; return '<w:tc><w:tcPr><w:tcW w:w="'+w+'" w:type="dxa"/>'+(o.fill?'<w:shd w:val="clear" w:color="auto" w:fill="'+o.fill+'"/>':'')+(o.span?'<w:gridSpan w:val="'+o.span+'"/>':'')+'<w:vAlign w:val="'+(o.va||'center')+'"/>'+(o.mar?'<w:tcMar><w:top w:w="'+o.mar+'" w:type="dxa"/><w:bottom w:w="'+o.mar+'" w:type="dxa"/><w:left w:w="'+(o.marx||140)+'" w:type="dxa"/><w:right w:w="'+(o.marx||140)+'" w:type="dxa"/></w:tcMar>':'')+'</w:tcPr>'+content+'</w:tc>'; };
+    const tcell = (content, w, o)=>{ o = o||{}; return '<w:tc><w:tcPr><w:tcW w:w="'+w+'" w:type="dxa"/>'+(o.span?'<w:gridSpan w:val="'+o.span+'"/>':'')+(o.nob?'<w:tcBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/></w:tcBorders>':'')+(o.fill?'<w:shd w:val="clear" w:color="auto" w:fill="'+o.fill+'"/>':'')+(o.mar?'<w:tcMar><w:top w:w="'+o.mar+'" w:type="dxa"/><w:bottom w:w="'+o.mar+'" w:type="dxa"/><w:left w:w="'+(o.marx||140)+'" w:type="dxa"/><w:right w:w="'+(o.marx||140)+'" w:type="dxa"/></w:tcMar>':'')+'<w:vAlign w:val="'+(o.va||'center')+'"/></w:tcPr>'+(content||para('', {after:0}))+'</w:tc>'; };
     const table = (widths, rowsXml, o)=>{ o = o||{}; const b = o.borders || 'none';
-      return '<w:tbl><w:tblPr><w:tblW w:w="'+TOT+'" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(x=>'<w:'+x+' w:val="'+(b==='none'?'nil':'single')+'" w:sz="4" w:space="0" w:color="'+C.line+'"/>').join('')+'</w:tblBorders><w:tblCellMar><w:top w:w="60" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:left w:w="120" w:type="dxa"/><w:right w:w="120" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>'+widths.map(w=>'<w:gridCol w:w="'+w+'"/>').join('')+'</w:tblGrid>'+rowsXml+'</w:tbl>'+para('', {after:o.after!=null?o.after:160}); };
+      return '<w:tbl><w:tblPr><w:tblW w:w="'+TOT+'" w:type="dxa"/><w:tblLayout w:type="fixed"/>'+(o.spacing?'<w:tblCellSpacing w:w="'+o.spacing+'" w:type="dxa"/>':'')+'<w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(x=>'<w:'+x+' w:val="'+(b==='none'?'nil':'single')+'" w:sz="4" w:space="0" w:color="'+C.line+'"/>').join('')+'</w:tblBorders><w:tblCellMar><w:top w:w="60" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:left w:w="120" w:type="dxa"/><w:right w:w="120" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>'+widths.map(w=>'<w:gridCol w:w="'+w+'"/>').join('')+'</w:tblGrid>'+rowsXml+'</w:tbl>'+para('', {after:o.after!=null?o.after:160}); };
     const tr = (cells, o)=>'<w:tr><w:trPr><w:cantSplit/>'+(o&&o.header?'<w:tblHeader/>':'')+'</w:trPr>'+cells+'</w:tr>';
-    const MONO = 'Consolas', DISP = 'Calibri';
-    /* nagłówek: ciemny blok jak .rpc-header */
+    const eyebrow = (t, red, before)=>para(run(t, {font:MONO, sz:14, color:red?C.red:'6B6760', caps:true, sp:16}), {keep:true, before:before!=null?before:120, after:20});
+    /* nagłówek */
+    const lw = TOT*0.74|0;
     const ringTxt = d.recsY.length ? Math.round(d.recsDoneY/d.recsY.length*100)+'%' : '—';
-    const head = table([TOT*0.74|0, TOT-(TOT*0.74|0)], tr(
+    let b = table([lw, TOT-lw], tr(
       tcell(para(run('ANALIZA STANU BHP   ·   ROK '+year+'   ·   M.2', {font:MONO, sz:14, color:'D8D5CC', sp:20}), {after:200})
         + para(run(M.p.name||'', {font:DISP, b:true, sz:56, color:C.paper}), {after:200})
         + para(run('Okres analizy  ', {sz:14, color:'A3A09A'})+run('01.01–31.12.'+year, {font:MONO, sz:17, color:C.paper})+run('     Opracował  ', {sz:14, color:'A3A09A'})+run(M.sp.name||'specjalista ds. BHP', {font:MONO, sz:17, color:C.paper})+run('     Data  ', {sz:14, color:'A3A09A'})+run(fmtDatePL(wtTodayIso()), {font:MONO, sz:17, color:C.paper}), {after:0}),
-        TOT*0.74|0, {fill:C.ink, mar:360, marx:420, va:'top'})
+        lw, {fill:C.ink, mar:360, marx:420, va:'top'})
       + tcell(para(run(ringTxt, {font:DISP, b:true, sz:52, color:C.paper}), {jc:'center', after:40}) + para(run('ZALECENIA', {sz:13, color:'A3A09A', sp:20}), {jc:'center', after:40})
-        + para(run(d.recsY.length ? d.recsDoneY+' z '+d.recsY.length+' zrealizowanych' : 'brak zaleceń w roku', {sz:15, color:'D8D5CC'}), {jc:'center', after:0}), TOT-(TOT*0.74|0), {fill:C.ink, mar:360}) ), {after:200});
-    /* kafelki */
-    const tiles = [['Pracownicy', d.hc!=null?d.hc:'—', 'total'], ['Wypadki przy pracy', d.accWork.length, d.accWork.length?'bad':'ok'], ['Zalecenia po terminie', d.openOver.length, d.openOver.length?'bad':'ok'], ['Zaległe szkolenia / badania', d.trOver+' / '+d.medOver, (d.trOver+d.medOver)?'bad':'ok']];
-    const tw = TOT/4|0;
-    const tileRow = tr(tiles.map(t=>{ const c = t[2]==='total' ? [C.sand, C.ink] : ST[t[2]]; return tcell(para(run(t[0], {sz:15, color:t[2]==='total'?C.soft:c[1]}), {after:60})+para(run(String(t[1]), {font:DISP, b:true, sz:40, color:c[1]}), {after:0}), tw, {fill:c[0], mar:200, marx:200, va:'top'}); }).join(''));
-    let b = head + table([tw,tw,tw,tw], tileRow, {after:240});
-    /* sekcje */
-    const rowsTable = rows=>table([620, TOT-620-1700, 1700], rows.map((r,i)=>{ const c = ST[r.cls]||ST.nd;
+        + para(run(d.recsY.length ? d.recsDoneY+' z '+d.recsY.length+' zrealizowanych' : 'brak zaleceń w roku', {sz:15, color:'D8D5CC'}), {jc:'center', after:0}), TOT-lw, {fill:C.ink, mar:360})), {after:200});
+    const tileTable = items=>{ let x = ''; for(let i=0;i<items.length;i+=4){ const ch = items.slice(i,i+4); const tw = TOT/4|0;
+        x += table([tw,tw,tw,TOT-3*tw], tr(ch.concat(Array(4-ch.length).fill(null)).map((t,k)=>{ const w = k<3?tw:TOT-3*tw; if(!t) return tcell('', w, {}); const c = ST[t.cls]||ST.total;
+          return tcell(para(run(t.label, {sz:15, color:t.cls==='total'?C.soft:c[1]}), {after:60})+para(run(String(t.num), {font:DISP, b:true, sz:String(t.num).length>7?28:40, color:c[1]}), {after:0}), w, {fill:c[0], mar:200, marx:200, va:'top'}); }).join('')), {after:120}); }
+      return x; };
+    b += tileTable([{label:'Pracownicy', num:d.hc!=null?d.hc:'—', cls:'total'}, {label:'Wypadki przy pracy', num:d.accWork.length, cls:d.accWork.length?'bad':'ok'}, {label:'Zalecenia po terminie', num:d.openOver.length, cls:d.openOver.length?'bad':'ok'}, {label:'Zaległe szkolenia / badania', num:d.trOver+' / '+d.medOver, cls:(d.trOver+d.medOver)?'bad':'ok'}]);
+    const rowsTable = rows=>table([620, TOT-620-1800, 1800], rows.map((r,i)=>{ const c = ST[r.cls]||ST.nd;
       return tr(tcell(para(run(String(i+1).padStart(2,'0'), {font:MONO, sz:15, color:C.faint}), {after:0}), 620, {va:'top'})
-        + tcell(para(run(r.text, {sz:19}), {after:r.note?20:0})+(r.note?para(run(r.note, {sz:16, color:C.soft}), {after:0}):''), TOT-620-1700, {va:'top'})
-        + tcell(para(run(r.status||'—', {font:MONO, b:true, sz:15, color:c[1]}), {jc:'center', after:0}), 1700, {fill:c[0]})); }).join(''), {borders:'single'});
-    const eyebrow = (t, red)=>para(run(t, {font:MONO, sz:14, color:red?C.red:'6B6760', caps:true, sp:16}), {keep:true, before:120, after:20});
-    const h2 = t=>para(run(t, {font:DISP, b:true, sz:36}), {style:'Heading1', keep:true, after:120});
+        + tcell(para(run(r.text, {sz:19}), {after:r.note?20:0})+(r.note?para(run(r.note, {sz:16, color:C.soft}), {after:0}):''), TOT-620-1800, {va:'top'})
+        + tcell(para(run(r.status||'—', {font:MONO, b:true, sz:15, color:c[1]}), {jc:'center', after:0}), 1800, {fill:c[0]})); }).join(''), {borders:'single'});
+    const defTable = items=>{ const hw = TOT/2|0; let rows = '';
+      for(let i=0;i<items.length;i+=2){ rows += tr([items[i], items[i+1]].map((it,k)=>tcell(it ? para(run(it[0], {font:MONO, sz:13, color:'6B6760', caps:true, sp:14}), {after:20})+para(run(it[1], {b:true, sz:20}), {after:0}) : '', k?TOT-hw:hw, {va:'top', mar:80})).join('')); }
+      return table([hw, TOT-hw], rows, {borders:'single'}); };
+    const progressTable = b2=>{ const pct = b2.total ? Math.round(b2.done/b2.total*100) : 0; const gw = Math.max(1, Math.round(TOT*pct/100)), rw = Math.max(1, TOT-gw);
+      return table([TOT], tr(tcell(para(run(b2.label+'   ', {sz:17, color:C.soft})+run(b2.done+' z '+b2.total+' · '+pct+'%', {font:DISP, b:true, sz:30}), {after:0}), TOT, {fill:C.sand, mar:160, marx:200})), {after:0})
+        + table(pct>=100?[TOT]:pct<=0?[TOT]:[gw, rw], tr(pct>=100 ? tcell(para('',{after:0}), TOT, {fill:C.green}) : pct<=0 ? tcell(para('',{after:0}), TOT, {fill:C.badBg}) : tcell(para('',{after:0}), gw, {fill:C.green})+tcell(para('',{after:0}), rw, {fill:C.badBg})), {after:160}); };
+    const cardsXml = (items, empty)=>{ if(!items.length) return para(run(empty||'Brak pozycji', {sz:18, color:C.soft}), {after:160}); let x = '';
+      items.forEach((it, j)=>{ const pc = it.pillCls==='ok' ? [C.okBg, C.ok] : it.pillCls==='warn' ? [C.warnBg, C.warn] : [C.badBg, C.bad]; const w3 = TOT/3|0;
+        x += table([620, TOT-620-1800, 1800], tr(tcell(para(run(String(j+1).padStart(2,'0'), {font:DISP, b:true, sz:30}), {after:0}), 620, {va:'top', mar:120})
+            + tcell(para(run(it.question||'—', {b:true, sz:20}), {after:it.comment?40:0})+(it.comment ? para(run(it.comment, {sz:16, color:C.soft}), {after:0}) : ''), TOT-620-1800, {va:'top', mar:120})
+            + tcell(para(run(it.pill||'', {font:MONO, b:true, sz:15, color:pc[1]}), {jc:'center', after:0}), 1800, {fill:pc[0]})), {borders:'single', after:(it.action||it.owner||it.due||it.writein!==false)?0:140});
+        if(it.action||it.owner||it.due) x += table([w3, w3, TOT-2*w3], tr(tcell(para(run('ZALECANE DZIAŁANIE', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(it.action||'—', {sz:18}), {after:0}), w3, {fill:C.sand, va:'top', mar:100})
+            + tcell(para(run('ODPOWIEDZIALNY', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(it.owner||'', {sz:18}), {after:0}), w3, {fill:C.sand, va:'top', mar:100})
+            + tcell(para(run('TERMIN', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(it.due||'', {font:MONO, sz:18}), {after:0}), TOT-2*w3, {fill:C.sand, va:'top', mar:100})), {borders:'single', after:it.writein===false?140:0});
+        if(it.writein!==false) x += table([TOT-2500, 2500], tr(tcell(para(run((it.w1||'Sposób realizacji')+': ………………………………………………', {sz:16, color:C.faint}), {after:0}), TOT-2500, {mar:100})+tcell(para(run((it.w2||'Data')+': …………', {sz:16, color:C.faint}), {after:0}), 2500, {mar:100})), {borders:'single', after:200});
+      }); return x; };
     M.secs.forEach((s, i)=>{
       const n = String(i+1).padStart(2,'0');
-      b += eyebrow(s.k==='plan' ? n+' · Propozycje przedsięwzięć na rok '+(year+1) : s.k==='podsumowanie' ? n+' · Wnioski' : n+' · Analiza stanu BHP '+year, s.k==='plan') + h2(s.t);
-      if(s.kv && s.kv.length) b += rowsTable(s.kv.map(r=>anKvRow(r[0], r[1])));
-      (s.tables||[]).forEach(t=>{ b += eyebrow(t.title) + rowsTable(anTableRows(t)); });
-      if(s.table) b += rowsTable(anTableRows(s.table));
-      if(s.plan) s.plan.forEach((r, j)=>{
-        const pill = (r.prio||'Średni').toUpperCase(), pc = r.prio==='Wysoki' ? [C.badBg, C.bad] : [C.warnBg, C.warn];
-        const sub = [r.goal?'Cel / miernik: '+r.goal:'', r.cost?'Koszt orientacyjny: '+r.cost:''].filter(Boolean).join(' · ');
-        const w3 = TOT/3|0;
-        b += table([620, TOT-620-1700, 1700], tr(tcell(para(run(String(j+1).padStart(2,'0'), {font:DISP, b:true, sz:30}), {after:0}), 620, {va:'top', mar:120})
-            + tcell(para(run(r.problem||r.action||'—', {b:true, sz:20}), {after:sub?40:0})+(sub ? para(run(sub, {sz:16, color:C.soft}), {after:0}) : ''), TOT-620-1700, {va:'top', mar:120})
-            + tcell(para(run(pill, {font:MONO, b:true, sz:15, color:pc[1]}), {jc:'center', after:0}), 1700, {fill:pc[0]})), {borders:'single', after:0});
-        b += table([w3, w3, TOT-2*w3], tr(tcell(para(run('ZALECANE DZIAŁANIE', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(r.action||'—', {sz:18}), {after:0}), w3, {fill:C.sand, va:'top', mar:100})
-            + tcell(para(run('ODPOWIEDZIALNY', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(r.owner||'', {sz:18}), {after:0}), w3, {fill:C.sand, va:'top', mar:100})
-            + tcell(para(run('TERMIN', {font:MONO, sz:13, color:C.faint}), {after:20})+para(run(r.due?fmtDatePL(r.due):'', {font:MONO, sz:18}), {after:0}), TOT-2*w3, {fill:C.sand, va:'top', mar:100})), {borders:'single', after:0});
-        b += table([TOT-2500, 2500], tr(tcell(para(run('Sposób realizacji: ………………………………………………', {sz:16, color:C.faint}), {after:0}), TOT-2500, {mar:100})+tcell(para(run('Data realizacji: …………', {sz:16, color:C.faint}), {after:0}), 2500, {mar:100})), {borders:'single', after:200});
+      const eb = s.k==='plan' ? n+' · Propozycje przedsięwzięć na rok '+(year+1) : s.k==='podsumowanie' ? n+' · Wnioski' : s.k==='ocena' ? n+' · Podsumowanie dla pracodawcy' : n+' · Analiza stanu BHP '+year;
+      const bd = anSecBadge(s, ov);
+      b += eyebrow(eb, s.k==='plan', 200);
+      b += table([TOT-2400, 2400], tr(tcell(para(run(s.t, {font:DISP, b:true, sz:34}), {style:'Heading1', after:0}), TOT-2400, {va:'bottom'})
+        + tcell(bd ? para(run(' '+bd.status+' ', {font:MONO, b:true, sz:14, color:'FFFFFF', hl:BADGE[bd.cls]}), {jc:'right', after:0}) : '', 2400, {va:'bottom'})), {after:120});
+      anBlocks(s).forEach(bl=>{
+        if(bl.title) b += eyebrow(bl.title, false, 60);
+        if(bl.type==='rows') b += rowsTable(bl.rows);
+        else if(bl.type==='cards') b += cardsXml(bl.items, bl.empty);
+        else if(bl.type==='deflist') b += defTable(bl.items);
+        else if(bl.type==='tiles') b += tileTable(bl.items);
+        else if(bl.type==='progress') b += progressTable(bl);
+        else if(bl.type==='text') String(bl.text||'').split('\n').map(x=>x.trim()).filter(Boolean).forEach(x=>{ b += para(run(x, {sz:19}), {style:'BodyText', after:60}); });
       });
-      if(s.note) String(s.note).split('\n').map(x=>x.trim()).filter(Boolean).forEach(x=>{ b += para(run(x, {sz:19}), {style:'BodyText', after:60}); });
     });
     b += para('', {after:500});
     b += table([TOT/2|0, TOT-(TOT/2|0)], tr(tcell(para(run('opracował: '+(M.sp.name||'specjalista ds. BHP'), {sz:16, color:C.soft}), {jc:'center', after:0})+para(run('(data, podpis)', {sz:15, color:C.faint}), {jc:'center', after:0}), TOT/2|0)
       + tcell(para(run('zapoznałem się i przyjmuję do realizacji: pracodawca', {sz:16, color:C.soft}), {jc:'center', after:0})+para(run('(data, podpis)', {sz:15, color:C.faint}), {jc:'center', after:0}), TOT-(TOT/2|0))));
     b += para(run('Okresowa analiza stanu bezpieczeństwa i higieny pracy za '+year+' r. — § 2 ust. 1 pkt 3 rozporządzenia Rady Ministrów z 2.09.1997 r. w sprawie służby bhp. Stan na '+fmtDatePL(wtTodayIso())+'.', {sz:15, color:C.faint}), {before:200, after:0});
-    /* tabele dwu-wierszowe w kartach działań mają 3 kolumny w 2. wierszu — siatka 3-kolumnowa obsłuży gridSpan */
     const sect = '<w:sectPr><w:footerReference w:type="default" r:id="rId3"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
     const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
     const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+NS+'><w:body>'+b+sect+'</w:body></w:document>';
