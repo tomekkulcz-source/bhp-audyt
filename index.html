@@ -1406,6 +1406,19 @@ html[data-theme="dark"] .wt-modesw button[aria-pressed="true"]{color:#140806;}
 #sec-checklist.wt-pip-only .cat:not(:has(.item[data-pip])){display:none !important;}
 #sec-checklist .item[data-pip] .pbar{box-shadow:inset -3px 0 0 #1d3f8f;}
 .wt-pip-legend{margin:-6px 0 14px;color:var(--ink-soft);}
+.wt-myperm-list{display:flex;flex-direction:column;gap:2px;}
+.wt-myperm-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:9px 2px;font:inherit;color:var(--ink);text-align:left;cursor:pointer;}
+.wt-myperm-row:last-child{border-bottom:0;}
+.wt-myperm-row:hover{background:var(--accent-soft);}
+.wt-myperm-row .nm{font-weight:600;font-size:13.5px;display:flex;flex-direction:column;min-width:0;}
+.wt-myperm-row .no{font-weight:400;font-size:12px;color:var(--ink-faint);}
+.wt-myperm-row .dt{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.wt-myperm-foot{margin-top:8px;}
+.wt-myperm-form{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;}
+.wt-myperm-form > div:first-child,.wt-myperm-form .wide{grid-column:1/-1;}
+.wt-myperm-form label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:3px;}
+.wt-myperm-form .wt-input{width:100%;box-sizing:border-box;}
+@media (max-width:560px){.wt-myperm-form{grid-template-columns:1fr;}}
 .wt-emp-overlay .wt-emp-box.wt-an2{width:min(1180px,96vw);max-width:1180px;}
 .wt-an2-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
 .wt-an2-body{display:grid;grid-template-columns:270px minmax(0,1fr);gap:16px;align-items:start;}
@@ -2916,6 +2929,8 @@ window.__WT_FIREBASE_CONFIG__ = {
           <div class="card wt-today" id="wtStartToday"></div>
         </div>
       </div>
+
+      <div class="wt-start-law" id="wtStartMyPermWrap"><div class="wt-start-sect"><span>Moje uprawnienia</span><a class="jump" onclick="window.wtMyDataOpen()">Moje dane →</a></div><div class="card wt-myperm" id="wtStartMyPerm"></div></div>
 
       <div class="wt-start-health" id="wtStartHealthWrap"><div class="wt-start-sect"><span>Stan klientów</span><a class="jump" onclick="showSection('klienci')">Wszyscy klienci →</a></div><div class="wt-start-health-grid" id="wtStartHealthCards"></div></div>
 
@@ -16274,6 +16289,7 @@ document.addEventListener('keydown', e=>{
     out.push(...wtCollectReviewDatesInRange(startIso, endIso));
     out.push(...wtCollectUpwDatesInRange(startIso, endIso));
     out.push(...wtCollectEmployeeDatesInRange(startIso, endIso));
+    out.push(...wtCollectMyPermDatesInRange(startIso, endIso));
     out.push(...wtCollectRecommendationDatesInRange(startIso, endIso));
     out.push(...wtCollectAccidentDatesInRange(startIso, endIso));
     out.push(...wtCollectMachineDatesInRange(startIso, endIso));
@@ -16393,6 +16409,7 @@ document.addEventListener('keydown', e=>{
     registerDates.push(...wtCollectReviewDatesForMonth(calYear, calMonth));
     registerDates.push(...wtCollectUpwDatesForMonth(calYear, calMonth));
     registerDates.push(...wtCollectEmployeeDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
+    registerDates.push(...wtCollectMyPermDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
     registerDates.push(...wtCollectRecommendationDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
     registerDates.push(...wtCollectAccidentDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
     registerDates.push(...wtCollectMachineDatesForMonth(calYear, calMonth));
@@ -19959,6 +19976,65 @@ document.addEventListener('keydown', e=>{
     });
     return out;
   }
+  /* ---------- Moje uprawnienia (specjalisty) — kafelek na Starcie + terminy w Terminarzu i „Pilnych terminach”.
+     Zapis w profilu specjalisty (app_settings key='specialist_profile').permits = [{id, name, number, date, validUntil, note}].
+     Nie należą do żadnego klienta. ---------- */
+  const WT_MYPERM_SUGGEST = ['Szkolenie okresowe BHP (służba BHP)', 'Inspektor ochrony przeciwpożarowej', 'Uprawnienia SEP — eksploatacja (E)', 'Uprawnienia SEP — dozór (D)', 'Kurs pierwszej pomocy', 'Uprawnienia do prowadzenia szkoleń', 'Zaświadczenie kwalifikacyjne UDT'];
+  function wtMyPerms(){ const d = wtSpecialistDoc(); return (d && Array.isArray(d.permits)) ? d.permits : []; }
+  function wtMyPermDue(pm){
+    if(pm.validUntil) return pm.validUntil;
+    if(pm.date && /szkolenie okresowe/i.test(pm.name||'')) return wtAddMonthsIso(pm.date, 60); /* § 15 ust. 2 w zw. z § 14 ust. 2 pkt 4 rozp. MGiP z 27.07.2004 r. — nie rzadziej niż raz na 5 lat */
+    return '';
+  }
+  function wtRenderMyPerms(){
+    const el = document.getElementById('wtStartMyPerm'); if(!el) return;
+    const list = wtMyPerms().slice().sort((a,b)=>String(wtMyPermDue(a)||'9999').localeCompare(String(wtMyPermDue(b)||'9999')));
+    el.innerHTML = (list.length ? '<div class="wt-myperm-list">'+list.map(pm=>{ const due = wtMyPermDue(pm);
+        return '<button type="button" class="wt-myperm-row" onclick="window.wtMyPermEdit(\''+pm.id+'\')"><span class="nm">'+esc(pm.name||'Uprawnienie')+(pm.number?'<span class="no">'+esc(pm.number)+'</span>':'')+'</span>'
+          +'<span class="dt">'+(due ? '<span class="mono small">ważne do '+esc(fmtDatePL(due))+'</span>'+wtPrzStatusPillHtml(due, WT_TH_90) : '<span class="small" style="color:var(--ink-faint)">bezterminowe</span>')+'</span></button>'; }).join('')+'</div>'
+      : '<div class="wt-empty" style="padding:4px 0 8px;">Dodaj swoje uprawnienia i szkolenia — przypomnę o terminie 90 i 30 dni wcześniej (tu, w „Pilnych terminach” i w Terminarzu).</div>')
+      + '<div class="wt-myperm-foot"><button class="wt-btn" onclick="window.wtMyPermEdit(null)">+ Dodaj uprawnienie</button></div>';
+  }
+  window.wtMyPermEdit = function(id){
+    const pm = Object.assign({id:'', name:'', number:'', date:'', validUntil:'', note:''}, wtMyPerms().find(x=>x.id===id)||{});
+    const ov = wtEmpOverlay();
+    const f = (k, label, type, extra)=>'<div><label>'+label+'</label><input class="wt-input" data-mp="'+k+'" type="'+(type||'text')+'" value="'+esc(pm[k]||'')+'"'+(extra||'')+'></div>';
+    ov.innerHTML = '<div class="wt-emp-box" role="dialog" aria-modal="true" style="max-width:560px;"><div class="wt-emp-boxhead"><h3>'+(id?'Uprawnienie':'Nowe uprawnienie')+'</h3><button class="wt-iconbtn" title="Zamknij" onclick="window.wtEmpClose()"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button></div>'
+      +'<div class="wt-myperm-form">'+f('name','Nazwa uprawnienia / szkolenia','text',' list="wtMyPermList" placeholder="np. Szkolenie okresowe BHP (służba BHP)"')
+      +'<datalist id="wtMyPermList">'+WT_MYPERM_SUGGEST.map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist>'
+      +f('number','Numer zaświadczenia / świadectwa')+f('date','Data uzyskania / ostatniego szkolenia','date')+f('validUntil','Ważne do (puste = bezterminowe)','date')
+      +'<div class="wide"><label>Uwagi</label><input class="wt-input" data-mp="note" value="'+esc(pm.note||'')+'" placeholder="np. jednostka szkoląca, zakres"></div></div>'
+      +'<p class="small" style="margin:8px 0 0;">Szkolenie okresowe BHP służby BHP — gdy nie wpiszesz „Ważne do”, termin policzy się sam: nie rzadziej niż raz na 5 lat od daty szkolenia (§ 15 ust. 2 rozp. MGiP z 27.07.2004 r.).</p>'
+      +'<div class="wt-report-actionbar">'+(id?'<button class="wt-btn danger" onclick="window.wtMyPermDelete(\''+id+'\')">Usuń</button>':'')+'<button class="wt-btn" onclick="window.wtEmpClose()">Anuluj</button><button class="wt-btn primary" onclick="window.wtMyPermSave(\''+(id||'')+'\')">Zapisz</button></div></div>';
+    ov.classList.add('show');
+    setTimeout(()=>{ const i = ov.querySelector('[data-mp="name"]'); if(i && !id) i.focus(); }, 50);
+  };
+  async function wtMyPermWrite(list){
+    if(!DB) return false;
+    const d = wtSpecialistDoc();
+    try{
+      if(d){ await DB.doc('app_settings/'+d.id).update({permits:list, updatedAt:Date.now()}); d.permits = list; }
+      else await DB.collection('app_settings').add({key:'specialist_profile', permits:list, createdAt:Date.now(), updatedAt:Date.now()});
+      return true;
+    }catch(e){ console.error('moje uprawnienia', e); wtToast('Nie udało się zapisać'+(e&&e.message?': '+e.message:'.'), true); return false; }
+  }
+  window.wtMyPermSave = async function(id){
+    const ov = document.getElementById('wt-emp-overlay'); if(!ov) return;
+    const pm = {id: id || ('mp'+Date.now().toString(36)+Math.random().toString(36).slice(2,6))};
+    ov.querySelectorAll('[data-mp]').forEach(i=>{ pm[i.dataset.mp] = i.value.trim(); });
+    if(!pm.name){ wtToast('Wpisz nazwę uprawnienia.', true); return; }
+    const list = wtMyPerms().filter(x=>x.id!==pm.id).concat([pm]);
+    if(await wtMyPermWrite(list)){ window.wtEmpClose(); wtToast('Zapisano.'); wtRenderMyPerms(); try{ wtRenderOverdueRegPanel(); }catch(e){} }
+  };
+  window.wtMyPermDelete = async function(id){
+    if(!await wtConfirm('Usunąć to uprawnienie z listy?', 'Usuń')) return;
+    if(await wtMyPermWrite(wtMyPerms().filter(x=>x.id!==id))){ window.wtEmpClose(); wtRenderMyPerms(); try{ wtRenderOverdueRegPanel(); }catch(e){} }
+  };
+  function wtCollectMyPermDatesInRange(startIso, endIso){
+    return wtMyPerms().map(pm=>({pm, due:wtMyPermDue(pm)})).filter(x=>x.due && x.due>=startIso && x.due<=endIso)
+      .map(x=>({date:x.due, kind:'review', tag:'Moje uprawnienia', title:'Ważność: '+(x.pm.name||'uprawnienie'), color:'#6b6760', isDeadline:true, nav:{section:'start', openFn:'wtMyPermEdit', id:x.pm.id}}));
+  }
+  window.wtMyDataOpen = function(){ showSection('rodo'); setTimeout(()=>{ const e = document.getElementById('rodoSpecialist'); if(e) e.scrollIntoView({block:'center', behavior:'smooth'}); }, 80); };
   window.wtEmpOpenFromCal = function(id){
     const e = allEmployees.find(x=>x.id===id);
     if(!e) return;
@@ -29243,6 +29319,7 @@ document.addEventListener('keydown', e=>{
       }
       wtRenderLegalWatchBanner();
       wtRenderBackupReminderBanner();
+      try{ wtRenderMyPerms(); wtRenderOverdueRegPanel(); }catch(e){}
       if(window.wtQuizMigrateHistory) window.wtQuizMigrateHistory();
       if(window.wtQuizRenderHistory) window.wtQuizRenderHistory();
       renderRjHub();
@@ -29486,7 +29563,7 @@ document.addEventListener('keydown', e=>{
       }
       _wtOrigShowSection2(key);
       if(key==='wypadki' && wypState.view!=='wizard'){ const sec = document.getElementById('sec-wypadki'); if(sec) sec.classList.remove('wt-wyp-working','wt-wyp-showref'); }
-      if(key==='start'){ wtRenderStartGreeting(); renderDeadlinePanel(); wtRenderLegalWatchBanner(); wtRenderBackupReminderBanner(); wtRenderOverdueRegPanel(); wtRenderWeekPanel(); wtRenderStartToday(); wtRenderStartClientUrgency(); }
+      if(key==='start'){ wtRenderStartGreeting(); renderDeadlinePanel(); wtRenderLegalWatchBanner(); wtRenderBackupReminderBanner(); wtRenderOverdueRegPanel(); wtRenderWeekPanel(); wtRenderStartToday(); try{ wtRenderMyPerms(); }catch(e){} wtRenderStartClientUrgency(); }
       if(key==='rejestry'){ wtRenderBibliotekaInstrukcji(); wtRjInitCollapse(); }
       if(key==='prawo-kluczowe'){ wtWypInitCollapse(); }
     };
