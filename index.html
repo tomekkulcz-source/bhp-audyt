@@ -1992,8 +1992,8 @@ tr.srow.wt-item-inactive{opacity:.4;}
 .wt-due-over{color:var(--crit);} .wt-due-today{color:var(--high);} .wt-due-soon{color:var(--accent-ink);}
 .wt-tm-ic{display:inline-flex;align-items:center;gap:3px;} .wt-tm-ic svg{width:12px;height:12px;flex:0 0 auto;} .wt-tm-ic.ok{color:var(--low);}
 .wt-tm-list{display:inline-flex;align-items:center;gap:5px;min-width:0;}
-.wt-todo-check.p1{border-color:var(--accent);} .wt-todo-check.p2{border-color:var(--high);} .wt-todo-check.p3{border-color:var(--crit);}
-.wt-todo-check.p1:not(:checked){background:color-mix(in srgb, var(--accent) 9%, var(--surface));}
+.wt-todo-check.p1{border-color:var(--blue);} .wt-todo-check.p2{border-color:var(--high);} .wt-todo-check.p3{border-color:var(--crit);}
+.wt-todo-check.p1:not(:checked){background:color-mix(in srgb, var(--blue) 9%, var(--surface));}
 .wt-todo-check.p2:not(:checked){background:color-mix(in srgb, var(--high) 10%, var(--surface));}
 .wt-todo-check.p3:not(:checked){background:color-mix(in srgb, var(--crit) 10%, var(--surface));}
 .wt-todo-flag{display:inline-flex;flex:0 0 auto;} .wt-todo-flag svg{width:14px;height:14px;}
@@ -2974,8 +2974,13 @@ window.__WT_FIREBASE_CONFIG__ = {
 #sec-todo textarea.wt-tt-dtitle:focus{outline:none;box-shadow:none;}
 #sec-todo textarea.wt-tt-ddesc{flex:0 0 auto;min-height:18vh;font-size:14px;color:var(--ink);margin-bottom:12px;}
 #sec-todo textarea.wt-tt-ddesc::placeholder{color:var(--ink-faint);}
-#sec-todo .wt-tt-props{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line);}
-#sec-todo .wt-tt-props.open{box-shadow:0 0 0 3px var(--accent-soft);border-radius:8px;}
+#sec-todo .wt-tt-props{display:none;margin:-4px 0 14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);}
+#sec-todo .wt-tt-props.open{display:grid;}
+#sec-todo .wt-tt-props .wt-tt-hrow{display:none !important;}
+.wt-tt-listchip{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--ink-soft);font:inherit;font-size:12.5px;font-weight:600;padding:5px 8px;border-radius:7px;cursor:pointer;max-width:220px;min-width:0;}
+.wt-tt-listchip span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wt-tt-listchip:hover{background:var(--surface-2);color:var(--ink);}
+#sec-todo #taskDetailStatus{white-space:nowrap;font-size:11.5px;}
 .wt-tt-hideprio{display:none;}
 .wt-tt-prompt{position:fixed;inset:0;z-index:3100;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:16px;}
 .wt-tt-prompt-box{background:var(--surface);border-radius:14px;padding:18px;width:min(380px,100%);box-shadow:0 20px 50px rgba(0,0,0,.25);}
@@ -7771,20 +7776,20 @@ window.__WT_FIREBASE_CONFIG__ = {
           <button type="button" class="wt-tt-tool" id="taskDetailFlagBtn" onclick="wtTaskDetailFlag(event)" title="Priorytet" aria-label="Priorytet"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <button type="button" class="wt-tt-tool" onclick="if(todoSelectedTaskId) wtTodoMenu(todoSelectedTaskId, {type:'click', currentTarget:this})" title="Więcej" aria-label="Więcej opcji"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg></button>
         </div>
+        <div class="wt-props wt-tt-props" id="taskDetailProps">
+          <label for="taskDetailListSelect" class="wt-tt-hrow">Lista</label><div class="wt-tt-hrow"><select class="status-select" id="taskDetailListSelect"></select></div>
+          <label for="taskDetailSecSelect" class="wt-tt-hrow">Sekcja</label><div class="wt-tt-hrow wt-tt-secrow"><select class="status-select" id="taskDetailSecSelect" onchange="wtTaskSetSection(this.value)"></select></div>
+          <label for="taskDetailDue">Termin</label><div><input type="date" id="taskDetailDue"><button type="button" class="wt-chip" onclick="wtTaskSetDue(0)">Dziś</button><button type="button" class="wt-chip" onclick="wtTaskSetDue(1)">Jutro</button><button type="button" class="wt-chip" onclick="wtTaskSetDue(7)">+7 dni</button><button type="button" class="wt-chip" onclick="wtTaskSetDue('')">Bez terminu</button></div>
+          <label for="taskDetailRepeat">Powtarzaj</label><div><select class="status-select" id="taskDetailRepeat" onchange="wtTaskSetRepeat(this.value)"><option value="">Nie powtarzaj</option><option value="daily">Codziennie</option><option value="weekly">Co tydzień</option><option value="monthly">Co miesiąc</option><option value="yearly">Co rok</option></select></div>
+          <span class="wt-tt-hideprio"><label>Priorytet</label><div><div class="wt-prio-seg" id="taskDetailPrio"><button type="button" data-prio="0" onclick="wtTaskSetPrio(0)">Brak</button><button type="button" data-prio="1" onclick="wtTaskSetPrio(1)"><i style="background:var(--blue)"></i>Niski</button><button type="button" data-prio="2" onclick="wtTaskSetPrio(2)"><i style="background:var(--high)"></i>Średni</button><button type="button" data-prio="3" onclick="wtTaskSetPrio(3)"><i style="background:var(--crit)"></i>Wysoki</button></div></div></span>
+        </div>
         <textarea class="wt-tt-dtitle" id="taskDetailTitle" rows="1" placeholder="Treść zadania" maxlength="300" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
         <textarea id="taskDetailNotes" class="wt-tt-ddesc" placeholder="Opis — napisz coś… (szczegóły, ustalenia, linki)"></textarea>
         <div class="wt-sub-head">Kroki <span id="taskSubCount"></span></div>
         <div class="wt-sub-list" id="taskSubList"></div>
         <input class="wt-input wt-sub-add" id="taskSubAdd" type="text" placeholder="+ Dodaj krok (Enter)" maxlength="200" onkeydown="if(event.key==='Enter'){event.preventDefault();wtSubAdd('task');}">
-        <div class="wt-props wt-tt-props" id="taskDetailProps">
-          <label for="taskDetailListSelect">Lista</label><div><select class="status-select" id="taskDetailListSelect"></select></div>
-          <label for="taskDetailSecSelect" class="wt-tt-secrow">Sekcja</label><div class="wt-tt-secrow"><select class="status-select" id="taskDetailSecSelect" onchange="wtTaskSetSection(this.value)"></select></div>
-          <label for="taskDetailDue">Termin</label><div><input type="date" id="taskDetailDue"><button type="button" class="wt-chip" onclick="wtTaskSetDue(0)">Dziś</button><button type="button" class="wt-chip" onclick="wtTaskSetDue(1)">Jutro</button><button type="button" class="wt-chip" onclick="wtTaskSetDue(7)">+7 dni</button><button type="button" class="wt-chip" onclick="wtTaskSetDue('')">Bez terminu</button></div>
-          <label for="taskDetailRepeat">Powtarzaj</label><div><select class="status-select" id="taskDetailRepeat" onchange="wtTaskSetRepeat(this.value)"><option value="">Nie powtarzaj</option><option value="daily">Codziennie</option><option value="weekly">Co tydzień</option><option value="monthly">Co miesiąc</option><option value="yearly">Co rok</option></select></div>
-          <span class="wt-tt-hideprio"><label>Priorytet</label><div><div class="wt-prio-seg" id="taskDetailPrio"><button type="button" data-prio="0" onclick="wtTaskSetPrio(0)">Brak</button><button type="button" data-prio="1" onclick="wtTaskSetPrio(1)"><i style="background:var(--accent)"></i>Niski</button><button type="button" data-prio="2" onclick="wtTaskSetPrio(2)"><i style="background:var(--high)"></i>Średni</button><button type="button" data-prio="3" onclick="wtTaskSetPrio(3)"><i style="background:var(--crit)"></i>Wysoki</button></div></div></span>
-        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
-          <span class="wt-note-status" id="taskDetailStatus"></span>
+          <span style="display:flex;align-items:center;gap:10px;min-width:0"><button type="button" class="wt-tt-listchip" id="taskDetailListChip" onclick="wtTaskListChip(this)" title="Przenieś do innej listy lub sekcji"></button><span class="wt-note-status" id="taskDetailStatus"></span></span>
           <button class="wt-btn danger ghost" onclick="wtDeleteTodo()">Usuń zadanie</button>
         </div>
       </div>
@@ -15130,7 +15135,7 @@ document.addEventListener('keydown', e=>{
     overdue:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
     all:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
   };
-  const WT_PRIO = [{l:'Brak',c:''},{l:'Niski',c:'var(--accent)'},{l:'Średni',c:'var(--high)'},{l:'Wysoki',c:'var(--crit)'}];
+  const WT_PRIO = [{l:'Brak',c:''},{l:'Niski',c:'var(--blue)'},{l:'Średni',c:'var(--high)'},{l:'Wysoki',c:'var(--crit)'}];
   const WT_REPEAT = {daily:'Codziennie', weekly:'Co tydzień', monthly:'Co miesiąc', yearly:'Co rok'};
   const WT_WD_SHORT = ['nd','pon','wt','śr','czw','pt','sob'];
   const WT_WD_FULL = ['niedziela','poniedziałek','wtorek','środa','czwartek','piątek','sobota'];
@@ -15657,9 +15662,10 @@ document.addEventListener('keydown', e=>{
     db.className = 'wt-tt-duebtn'+(di?' wt-due-'+di.cls+' set':'');
     if(fb){ const p = +t.priority||0; fb.style.color = p ? WT_PRIO[p].c : ''; fb.innerHTML = p ? WT_TT_IC.flagF : WT_TT_IC.flag; fb.title = 'Priorytet: '+WT_PRIO[p].l.toLowerCase(); }
     const ss = document.getElementById('taskDetailSecSelect');
+    { const ch = document.getElementById('taskDetailListChip'); if(ch){ const pp = t.projectId ? wtProjectById(t.projectId) : null; const sc = wtTodoSecs(t.projectId||'').find(x=>x.id===t.sectionId); ch.innerHTML = '<span class="wt-tt-mdot" style="background:'+(pp?pp.color:'var(--ink-faint)')+'"></span><span>'+esc(pp?pp.name:'Skrzynka')+(sc?' · '+esc(sc.name):'')+'</span>'; } }
     if(ss){ const secs = wtTodoSecs(t.projectId||''); ss.innerHTML = '<option value="">Bez sekcji</option>'+secs.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>').join(''); ss.value = secs.some(s=>s.id===t.sectionId) ? t.sectionId : ''; ss.closest('.wt-tt-secrow').style.display = secs.length ? '' : 'none'; }
   }
-  window.wtTaskDetailDueToggle = function(){ const p = document.getElementById('taskDetailProps'); if(!p) return; p.classList.toggle('open'); if(p.classList.contains('open')){ const d = document.getElementById('taskDetailDue'); if(d) d.focus(); } };
+  window.wtTaskDetailDueToggle = function(){ const p = document.getElementById('taskDetailProps'); if(!p) return; p.classList.toggle('open'); };
   window.wtTaskDetailFlag = function(ev){
     if(!todoSelectedTaskId) return; wtTtMenuClose(); const t = allTodos.find(x=>x.id===todoSelectedTaskId); const prio = t ? +t.priority||0 : 0;
     const m = document.createElement('div'); m.id = 'wtTtMenu'; m.className = 'wt-tt-menu';
@@ -15667,6 +15673,7 @@ document.addEventListener('keydown', e=>{
     m.addEventListener('click', e=>{ const b = e.target.closest('[data-p]'); if(!b) return; wtTtMenuClose(); window.wtTaskSetPrio(+b.dataset.p); });
     const r = ev.currentTarget.getBoundingClientRect(); wtTtMenuPlace(m, r.right - 200, r.bottom + 4);
   };
+  window.wtTaskListChip = function(btn){ if(!todoSelectedTaskId) return; window.wtTodoMenu(todoSelectedTaskId, {type:'click', currentTarget:btn}); const mv = document.querySelector('#wtTtMenu [data-m="move"]'); if(mv) mv.click(); };
   window.wtTaskSetSection = function(v){ if(!todoSelectedTaskId || !DB) return; DB.doc('todos/'+todoSelectedTaskId).update({sectionId:v}).catch(()=>wtToast('Nie udało się zapisać sekcji.', true)); };
   /* ---- panel szczegółów zadania: pełnowymiarowa notatka po prawej, bez małego okienka z przewijaniem ---- */
   function wtRefreshTaskListSelect(){
@@ -15757,6 +15764,7 @@ document.addEventListener('keydown', e=>{
     if(!todoSelectedTaskId) return;
     document.getElementById('taskDetailDue').value = n==='' ? '' : wtIsoPlus(+n);
     scheduleSaveTask(todoSelectedTaskId, 0);
+    const pp = document.getElementById('taskDetailProps'); if(pp) pp.classList.remove('open');
   };
   window.wtTaskDetailToggleDone = function(){
     const t = allTodos.find(x=>x.id===todoSelectedTaskId); if(!t) return;
