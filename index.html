@@ -15463,7 +15463,7 @@ document.addEventListener('keydown', e=>{
       DB.collection('todos').add(c).then(()=>wtToast('Zduplikowano zadanie.')).catch(()=>wtToast('Nie udało się zduplikować.', true)); return; }
     if(act==='del'){ wtTtMenuClose(); window.wtDeleteTodo(id); return; }
     if(act==='move'){ wtTodoMoveMenu(id, btn); return; }
-    if(act.startsWith('to:')){ wtTtMenuClose(); const [pid, sid] = act.slice(3).split('|'); up({projectId:pid, sectionId:sid||''}); wtToast('Przeniesiono zadanie.'); return; }
+    if(act.startsWith('to:')){ wtTtMenuClose(); const [pid] = act.slice(3).split('|'); if((t.projectId||'')===pid) return; up({projectId:pid, sectionId:''}); wtToast('Przeniesiono zadanie.'); return; }
   }
   function wtTodoBackBtn(id, m, label){ const b = document.createElement('button'); b.type = 'button'; b.className = 'wt-tt-mback'; b.innerHTML = WT_TT_IC.chev+'<span>'+esc(label)+'</span>';
     b.addEventListener('click', e=>{ e.stopPropagation(); const r = m.getBoundingClientRect(); wtTtMenuClose(); window.wtTodoMenu(id, {clientX:r.left, clientY:r.top}); }); return b; }
@@ -15485,10 +15485,10 @@ document.addEventListener('keydown', e=>{
   }
   function wtTodoMoveMenu(id, btn){
     const t = allTodos.find(x=>x.id===id); const m = document.getElementById('wtTtMenu'); if(!m || !t) return;
-    const opt = (pid, sid, lbl, dot, indent)=>'<button type="button" data-m="to:'+pid+'|'+(sid||'')+'"'+((t.projectId||'')===pid && (t.sectionId||'')===(sid||'') ? ' class="on"' : '')+(indent?' style="padding-left:34px"':'')+'>'+(dot||'')+'<span>'+esc(lbl)+'</span></button>';
+    const opt = (pid, sid, lbl, dot, indent)=>'<button type="button" data-m="to:'+pid+'|'+(sid||'')+'"'+((t.projectId||'')===pid ? ' class="on"' : '')+(indent?' style="padding-left:34px"':'')+'>'+(dot||'')+'<span>'+esc(lbl)+'</span></button>';
     const lists = [['', 'Skrzynka', '<span class="wt-tt-mdot" style="background:var(--ink-faint)"></span>']].concat(allProjects.map(p=>[p.id, p.name, '<span class="wt-tt-mdot" style="background:'+p.color+'"></span>']));
     m.innerHTML = '<button type="button" data-back="1" class="wt-tt-mback">'+WT_TT_IC.chev+'<span>Przenieś do…</span></button><div class="wt-tt-mscroll">'
-      + lists.map(([pid, lbl, dot])=>opt(pid, '', lbl, dot) + wtTodoSecs(pid).map(s=>opt(pid, s.id, s.name, '', true)).join('')).join('') + '</div>';
+      + lists.map(([pid, lbl, dot])=>opt(pid, '', lbl, dot)).join('') + '</div>';
     m.querySelector('[data-back]').addEventListener('click', e=>{ e.stopPropagation(); const r = m.getBoundingClientRect(); wtTtMenuClose(); window.wtTodoMenu(id, {clientX:r.left, clientY:r.top}); });
   }
   window.wtTodoListMenu = function(ev){
