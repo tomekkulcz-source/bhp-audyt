@@ -30480,7 +30480,8 @@ document.addEventListener('keydown', e=>{
   }
   const PPOZ_CATS = ['ZL I','ZL II','ZL III','ZL IV','ZL V','PM','IN'];
   const wtPpozClients = ()=>allProjects.filter(p=>p.isClient!==false && p.services && p.services.ppoz===true).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pl'));
-  const ppozNum = v=>{ const n = parseFloat(String(v==null?'':v).replace(',','.')); return isFinite(n) ? n : null; };
+  /* liczby wpisywane po polsku: „1 500,5” (spacje jako separator tysięcy, przecinek dziesiętny) */
+  const ppozNum = v=>{ const n = parseFloat(String(v==null?'':v).replace(/[\s\u00a0\u202f]/g,'').replace(',','.')); return isFinite(n) ? n : null; };
 
   /* ---- terminy urządzenia: przegląd (min(okres producenta, 12 mies.)) + próba węży (5 lat) ---- */
   function wtPpozDevDue(d){
@@ -31233,7 +31234,7 @@ document.addEventListener('keydown', e=>{
   const KL_ZL_TABLE = {N:{'ZL I':'B','ZL II':'B','ZL III':'C','ZL IV':'D','ZL V':'C'}, SW:{'ZL I':'B','ZL II':'B','ZL III':'B','ZL IV':'C','ZL V':'B'}, W:{'ZL I':'B','ZL II':'B','ZL III':'B','ZL IV':'B','ZL V':'B'}, WW:{'ZL I':'A','ZL II':'A','ZL III':'A','ZL IV':'B','ZL V':'A'}};
   /* § 212 ust. 4 — PM i IN: wiersz wg Q, kolumna: jedna kondygnacja nadziemna / N / SW / W / WW; null = budynek niedopuszczalny (§ 228 ust. 1) */
   const KL_PM_TABLE = [{max:500, c:['E','D','C','B','B']}, {max:1000, c:['D','D','C','B','B']}, {max:2000, c:['C','C','C','B','B']}, {max:4000, c:['B','B','B',null,null]}, {max:Infinity, c:['A','A','A',null,null]}];
-  const klNum = v=>{ const n = parseFloat(String(v==null?'':v).replace(',','.')); return isFinite(n) ? n : null; };
+  const klNum = v=>{ const n = parseFloat(String(v==null?'':v).replace(/[\s\u00a0\u202f]/g,'').replace(',','.')); return isFinite(n) ? n : null; };
   const klHigher = (a, b)=>!a ? b : !b ? a : (KL_CLASS.indexOf(a) <= KL_CLASS.indexOf(b) ? a : b);
   function klHgByHeight(h){ if(h===null) return null; return h<=12 ? 'N' : h<=25 ? 'SW' : h<=55 ? 'W' : 'WW'; }
   function klHgByStoreys(n){ if(n===null) return null; return n<=4 ? 'N' : n<=9 ? 'SW' : n<=18 ? 'W' : null; }
@@ -31450,7 +31451,7 @@ document.addEventListener('keydown', e=>{
         +(ibp.resistClass?'Wymagana klasa odporności pożarowej budynku: '+ibp.resistClass+'. ':'')
         +(nz(ibp.construction)?'Konstrukcja i materiały: '+ibp.construction+'. ':''));
       { const sst = sevClientStatus(o.projectId); if(sst==='zzr' || sst==='zdr') parts.push('Zakład jest zakładem o '+(sst==='zdr'?'dużym':'zwiększonym')+' ryzyku wystąpienia poważnej awarii przemysłowej (art. 248 ustawy — Prawo ochrony środowiska). Zasady zapobiegania awariom i ograniczania ich skutków określa program zapobiegania poważnym awariom przemysłowym'+(sst==='zdr'?', raport o bezpieczeństwie oraz wewnętrzny plan operacyjno-ratowniczy':'')+'; postępowanie opisane w niniejszej instrukcji jest z nimi spójne, a w razie awarii przemysłowej prowadzący zakład natychmiast zawiadamia '+(sst==='zdr'?'komendanta wojewódzkiego':'komendanta powiatowego (miejskiego)')+' PSP oraz wojewódzkiego inspektora ochrony środowiska (art. 264).'); }
-      if((ibp.zones||[]).length) parts.push('Podział na strefy pożarowe: '+ibp.zones.map(z=>[z.name, z.cat, nz(z.area)?z.area+' m²':'', nz(z.q)?'gęstość obciążenia ogniowego '+z.q+' MJ/m²':'', nz(z.people)?'do '+z.people+' osób':''].filter(Boolean).join(', ')).join('; ')+'.');
+      if((ibp.zones||[]).length) parts.push('Podział na strefy pożarowe: '+ibp.zones.map(z=>[z.name, z.cat, nz(z.area)?z.area+' m²':'', nz(z.q)?'gęstość obciążenia ogniowego '+(ppozNum(z.q)!==null?ppozNum(z.q).toLocaleString('pl-PL',{maximumFractionDigits:2}):z.q)+' MJ/m²':'', nz(z.people)?'do '+z.people+' osób':''].filter(Boolean).join(', ')).join('; ')+'.');
       parts.push(o.explosion ? 'W obiekcie występuje strefa (strefy) zagrożenia wybuchem: '+(ibp.explosionDesc||'[pomieszczenia / przestrzenie, klasyfikacja stref, czynniki mogące zainicjować zapłon]')+'. Wymagania dla tych stref określa ocena zagrożenia wybuchem z dokumentacją klasyfikacyjną (§ 37).' : 'W obiekcie nie występują strefy zagrożenia wybuchem.');
       if((ibp.materials||[]).length) parts.push('Materiały niebezpieczne pożarowo i ich parametry pożarowe: '+ibp.materials.map(m=>[m.name, nz(m.qty)?'ilość: '+m.qty:'', nz(m.place)?'miejsce: '+m.place:'', nz(m.param)?m.param:''].filter(Boolean).join(', ')).join('; ')+'. Na stanowiskach pracy utrzymuje się nie więcej niż dobowe zapotrzebowanie, a zapas przechowuje w wydzielonym magazynie (§ 7 ust. 1 pkt 2–3).');
       else parts.push('W obiekcie nie przechowuje się materiałów niebezpiecznych pożarowo w ilościach wymagających wydzielonego magazynowania (poza środkami w opakowaniach jednostkowych).');
@@ -31708,8 +31709,17 @@ document.addEventListener('keydown', e=>{
     wtQState = {zi, F: z.area||'', rows: (z.qRows && z.qRows.length) ? JSON.parse(JSON.stringify(z.qRows)) : [{m:'',g:'',qc:''}]};
     wtQRender();
   };
-  function wtQSum(){ const F = ppozNum(wtQState.F)||0; const sum = wtQState.rows.reduce((s,r)=>s+(ppozNum(r.g)||0)*(ppozNum(r.red)||1)*(ppozNum(r.qc)||0), 0); return {sum:Math.round(sum), F, Q: F ? Math.round(sum/F) : 0}; }
-  function wtQResHtml(r){ let h = 'Σ G·Q<sub>c</sub> = '+r.sum.toLocaleString('pl-PL')+' MJ · Q = <b>'+r.Q.toLocaleString('pl-PL')+' MJ/m²</b>';
+  /* Q liczone bez zaokrąglania (zaokrąglenie przed porównaniem z progami 200/500/1000/2000/4000/5900 MJ/m² mogłoby zmienić przedział);
+     ujemne masy / ciepła spalania są pomijane i zgłaszane. */
+  const Q_TH = [200,500,1000,2000,4000,5900];
+  function qStore(Q){ let r = Math.round(Q*100)/100; if(Q_TH.some(t=>(Q>t)!==(r>t))) r = Q; return String(r); }
+  const qFmt = v=>Number(v).toLocaleString('pl-PL', {maximumFractionDigits:2});
+  function wtQSum(){ const F = ppozNum(wtQState.F)||0; let bad = 0;
+    const sum = wtQState.rows.reduce((s,r)=>{ const g = ppozNum(r.g), qc = ppozNum(r.qc), red = ppozNum(r.red)||1; if((g!==null && g<0) || (qc!==null && qc<0)){ bad++; return s; } return s+(g||0)*red*(qc||0); }, 0);
+    return {sum, F, Q: F>0 ? sum/F : 0, bad}; }
+  function wtQResHtml(r){ let h = 'Σ G·Q<sub>c</sub> = '+qFmt(r.sum)+' MJ · Q<sub>d</sub> = <b>'+qFmt(r.Q)+' MJ/m²</b>';
+    if(r.bad) h += '<br><span class="small" style="color:var(--crit)">Pominięto '+r.bad+' '+(r.bad===1?'wiersz':'wiersze')+' z ujemną masą lub ciepłem spalania — popraw dane.</span>';
+    if(!r.F && r.sum) h += '<br><span class="small" style="color:var(--crit)">Podaj powierzchnię F, aby policzyć Q.</span>';
     const o = wtIbpObj(); const ibp = o ? (wtIbpPending || ibpOf(o)) : null; const z = ibp && (ibp.zones||[])[wtQState.zi];
     if(r.Q>5900) h += '<br><span class="small">Q powyżej 5900 MJ/m² — względny czas trwania pożaru przyjmuje się 8 h (PN-B-02852, rozdz. 3).</span>';
     else if(r.Q) h += '<br><span class="small">Względny czas trwania pożaru odczytaj z rysunku 1 normy PN-B-02852 (potrzebny m.in. do zapasu wody w zbiorniku, maks. 4 h — § 6 ust. 10 pkt 1 rozp. z 24.07.2009 r.).</span>';
@@ -31729,7 +31739,7 @@ document.addEventListener('keydown', e=>{
       +'<div class="wt-ibp-list">'+wtQState.rows.map((row,i)=>'<div class="wt-ibp-lrow"><label class="wt-pz-f" style="flex:2 1 180px"><span>Materiał</span><input class="wt-input" list="wtQList" value="'+esc(row.m)+'" oninput="window.wtQSet('+i+',\'m\',this.value)"></label><label class="wt-pz-f" style="flex:1 1 90px"><span>Masa G [kg]</span><input class="wt-input" inputmode="decimal" value="'+esc(row.g)+'" oninput="window.wtQSet('+i+',\'g\',this.value)"></label><label class="wt-pz-f" style="flex:1 1 90px"><span>Q<sub>c</sub> [MJ/kg]</span><input class="wt-input" inputmode="decimal" id="wtQc'+i+'" value="'+esc(row.qc)+'" oninput="window.wtQSet('+i+',\'qc\',this.value)"></label><label class="wt-pz-f" style="flex:1 1 100px"><span>Udział masy</span><select class="wt-input" onchange="window.wtQSet('+i+',\'red\',this.value)">'+[['1','100%'],['0.1','10% (pkt 2.2.3)'],['0.2','20% (pkt 2.2.4)']].map(o=>'<option value="'+o[0]+'"'+(String(row.red||'1')===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select></label><button type="button" class="wt-btn ghost danger" onclick="window.wtQDel('+i+')">×</button></div>').join('')
       +'<button type="button" class="wt-btn ghost" onclick="window.wtQAdd()">+ Materiał</button></div>'
       +'<div class="wt-ibp-qres" id="wtQRes">'+wtQResHtml(r)+'</div>',
-      ()=>{ const res = wtQSum(); wtIbpSet('zones.'+wtQState.zi+'.q', String(res.Q)); wtIbpSet('zones.'+wtQState.zi+'.qRows', wtQState.rows); wtIbpRerenderSoon(); wtToast('Wpisano Q = '+res.Q+' MJ/m².'); return true; }, 'Wpisz Q do strefy');
+      ()=>{ const res = wtQSum(); if(!(res.F>0)){ wtToast('Podaj powierzchnię F strefy.', true); return false; } if(res.bad){ wtToast('Popraw wiersze z ujemną masą lub ciepłem spalania.', true); return false; } wtIbpSet('zones.'+wtQState.zi+'.q', qStore(res.Q)); wtIbpSet('zones.'+wtQState.zi+'.qRows', wtQState.rows); wtIbpRerenderSoon(); wtToast('Wpisano Q = '+qFmt(res.Q)+' MJ/m².'); return true; }, 'Wpisz Q do strefy');
   }
   window.wtQSet = function(i, k, v){
     if(i<0) wtQState.F = v; else { wtQState.rows[i][k] = v; if(k==='m'){ const p = Q_PRESETS.find(x=>x[0]===v); if(p){ wtQState.rows[i].qc = String(p[1]); const el = document.getElementById('wtQc'+i); if(el) el.value = p[1]; } } }
