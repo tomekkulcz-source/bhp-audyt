@@ -30045,6 +30045,7 @@ document.addEventListener('keydown', e=>{
     allPpozObjects.filter(o=>cl.has(o.projectId)).forEach(o=>{
       const r = wtPpozObjReq(o);
       if(r.ibp.needed) ev.push({pid:o.projectId, oid:o.id, kind:'obj', id:o.id, date:r.ibp.due, title:'Aktualizacja IBP (co 2 lata)', sub:o.name||'obiekt', missing:!r.ibp.due});
+      if(r.ibp.needed){ const ch = ibpChanged(o); if(ch.length) ev.push({pid:o.projectId, oid:o.id, kind:'obj', id:o.id, date:wtTodayIso(), title:'Zmiany danych obiektu po aktualizacji IBP ('+ch.join(', ')+') — sprawdź, czy IBP wymaga aktualizacji (§ 6 ust. 7)', sub:o.name||'obiekt', missing:false}); }
       if(r.evac.needed) ev.push({pid:o.projectId, oid:o.id, kind:'obj', id:o.id, date:r.evac.due, title:'Praktyczne sprawdzenie ewakuacji', sub:o.name||'obiekt', missing:!r.evac.due});
       if(r.evac.needed && r.evac.due) ev.push({pid:o.projectId, oid:o.id, kind:'obj', id:o.id, date:wtAddDaysIso(r.evac.due, -21), title:'Próbna ewakuacja za 3 tygodnie — ustal termin i zawiadom komendanta PSP najpóźniej tydzień przed (§ 17 ust. 4)'+(r.evac.zl2?'; ZL II — uzgodnij z PSP zakres i obszar (§ 17 ust. 3)':''), sub:o.name||'obiekt', missing:false});
       if(r.wasteDrill){ ev.push({pid:o.projectId, oid:o.id, kind:'obj', id:o.id, date:r.wasteDrill.due, title:'Ćwiczenia na wypadek pożaru — miejsce gospodarowania odpadami (co rok, § 39)', sub:o.name||'obiekt', missing:!r.wasteDrill.due});
@@ -30305,7 +30306,7 @@ document.addEventListener('keydown', e=>{
     if(open){
       const row = (k,v,b)=>'<div class="wt-pz-req"><b>'+k+'</b><span>'+v+'</span>'+(b?'<small>'+esc(b)+'</small>':'')+'</div>';
       det = '<div class="wt-pz-det">'
-        +row('IBP', r.ibp.needed===null ? esc(r.ibp.why) : r.ibp.needed ? 'Wymagana — '+esc(r.ibp.why)+'. '+(o.ibpDate?'Ostatnia aktualizacja '+fmtDatePL(o.ibpDate)+', następna do '+fmtDatePL(r.ibp.due):'Brak daty aktualizacji')+(o.ibpAuthor?' · opracował(a): '+esc(o.ibpAuthor):'') : 'Niewymagana — '+esc(r.ibp.why), r.ibp.basis+'; aktualizacja co najmniej raz na 2 lata (§ 6 ust. 7)')
+        +row('IBP', r.ibp.needed===null ? esc(r.ibp.why) : r.ibp.needed ? 'Wymagana — '+esc(r.ibp.why)+'. '+(o.ibpDate?'Ostatnia aktualizacja '+fmtDatePL(o.ibpDate)+', następna do '+fmtDatePL(r.ibp.due):'Brak daty aktualizacji')+(o.ibpAuthor?' · opracował(a): '+esc(o.ibpAuthor):'')+(()=>{ const ch = ibpChanged(o); return ch.length ? '<br>'+badge('med','Zmiany po aktualizacji IBP')+' '+esc(ch.join(', '))+' — sprawdź, czy IBP wymaga aktualizacji' : ''; })() : 'Niewymagana — '+esc(r.ibp.why), r.ibp.basis+'; aktualizacja co najmniej raz na 2 lata oraz po zmianach wpływających na warunki ochrony ppoż. (§ 6 ust. 7)')
         +(()=>{ const ib = ibpOf(o); if(!ibpPspNeeded(o, ib)) return ''; const p = ib.psp||{};
           return row('Warunki i plany do PSP', p.mode==='zwolnienie' ? 'Zwolnienie przez komendanta'+(p.date?' ('+fmtDatePL(p.date)+')':'') : p.mode ? 'Przekazano '+(p.mode==='elektr'?'elektronicznie':'papierowo')+(p.date?' '+fmtDatePL(p.date):'')+(p.note?' · '+esc(p.note):'') : '<b>Nie przekazano</b> — obiekt z obowiązkowym SSP: warunki ochrony ppoż. i plany z IBP przekazuje się komendantowi powiatowemu (miejskiemu) PSP. Uzupełnij w Generatorze IBP → Opracowanie i eksport.', '§ 6 ust. 2–5 rozp. MSWiA z 7.06.2010 r.'); })()
         +(()=>{ const st = ssp31State(o); if(!st) return ''; const s = o.ssp31||{};
@@ -30856,7 +30857,18 @@ document.addEventListener('keydown', e=>{
   ];
   let wtIbpObjId = null, wtIbpStep = 'dane', wtIbpSaveT = null, wtIbpPlans = [];
   const ibpOf = o=>Object.assign({zones:[], materials:[], functionaries:[], phones:IBP_PHONES.map(p=>({role:p[0], tel:p[1]})), inst:{}, custom:{}}, o.ibp||{});
-  function wtIbpObj(){ return allPpozObjects.find(x=>x.id===wtIbpObjId) || null; }
+  /* § 6 ust. 7: aktualizacja IBP co najmniej raz na 2 lata ORAZ po zmianach sposobu użytkowania / procesu technologicznego wpływających
+     na warunki ochrony ppoż. — ibpSig = odcisk danych obiektu istotnych dla tych warunków, zapisywany przy ustawieniu daty aktualizacji IBP. */
+  const IBP_SIG_LBL = {category:'kategoria / przeznaczenie', area:'powierzchnia', volume:'kubatura', explosion:'strefa zagrożenia wybuchem', waste:'gospodarowanie odpadami', purpose:'przeznaczenie i działalność', technology:'proces technologiczny / składowanie', zones:'strefy pożarowe', materials:'materiały niebezpieczne pożarowo', explosionDesc:'opis stref zagrożenia wybuchem', height:'wysokość / kondygnacje', inst:'instalacje'};
+  function ibpSigParts(o){ const b = ibpOf(o); const n = v=>String(v==null?'':v).trim().toLowerCase();
+    return {category:n(o.category), area:n(o.area), volume:n(o.volume), explosion:n(!!o.explosion), waste:n(!!o.waste), purpose:n(b.purpose), technology:n(b.technology),
+      zones:(b.zones||[]).map(z=>[z.name,z.cat,z.area,z.q,z.people].map(n).join('|')).join(';'), materials:(b.materials||[]).map(m=>[m.name,m.qty,m.place].map(n).join('|')).join(';'),
+      explosionDesc:n(b.explosionDesc), height:[b.heightM,b.floorsAbove,b.floorsBelow].map(n).join('|'), inst:Object.keys(b.inst||{}).filter(k=>(b.inst||{})[k]).sort().join(',')}; }
+  function ibpChanged(o){ if(!o || !o.ibpDate || !o.ibpSig) return []; const cur = ibpSigParts(o); return Object.keys(cur).filter(k=>o.ibpSig[k]!==undefined && o.ibpSig[k]!==cur[k]).map(k=>IBP_SIG_LBL[k]); }
+  async function ibpMarkUpdated(o, date){ if(!o || !DB) return; const sig = ibpSigParts(o); o.ibpDate = date; o.ibpSig = sig; try{ await DB.doc('ppoz_objects/'+o.id).update({ibpDate:date, ibpSig:sig, updatedAt:Date.now()}); }catch(e){ console.error(e); } }
+  async function ibpAskDate(o){ if(!o || !DB) return; const today = wtTodayIso(); if(o.ibpDate===today) return;
+    if(await wtConfirm('Ustawić dzisiejszą datę ('+fmtDatePL(today)+') jako datę opracowania / aktualizacji IBP?'+(o.ibpDate?' Obecnie: '+fmtDatePL(o.ibpDate)+'.':'')+' Następna aktualizacja wypadnie wtedy do '+fmtDatePL(wtAddMonthsIso(today, 24))+' (§ 6 ust. 7).', 'Ustaw datę', '')) { await ibpMarkUpdated(o, today); wtToast('Ustawiono datę aktualizacji IBP.'); } }
+  function wtIbpObj(){ const o = allPpozObjects.find(x=>x.id===wtIbpObjId) || null; if(o && o.ibpDate && !o.ibpSig && DB){ o.ibpSig = ibpSigParts(o); DB.doc('ppoz_objects/'+o.id).update({ibpSig:o.ibpSig}).catch(()=>{}); } return o; }
   window.wtIbpOpen = function(objId){ wtIbpObjId = objId; wtIbpStep = 'dane'; wtIbpPlans = []; const o = wtIbpObj(); if(o) window.wtPpozPickClient(o.projectId); showSection('ppoz-ibp'); };
   /* ---- zapis (debounce) ---- */
   let wtIbpPending = null;
@@ -30878,6 +30890,7 @@ document.addEventListener('keydown', e=>{
     try{ await DB.doc('ppoz_objects/'+o.id).update({ibp:data, updatedAt:Date.now()}); const st = document.getElementById('wtIbpSaveSt'); if(st) st.textContent = 'Zapisano'; }
     catch(e){ console.error(e); wtToast('Nie udało się zapisać IBP.', true); }
   }
+  window.wtIbpSetDate = async function(v){ const o = wtIbpObj(); if(!o) return; await wtIbpFlush(); await ibpMarkUpdated(o, v); window.wtIbpRerenderSoon(); };
   window.wtIbpObjField = function(k, v){ const o = wtIbpObj(); if(!o || !DB) return; o[k] = v; DB.doc('ppoz_objects/'+o.id).update({[k]:v, updatedAt:Date.now()}).catch(()=>{}); };
   /* ---- listy (strefy, materiały, osoby funkcyjne, telefony) ---- */
   window.wtIbpListAdd = function(list, tpl){ const o = wtIbpObj(); if(!o) return; const ibp = wtIbpPending || ibpOf(o); ibp[list] = (ibp[list]||[]).concat([Object.assign({}, tpl)]); wtIbpPending = ibp; o.ibp = ibp; wtIbpFlush(); wtIbpRender(); };
@@ -31376,8 +31389,9 @@ document.addEventListener('keydown', e=>{
     } else if(st==='autor'){
       const due = o.ibpDate ? wtAddMonthsIso(o.ibpDate, 24) : '';
       body = '<div class="wt-pz-grid">'+ibf('authorName','Opracował(a) — imię i nazwisko', ibp.authorName)+ibf('authorQual','Kwalifikacje (np. inspektor ochrony ppoż., nr zaświadczenia)', ibp.authorQual)+ibf('authorFirm','Podmiot opracowujący', ibp.authorFirm)
-        +'<label class="wt-pz-f"><span>Data opracowania / aktualizacji</span><input class="wt-input" type="date" value="'+esc(o.ibpDate||'')+'" onchange="window.wtIbpObjField(\'ibpDate\',this.value);window.wtIbpRerenderSoon()"><small>'+(due?'Następna aktualizacja najpóźniej do '+fmtDatePL(due)+' (§ 6 ust. 7) — termin pojawi się na pulpicie PPOŻ.':'Co najmniej raz na 2 lata oraz po zmianach wpływających na warunki ochrony ppoż. (§ 6 ust. 7).')+'</small></label>'
+        +'<label class="wt-pz-f"><span>Data opracowania / aktualizacji</span><input class="wt-input" type="date" value="'+esc(o.ibpDate||'')+'" onchange="window.wtIbpSetDate(this.value)"><small>'+(due?'Następna aktualizacja najpóźniej do '+fmtDatePL(due)+' (§ 6 ust. 7) — termin pojawi się na pulpicie PPOŻ.':'Co najmniej raz na 2 lata oraz po zmianach wpływających na warunki ochrony ppoż. (§ 6 ust. 7).')+'</small></label>'
         +ibf('approver','Zatwierdził (właściciel / zarządca)', ibp.approver)+'</div>'
+        +(()=>{ const ch = ibpChanged(o); return ch.length ? '<div class="wt-ibp-miss"><b>Po aktualizacji IBP z '+esc(fmtDatePL(o.ibpDate))+' zmieniły się dane obiektu:</b> '+esc(ch.join(', '))+'. Sprawdź, czy zmiany wpływają na warunki ochrony ppoż. — jeśli tak, IBP trzeba zaktualizować (§ 6 ust. 7). Po aktualizacji ustaw nową datę.</div>' : ''; })()
         +ibpPspUi(o, ibp)
         +(o.category==='PM'?'<p class="small">W obiektach produkcyjnych, magazynowych i inwentarskich instrukcja może stanowić część instrukcji technologiczno-ruchowej (§ 6 ust. 6).</p>':'')
         +(()=>{ const lack = ibpLack(o, ibp); return lack.length ? '<div class="wt-ibp-miss"><b>Uwaga — wymagane urządzenia, których nie stwierdzono w obiekcie:</b><ul>'+lack.map(r=>'<li><a href="#" onclick="event.preventDefault();window.wtIbpStepGo(\'wyposazenie\')">'+esc(r.label)+'</a> — '+esc(r.reasons.join('; '))+' ('+esc(r.basis)+')</li>').join('')+'</ul></div>' : ''; })()
@@ -31447,7 +31461,7 @@ document.addEventListener('keydown', e=>{
       +'<w:tr><w:trPr><w:tblHeader/></w:trPr>'+head.map((h,i)=>cell(h,i,true)).join('')+'</w:tr>'+rows.map(r=>'<w:tr><w:trPr><w:cantSplit/></w:trPr>'+r.map((t,i)=>cell(t,i,false)).join('')+'</w:tr>').join('')+'</w:tbl>';
   }
   window.wtIbpDocx = async function(){
-    const o = wtIbpObj(); if(!o) return; if(!await klGateExport(o)) return; await wtIbpFlush();
+    const o = wtIbpObj(); if(!o) return; if(!await klGateExport(o)) return; await wtIbpFlush(); await ibpAskDate(o);
     try{ await ensureXlsxLib(); }catch(e){ wtToast('Nie udało się wczytać biblioteki do tworzenia pliku Word (wymagany internet).', true); return; }
     const M = ibpDocModel(o); const zip = new JSZip();
     const media = []; let rid = 10;
@@ -31511,7 +31525,7 @@ document.addEventListener('keydown', e=>{
   };
   /* ---- eksport PDF ---- */
   window.wtIbpPdf = async function(){
-    const o = wtIbpObj(); if(!o) return; if(!await klGateExport(o)) return; await wtIbpFlush();
+    const o = wtIbpObj(); if(!o) return; if(!await klGateExport(o)) return; await wtIbpFlush(); await ibpAskDate(o);
     const M = ibpDocModel(o);
     const pb = '<div class="wt-pdf-break"></div>';
     const td = 'style="border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;font-size:10.5px"';
@@ -32814,7 +32828,7 @@ document.addEventListener('keydown', e=>{
   };
   /* ---- IBP (PDF) ---- */
   window.wtIbpPdf = async function(){
-    const o = wtIbpObj(); if(!o) return; if(!await klGateExport(o)) return; await wtIbpFlush();
+    const o = wtIbpObj(); if(!o) return; if(!await klGateExport(o)) return; await wtIbpFlush(); await ibpAskDate(o);
     const M = ibpDocModel(o); const r = wtPpozObjReq(o); const miss = ibpCompleteness(ibpCtx(o));
     const sections = M.ch.map((c,i)=>wtRpcSection(c.law?c.law+' rozporządzenia':'Instrukcja', (i+1)+'. '+c.t, wtRpcText(c.p.filter(x=>String(x).trim()).join('\n\n').replace(/\n(\d+\))/g,'\n$1'))));
     M.ann.forEach((a,i)=>{ let body = a.intro ? wtRpcText(a.intro) : '';
