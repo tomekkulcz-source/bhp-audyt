@@ -31652,6 +31652,20 @@ document.addEventListener('keydown', e=>{
       +'<div class="wt-pz-tablewrap"><table class="wt-pz-table"><thead><tr><th>Urządzenie</th><th>Wymaganie</th><th>Stan</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
       +'<p class="small">Analiza obejmuje wymagania rozporządzenia MSWiA w sprawie ochrony przeciwpożarowej. Wymagania przepisów techniczno-budowlanych (np. oświetlenie awaryjne, oddymianie, przeciwpożarowy wyłącznik prądu, klasy odporności) oraz rozwiązania zamienne ocenia autor instrukcji. Rozwiązanie zamienne (§ 1 ust. 2) — tylko w przypadkach szczególnie uzasadnionych uwarunkowaniami lokalnymi, wskazanych w ekspertyzie technicznej rzeczoznawcy ds. zabezpieczeń przeciwpożarowych i uzgodnionych z komendantem wojewódzkim PSP; dotyczy wyłącznie § 19, 23, 24, 25 ust. 1, 2, 5 i 6, § 27 ust. 1 i 2, § 28 ust. 1, § 29 ust. 1 i § 38 ust. 1.</p></details>';
   }
+  /* ---- woda do zewnętrznego gaszenia dla obiektów PM — tabela nr 2 zał. do rozp. MSWiA z 24.07.2009 r. (§ 6 ust. 3, 10; § 10 ust. 8) ----
+     wiersze: gęstość obciążenia ogniowego do 200 / 500 / 1000 / 2000 / 4000 / powyżej 4000 MJ/m²;
+     kolumny: powierzchnia strefy do 500 / 1000 / 2000 / 3000 / 4000 / 5000 / powyżej 5000 m²; dla garaży nie więcej niż 20 dm³/s */
+  const PM_WATER_Q = [200,500,1000,2000,4000,Infinity], PM_WATER_A = [500,1000,2000,3000,4000,5000,Infinity];
+  const PM_WATER_T = [[10,10,10,10,15,15,20],[10,10,10,20,20,30,30],[10,10,20,20,30,30,40],[10,20,20,30,30,40,40],[20,20,30,30,40,40,50],[20,30,30,40,40,50,60]];
+  function pmWater(q, area){ if(q==null || area==null || isNaN(q) || isNaN(area)) return null; const ri = PM_WATER_Q.findIndex(x=>q<=x), ci = PM_WATER_A.findIndex(x=>area<=x); return PM_WATER_T[ri][ci]; }
+  function pmWaterText(zones){
+    const zs = (zones||[]).filter(z=>z.cat==='PM').map(z=>({z, q:ppozNum(z.q), a:ppozNum(z.area)})).filter(x=>x.q!==null && x.a!==null).map(x=>Object.assign(x, {w:pmWater(x.q, x.a)}));
+    if(!zs.length) return null;
+    const top = zs.reduce((m,x)=>x.w>m.w?x:m, zs[0]); const w = top.w;
+    return '<b>Wymagana ilość wody (§ 6 ust. 3, tabela nr 2): '+w+' dm³/s</b> — strefa „'+esc(top.z.name||'PM')+'” (Q = '+top.q.toLocaleString('pl-PL')+' MJ/m², F = '+top.a.toLocaleString('pl-PL')+' m²'+(zs.length>1?'; przyjęto strefę z największym zapotrzebowaniem':'')+'). '
+      +'Hydranty zewnętrzne: wydajność nominalna DN 80 — 10 dm³/s, DN 100 — 15 dm³/s (§ 10 ust. 8), czyli co najmniej '+Math.ceil(w/10)+' × DN 80 albo '+Math.ceil(w/15)+' × DN 100. '
+      +'Gdy wodociąg nie zapewnia tej ilości — zbiornik z zapasem równym brakującej wydajności × czas trwania pożaru wg PN-B-02852, nie dłuższy niż 4 h (§ 6 ust. 10 pkt 1); przy braku wodociągu i 4 h: do '+(w*14.4).toLocaleString('pl-PL')+' m³. Dla garaży nie więcej niż 20 dm³/s. ';
+  }
   /* ---- kalkulator gęstości obciążenia ogniowego Q = Σ(Gi·Qci) / F [MJ/m²] ---- */
   const Q_PRESETS = [['Drewno i wyroby drewniane',17],['Papier, tektura',16],['Tkaniny bawełniane',17],['Polietylen (PE)',44],['Polipropylen (PP)',44],['Polistyren (PS)',40],['PVC',18],['Poliuretan (pianka)',26],['Guma',40],['Olej mineralny / smarowy',42],['Olej napędowy',43],['Benzyna',44],['Alkohol etylowy',27]];
   let wtQState = null;
@@ -31661,6 +31675,10 @@ document.addEventListener('keydown', e=>{
     wtQRender();
   };
   function wtQSum(){ const F = ppozNum(wtQState.F)||0; const sum = wtQState.rows.reduce((s,r)=>s+(ppozNum(r.g)||0)*(ppozNum(r.qc)||0), 0); return {sum, F, Q: F ? Math.round(sum/F) : 0}; }
+  function wtQResHtml(r){ let h = 'Σ G·Q<sub>c</sub> = '+r.sum.toLocaleString('pl-PL')+' MJ · Q = <b>'+r.Q.toLocaleString('pl-PL')+' MJ/m²</b>';
+    const o = wtIbpObj(); const ibp = o ? (wtIbpPending || ibpOf(o)) : null; const z = ibp && (ibp.zones||[])[wtQState.zi];
+    if(z && z.cat==='PM' && r.F && r.Q){ const w = pmWater(r.Q, r.F); h += '<br><span class="small">Woda do zewnętrznego gaszenia dla tej strefy (tabela nr 2 rozp. MSWiA z 24.07.2009 r.): <b>'+w+' dm³/s</b> · klasa odporności pożarowej — w „Klasyfikacji pożarowej”.</span>'; }
+    return h; }
   function wtQRender(){
     const r = wtQSum();
     wtPpozModal('Gęstość obciążenia ogniowego — strefa '+(wtQState.zi+1),
@@ -31669,12 +31687,12 @@ document.addEventListener('keydown', e=>{
       +'<label class="wt-pz-f"><span>Powierzchnia F [m²]</span><input class="wt-input" inputmode="decimal" value="'+esc(wtQState.F)+'" oninput="window.wtQSet(-1,\'F\',this.value)"></label>'
       +'<div class="wt-ibp-list">'+wtQState.rows.map((row,i)=>'<div class="wt-ibp-lrow"><label class="wt-pz-f" style="flex:2 1 180px"><span>Materiał</span><input class="wt-input" list="wtQList" value="'+esc(row.m)+'" oninput="window.wtQSet('+i+',\'m\',this.value)"></label><label class="wt-pz-f" style="flex:1 1 90px"><span>Masa G [kg]</span><input class="wt-input" inputmode="decimal" value="'+esc(row.g)+'" oninput="window.wtQSet('+i+',\'g\',this.value)"></label><label class="wt-pz-f" style="flex:1 1 90px"><span>Q<sub>c</sub> [MJ/kg]</span><input class="wt-input" inputmode="decimal" id="wtQc'+i+'" value="'+esc(row.qc)+'" oninput="window.wtQSet('+i+',\'qc\',this.value)"></label><button type="button" class="wt-btn ghost danger" onclick="window.wtQDel('+i+')">×</button></div>').join('')
       +'<button type="button" class="wt-btn ghost" onclick="window.wtQAdd()">+ Materiał</button></div>'
-      +'<div class="wt-ibp-qres" id="wtQRes">Σ G·Q<sub>c</sub> = '+r.sum.toLocaleString('pl-PL')+' MJ · Q = <b>'+r.Q.toLocaleString('pl-PL')+' MJ/m²</b></div>',
+      +'<div class="wt-ibp-qres" id="wtQRes">'+wtQResHtml(r)+'</div>',
       ()=>{ const res = wtQSum(); wtIbpSet('zones.'+wtQState.zi+'.q', String(res.Q)); wtIbpSet('zones.'+wtQState.zi+'.qRows', wtQState.rows); wtIbpRerenderSoon(); wtToast('Wpisano Q = '+res.Q+' MJ/m².'); return true; }, 'Wpisz Q do strefy');
   }
   window.wtQSet = function(i, k, v){
     if(i<0) wtQState.F = v; else { wtQState.rows[i][k] = v; if(k==='m'){ const p = Q_PRESETS.find(x=>x[0]===v); if(p && !wtQState.rows[i].qc){ wtQState.rows[i].qc = String(p[1]); const el = document.getElementById('wtQc'+i); if(el) el.value = p[1]; } } }
-    const r = wtQSum(); const el = document.getElementById('wtQRes'); if(el) el.innerHTML = 'Σ G·Q<sub>c</sub> = '+r.sum.toLocaleString('pl-PL')+' MJ · Q = <b>'+r.Q.toLocaleString('pl-PL')+' MJ/m²</b>';
+    const r = wtQSum(); const el = document.getElementById('wtQRes'); if(el) el.innerHTML = wtQResHtml(r);
   };
   window.wtQAdd = function(){ wtQState.rows.push({m:'',g:'',qc:''}); wtQRender(); };
   window.wtQDel = function(i){ wtQState.rows.splice(i,1); if(!wtQState.rows.length) wtQState.rows.push({m:'',g:'',qc:''}); wtQRender(); };
@@ -31849,7 +31867,7 @@ document.addEventListener('keydown', e=>{
         +'<div class="wt-pz-grid">'+ibf('pwpPlace','Lokalizacja przeciwpożarowego wyłącznika prądu', ibp.pwpPlace)+ibf('gasPlace','Lokalizacja głównego kurka gazu', ibp.gasPlace)
         +ibf('water','Zaopatrzenie w wodę do celów ppoż.', ibp.water, {full:true, area:true, rows:2, ph:'np. 2 hydranty zewnętrzne nadziemne DN 80 w odległości 40 m i 75 m od budynku, wydajność 10 dm³/s każdy', hint:(()=>{ const v = ppozNum(o.volume), a = ppozNum(o.area); const zl = /^ZL/.test(o.category||'') || (ibp.zones||[]).some(z=>/^ZL/.test(z.cat||''));
           const base = 'Hydranty zewnętrzne: najbliższy do 75 m od budynku, kolejne do 150 m, min. 5 m od ściany (§ 10 ust. 6); uzupełniające źródło / zbiornik — do 250 m (§ 4 ust. 5) — rozp. MSWiA z 24.07.2009 r.';
-          if(!zl) return 'Obiekty PM — ilość wody wg tabeli nr 2 załącznika do rozp. MSWiA z 24.07.2009 r. (§ 6 ust. 3), zależnie od gęstości obciążenia ogniowego i powierzchni strefy. '+base;
+          if(!zl){ const wt = pmWaterText(ibp.zones); return wt ? wt+base : 'Obiekty PM — ilość wody wg tabeli nr 2 załącznika do rozp. MSWiA z 24.07.2009 r. (§ 6 ust. 3), zależnie od gęstości obciążenia ogniowego i powierzchni strefy — uzupełnij w „Klasyfikacji pożarowej” kategorię PM, powierzchnię i Q strefy, a ilość wody wyliczy się sama. '+base; }
           if(v===null || a===null) return 'Budynki ZL: uzupełnij kubaturę i powierzchnię obiektu, aby wyliczyć wymaganą ilość wody (§ 5 ust. 1). '+base;
           const small = v<=5000 && a<=1000; return '<b>Wymagana ilość wody (§ 5 ust. 1): '+(small?'10 dm³/s z co najmniej 1 hydrantu DN 80 lub 100 m³ w zbiorniku':'20 dm³/s łącznie z co najmniej 2 hydrantów DN 80 lub 200 m³ w zbiorniku')+'</b> ('+(small?'kubatura ≤ 5000 m³ i powierzchnia ≤ 1000 m²':'kubatura > 5000 m³ lub powierzchnia > 1000 m²')+'; przyjęto powierzchnię z danych obiektu). Brak wody z sieci — zbiornik 10 m³ na każdy brakujący 1 dm³/s, min. 50 m³ (§ 5 ust. 2). '+base; })()})
         +ibf('fireRoad','Drogi pożarowe, dojazd, wjazdy', ibp.fireRoad, {full:true, area:true, rows:2})+'</div><div class="wt-ibp-rerender"><button type="button" class="wt-btn ghost" onclick="window.wtIbpRerenderSoon()">Odśwież treść rozdziału</button></div>'
