@@ -1298,7 +1298,8 @@ html[data-theme="dark"] .wt-modesw button[aria-pressed="true"]{color:#140806;}
 .wt-at-body{padding:10px 14px 14px;display:flex;flex-direction:column;gap:6px;}
 .wt-at-body h4{margin:0;font-size:15px;}
 .wt-at-body p{margin:0;font-size:13.5px;line-height:1.5;}
-.wt-mz-toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0 6px;font-size:13.5px;}.wt-mz-toc span{color:var(--ink-faint);}.wt-at-nav{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px;}.wt-at-nav a{font-size:12.5px;text-decoration:none;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;}.wt-at-nav a span,.wt-at-gn{font-size:11px;color:var(--ink-soft);font-weight:500;}.wt-at-nav a:hover{border-color:var(--line-strong);}.wt-at-nophoto{display:flex;align-items:center;justify-content:center;min-height:140px;background:repeating-linear-gradient(135deg,var(--surface-2) 0 10px,transparent 10px 20px);color:var(--ink-soft);font-size:12px;margin:0;}.wt-at-add{align-self:flex-start;margin-top:2px;}
+.wt-mz-toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0 6px;font-size:13.5px;}.wt-mz-toc span{color:var(--ink-faint);}.wt-ibp-psp{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:12px;background:var(--surface-2);}.wt-ibp-psp .wt-ibp-h{margin-top:0;}
+.wt-at-nav{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px;}.wt-at-nav a{font-size:12.5px;text-decoration:none;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;}.wt-at-nav a span,.wt-at-gn{font-size:11px;color:var(--ink-soft);font-weight:500;}.wt-at-nav a:hover{border-color:var(--line-strong);}.wt-at-nophoto{display:flex;align-items:center;justify-content:center;min-height:140px;background:repeating-linear-gradient(135deg,var(--surface-2) 0 10px,transparent 10px 20px);color:var(--ink-soft);font-size:12px;margin:0;}.wt-at-add{align-self:flex-start;margin-top:2px;}
 .wt-mz-z,.wt-mz-w{font-size:13px;line-height:1.45;border-radius:6px;padding:6px 8px;}.wt-mz-z{background:color-mix(in srgb,var(--high,#c0392b) 9%,transparent);}.wt-mz-w{background:color-mix(in srgb,var(--low,#2e7d32) 9%,transparent);}.wt-mz-z ul,.wt-mz-w ul{margin:3px 0 0;padding-left:18px;}.wt-mz-z li,.wt-mz-w li{margin:1px 0;}
 .wt-at-id{font-size:12.5px!important;background:var(--surface-2);border-radius:6px;padding:6px 8px;}
 .wt-at-law{font-size:12px!important;color:var(--ink-soft);border-top:1px dashed var(--line);padding-top:6px;}
@@ -31352,7 +31353,7 @@ document.addEventListener('keydown', e=>{
         +'<div class="wt-ibp-rerender"><button type="button" class="wt-btn ghost" onclick="window.wtIbpRerenderSoon()">Odśwież treść</button></div>'
         +ibpTextBlock('ewakuacja', c, 'Rozdział 6. Warunki i organizacja ewakuacji oraz sposoby ich sprawdzania');
     } else if(st==='zapoznanie'){
-      body = '<div class="wt-pz-grid">'+ibf('ibpPlace','Miejsce przechowywania instrukcji', ibp.ibpPlace)+'</div>'+ibpTextBlock('zapoznanie', c, 'Rozdział 7. Sposoby zapoznania użytkowników z przepisami i instrukcją');
+      body = ibpPspAccessUi(o, ibp)+ibpTextBlock('zapoznanie', c, 'Rozdział 7. Sposoby zapoznania użytkowników z przepisami i instrukcją');
     } else if(st==='zadania'){
       body = '<div class="wt-pz-grid">'+ibf('ppozPerson','Osoba wykonująca czynności z zakresu ochrony ppoż.', ibp.ppozPerson, {ph:'np. Jan Kowalski — inspektor ochrony ppoż.'})+'</div>'+ibpTextBlock('zadania', c, 'Rozdział 8. Zadania i obowiązki w zakresie ochrony przeciwpożarowej');
     } else if(st==='plany'){
@@ -31371,7 +31372,7 @@ document.addEventListener('keydown', e=>{
         +(o.category==='PM'?'<p class="small">W obiektach produkcyjnych, magazynowych i inwentarskich instrukcja może stanowić część instrukcji technologiczno-ruchowej (§ 6 ust. 6).</p>':'')
         +(()=>{ const lack = ibpLack(o, ibp); return lack.length ? '<div class="wt-ibp-miss"><b>Uwaga — wymagane urządzenia, których nie stwierdzono w obiekcie:</b><ul>'+lack.map(r=>'<li><a href="#" onclick="event.preventDefault();window.wtIbpStepGo(\'wyposazenie\')">'+esc(r.label)+'</a> — '+esc(r.reasons.join('; '))+' ('+esc(r.basis)+')</li>').join('')+'</ul></div>' : ''; })()
         +(miss.length?'<div class="wt-ibp-miss"><b>Do uzupełnienia przed wydaniem ('+miss.length+'):</b><ul>'+miss.map(m=>'<li><a href="#" onclick="event.preventDefault();window.wtIbpStepGo(\''+m[0]+'\')">'+esc(m[1])+'</a></li>').join('')+'</ul></div>':'<div class="wt-ibp-ok">Wszystkie wymagane elementy § 6 ust. 1 są uzupełnione.</div>')
-        +'<div class="wt-pz-actions" style="justify-content:flex-start"><button type="button" class="wt-btn primary" onclick="window.wtIbpDocx()">Pobierz IBP — Word (.docx)</button><button type="button" class="wt-btn" onclick="window.wtIbpPdf()">Pobierz IBP — PDF</button><button type="button" class="wt-btn" onclick="window.wtIbpPosterPdf()">Instrukcja postępowania na wypadek pożaru (PDF)</button></div>'
+        +'<div class="wt-pz-actions" style="justify-content:flex-start"><button type="button" class="wt-btn primary" onclick="window.wtIbpDocx()">Pobierz IBP — Word (.docx)</button><button type="button" class="wt-btn" onclick="window.wtIbpPdf()">Pobierz IBP — PDF</button><button type="button" class="wt-btn" onclick="window.wtIbpPosterPdf()">Instrukcja postępowania na wypadek pożaru (PDF)</button><button type="button" class="wt-btn" onclick="window.wtIbpPspCardPdf()">Karta informacyjna dla PSP (PDF)</button></div>'
         +'<p class="small">Word zawiera: stronę tytułową, metrykę zmian, spis treści (aktualizuje się przy otwarciu), 9 rozdziałów wg § 6 ust. 1 i załączniki: wykaz urządzeń i gaśnic, osoby funkcyjne i telefony, wzór zezwolenia na prace niebezpieczne pożarowo, wzór protokołu z praktycznego sprawdzenia ewakuacji, kartę zapoznania z instrukcją oraz dołączone plany.</p>';
     }
     box.innerHTML = bar
@@ -31515,6 +31516,59 @@ document.addEventListener('keydown', e=>{
     wtHtmlToPdf(h, 'IBP_'+String(M.o.name||'obiekt').replace(/[^\wąćęłńóśźżĄĆĘŁŃÓŚŹŻ-]+/g,'_')+'.pdf', 'portrait', 900);
   };
   /* ---- instrukcja postępowania na wypadek pożaru (do wywieszenia, § 4 ust. 2 pkt 3) ---- */
+  /* ===== Dostępność IBP dla ekip ratowniczych (§ 6 ust. 3 i 9 rozp. MSWiA z 7.06.2010 r.) + karta informacyjna dla PSP =====
+     § 6 ust. 9: IBP powinna się znajdować w miejscach dostępnych dla ekip ratowniczych; § 6 ust. 3: dokumenty przekazane
+     komendantowi PSP przechowuje się tak, by można je było natychmiast wykorzystać w działaniach ratowniczych.
+     Karta to wyciąg z IBP (bez nowych wymagań prawnych) — dobra praktyka: przy wjeździe / portierni / centrali SSP. */
+  const IBP_PLACE_SUGG = ['Kaseta (skrzynka) dla straży przy głównym wjeździe / wejściu','Portiernia / ochrona czynna całą dobę','Przy centrali sygnalizacji pożarowej (CSP)','Pomieszczenie ochrony / monitoringu','Sekretariat (tylko w godzinach pracy — niewystarczające nocą)'];
+  function ibpPspAccessUi(o, ibp){
+    return '<div class="wt-ibp-psp"><h4 class="wt-ibp-h">Dostępność instrukcji dla ekip ratowniczych</h4>'
+      +'<p class="small">IBP powinna się znajdować w miejscu dostępnym dla ekip ratowniczych (§ 6 ust. 9), a dokumenty przekazane komendantowi PSP — być przechowywane tak, by można je było natychmiast wykorzystać w działaniach (§ 6 ust. 3). Dobra praktyka: przy wjeździe zostaw <b>kartę informacyjną dla PSP</b> — jedną kartkę A4 z tym, czego kierujący działaniem ratowniczym potrzebuje w pierwszych minutach (kontakt, zagrożenia, wyłączniki, woda, urządzenia, plany).</p>'
+      +'<div class="wt-pz-grid">'
+      +'<label class="wt-pz-f full"><span>Miejsce przechowywania instrukcji i karty dla PSP</span><input class="wt-input" list="ibpPlaceList" value="'+esc(ibp.ibpPlace||'')+'" oninput="window.wtIbpSet(\'ibpPlace\',this.value)" placeholder="np. kaseta dla straży przy bramie wjazdowej, klucz w depozycie ochrony"><datalist id="ibpPlaceList">'+IBP_PLACE_SUGG.map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist><small>Miejsce musi być dostępne także nocą i w dni wolne — sekretariat czy biuro kierownika zwykle nie wystarczą.</small></label>'
+      +ibf('psp.contact','Osoba kontaktowa dostępna całą dobę (imię, telefon)', (ibp.psp||{}).contact, {ph:'np. Jan Kowalski, kierownik utrzymania ruchu, 600 000 000'})
+      +ibf('psp.keys','Klucze, kody, dostęp do pomieszczeń technicznych', (ibp.psp||{}).keys, {ph:'np. komplet kluczy w kasecie przy CSP, kod bramy u ochrony'})
+      +((ibp.inst||{}).pv?ibf('psp.pv','Instalacja fotowoltaiczna — gdzie wyłączniki / falowniki, moc', (ibp.psp||{}).pv, {ph:'np. 50 kWp na dachu hali B, wyłącznik DC przy falownikach w pom. 0.12, rozłącznik AC w rozdzielni głównej'}):'')
+      +ibf('psp.hazards','Szczególne zagrożenia dla ratowników', (ibp.psp||{}).hazards, {full:true, area:true, rows:2, ph:'np. magazyn akumulatorów litowo-jonowych (hala B), butle z acetylenem w warsztacie, materiały reagujące z wodą, dach z płyt warstwowych z rdzeniem palnym'})
+      +'</div><div class="wt-pz-actions" style="justify-content:flex-start"><button type="button" class="wt-btn primary" onclick="window.wtIbpPspCardPdf()">Karta informacyjna dla PSP (PDF)</button></div></div>';
+  }
+  window.wtIbpPspCardPdf = async function(){
+    const o = wtIbpObj(); if(!o) return; await wtIbpFlush();
+    const c = ibpCtx(o), ibp = c.ibp, psp = ibp.psp||{}, kl = klCompute(o, ibp);
+    { const miss = [[psp.contact,'osoba kontaktowa 24 h (krok Zapoznanie)'],[ibp.pwpPlace,'lokalizacja wyłącznika prądu (krok Warunki)'],[ibp.water,'zaopatrzenie w wodę (krok Warunki)'],[ibp.fireRoad,'drogi pożarowe i wjazdy (krok Warunki)'],[ibp.ibpPlace,'miejsce przechowywania IBP (krok Zapoznanie)']].filter(x=>!nz(x[0])).map(x=>x[1]);
+      if(miss.length) wtToast('Karta wygenerowana, ale brakuje: '+miss.join(', ')+'.', true); }
+    const T = v=>esc(String(v==null?'':v));
+    const row = (k,v)=>nz(v)?'<tr><td style="width:34%;padding:4px 8px;border-bottom:1px solid #ddd;color:#444;vertical-align:top;text-align:left">'+T(k)+'</td><td style="padding:4px 8px;border-bottom:1px solid #ddd;font-weight:600;text-align:left">'+T(v)+'</td></tr>':'';
+    const box = (title, inner, red)=>inner?'<div style="margin-top:10px;border:2px solid '+(red?'#C8102E':'#333')+';border-radius:6px;overflow:hidden"><div style="background:'+(red?'#C8102E':'#333')+';color:#fff;font-weight:800;font-size:14px;padding:4px 10px;letter-spacing:.03em">'+T(title)+'</div><div style="padding:6px 8px;font-size:13px">'+inner+'</div></div>':'';
+    const tbl = rows=>{ const r = rows.join(''); return r?'<table style="width:100%;border-collapse:collapse;font-size:13px">'+r+'</table>':''; };
+    const cats = Array.from(new Set((ibp.zones||[]).map(z=>z.cat).filter(Boolean))); if(!cats.length && o.category) cats.push(o.category);
+    const people = (ibp.zones||[]).reduce((a,z)=>a+(ppozNum(z.people)||0),0);
+    const sst = sevClientStatus(o.projectId);
+    const devAt = keys=>c.devs.filter(d=>keys.includes(d.type)).map(d=>{ const t = ppozType(d.type); return (t.l||d.type)+(d.location?' — '+d.location:''); });
+    const devRows = [['Centrala SSP / sterowanie',['ssp']],['DSO (mikrofon strażaka)',['dso']],['Stałe urządzenia gaśnicze',['sug','pug','inert']],['Oddymianie, kurtyny dymowe',['oddym','kurtyna']],['Pompownia ppoż.',['pompa']],['Dźwig dla ekip ratowniczych',['dzwig']],['Hydranty zewnętrzne',['hydrant_zew']],['Zawory 52 / hydranty 52',['zawor52','hydrant52']]]
+      .map(([l,k])=>{ const v = devAt(k); return v.length?row(l, v.join('; ')):''; });
+    const inst = IBP_INST.filter(([k])=>(ibp.inst||{})[k]).map(([,l])=>l);
+    const mats = (ibp.materials||[]).filter(m=>nz(m.name));
+    const fun = (ibp.functionaries||[]).filter(f=>nz(f.name)||nz(f.tel));
+    const seg = [];
+    seg.push('<div style="font-family:Arial,Helvetica,sans-serif;color:#111"><div style="background:#C8102E;color:#fff;padding:12px 14px;border-radius:6px;display:flex;justify-content:space-between;gap:12px;align-items:flex-end"><div><div style="font-size:24px;font-weight:800;letter-spacing:.02em">KARTA INFORMACYJNA DLA PSP</div><div style="font-size:13px;margin-top:2px">dla kierującego działaniem ratowniczym — wyciąg z instrukcji bezpieczeństwa pożarowego</div></div><div style="text-align:right;font-size:12px">Stan na: <b>'+T(fmtDatePL(o.ibpDate)||fmtDatePL(wtTodayIso()))+'</b></div></div>'
+      +'<div style="margin-top:8px;font-size:19px;font-weight:800">'+T(o.name||'Obiekt')+'</div><div style="font-size:14px">'+T(o.address||'')+'</div>'
+      +'<div style="font-size:13px;color:#333;margin-top:2px">'+T([ibp.ownerName||(c.p||{}).name, ibp.purpose].filter(nz).join(' · '))+'</div></div>');
+    seg.push('<div style="font-family:Arial,Helvetica,sans-serif">'+box('KONTAKT — CAŁĄ DOBĘ', tbl([row('Osoba kontaktowa 24 h', psp.contact)].concat(fun.map(f=>row(f.role||'Osoba funkcyjna', [f.name,f.tel].filter(nz).join(', ')))).concat([row('Klucze, kody, dostęp', psp.keys)])), true)+'</div>');
+    const hz = [];
+    if(sst==='zzr'||sst==='zdr') hz.push(row('Seveso', 'Zakład o '+(sst==='zdr'?'dużym':'zwiększonym')+' ryzyku wystąpienia poważnej awarii przemysłowej'+(sst==='zdr'?' — jest wewnętrzny plan operacyjno-ratowniczy':'')));
+    if(o.explosion) hz.push(row('Strefy zagrożenia wybuchem', ibp.explosionDesc||'TAK — szczegóły w IBP'));
+    if(nz(psp.hazards)) hz.push(row('Szczególne zagrożenia', psp.hazards));
+    if((ibp.inst||{}).pv) hz.push(row('Fotowoltaika', psp.pv||'TAK — lokalizacja wyłączników w IBP'));
+    if((ibp.inst||{}).gaz) hz.push(row('Instalacja gazowa', 'TAK'));
+    seg.push('<div style="font-family:Arial,Helvetica,sans-serif">'+box('ZAGROŻENIA', tbl(hz)+(mats.length?'<table style="width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px"><tr style="background:#f3f3f3"><th style="text-align:left;padding:3px 6px">Materiał niebezpieczny pożarowo</th><th style="text-align:left;padding:3px 6px">Ilość</th><th style="text-align:left;padding:3px 6px">Miejsce</th><th style="text-align:left;padding:3px 6px">Parametry</th></tr>'+mats.map(m=>'<tr><td style="padding:3px 6px;border-bottom:1px solid #ddd;font-weight:600">'+T(m.name)+'</td><td style="padding:3px 6px;border-bottom:1px solid #ddd">'+T(m.qty)+'</td><td style="padding:3px 6px;border-bottom:1px solid #ddd">'+T(m.place)+'</td><td style="padding:3px 6px;border-bottom:1px solid #ddd">'+T(m.param)+'</td></tr>').join('')+'</table>':''), true)+'</div>');
+    seg.push('<div style="font-family:Arial,Helvetica,sans-serif">'+box('WYŁĄCZNIKI, WODA, DOJAZD', tbl([row('Przeciwpożarowy wyłącznik prądu', ibp.pwpPlace), row('Główny kurek gazu', ibp.gasPlace), row('Woda do gaszenia', ibp.water), row('Drogi pożarowe, wjazdy', ibp.fireRoad)]))+'</div>');
+    seg.push('<div style="font-family:Arial,Helvetica,sans-serif">'+box('OBIEKT I LUDZIE', tbl([row('Kategorie / strefy pożarowe', cats.join(', ')+((ibp.zones||[]).length>1?' ('+ibp.zones.length+' stref)':'')), row('Grupa wysokości', kl.hg?KL_HG[kl.hg]:''), row('Kondygnacje (nadziemne / podziemne)', (nz(ibp.floorsAbove)||nz(ibp.floorsBelow))?(ibp.floorsAbove||'0')+' / '+(ibp.floorsBelow||'0'):''), row('Kubatura / powierzchnia', [nz(o.volume)?o.volume+' m³':'', nz(o.area)?o.area+' m²':''].filter(Boolean).join(' · ')), row('Konstrukcja, dach', ibp.construction), row('Przewidywana liczba osób', people?'do '+people:''), row('Osoby o ograniczonej zdolności poruszania się', ibp.mobility), row('Miejsce zbiórki', ibp.assembly)]))+'</div>');
+    seg.push('<div style="font-family:Arial,Helvetica,sans-serif">'+box('URZĄDZENIA PRZECIWPOŻAROWE', tbl(devRows)+(inst.length?'<div style="font-size:12px;margin-top:4px;color:#333">Instalacje w obiekcie: '+T(inst.join(', '))+'</div>':''))+'</div>');
+    seg.push('<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;margin-top:10px;border-top:1px solid #999;padding-top:6px">Pełna instrukcja bezpieczeństwa pożarowego i plany: <b>'+T(ibp.ibpPlace||'…………………………')+'</b>. Karta jest wyciągiem z IBP — nie zastępuje instrukcji. Podstawa: § 6 ust. 3 i 9 rozporządzenia MSWiA z 7.06.2010 r. w sprawie ochrony przeciwpożarowej budynków, innych obiektów budowlanych i terenów (t.j. Dz.U. 2023 poz. 822 ze zm.).</div>');
+    wtIbpPlans.forEach(pl=>seg.push('<div style="font-family:Arial,Helvetica,sans-serif;margin-top:14px"><div style="font-weight:800;font-size:14px;margin-bottom:4px">'+T(pl.title||'Plan')+'</div><img src="'+pl.url+'" style="max-width:100%;max-height:980px;display:block;border:1px solid #999"></div>'));
+    wtHtmlToPdf(seg.join(''), 'Karta_dla_PSP_'+String(o.name||'obiekt').replace(/[^\wąćęłńóśźżĄĆĘŁŃÓŚŹŻ-]+/g,'_')+'.pdf', 'portrait', 900);
+  };
   window.wtIbpPosterPdf = async function(){
     const o = wtIbpObj(); if(!o) return; await wtIbpFlush();
     const c = ibpCtx(o), ibp = c.ibp;
