@@ -2867,6 +2867,11 @@ window.__WT_FIREBASE_CONFIG__ = {
 };
 </script>
 <style id="wt-tt-css">
+.wt-gus-cmp{font-size:12.5px;color:var(--ink-soft);margin:8px 0 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);line-height:1.6;}
+.wt-gus-cmp details{margin-top:4px;}
+.wt-gus-voiv{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px;}
+.wt-gus-hi{color:var(--crit);}
+.wt-gus-lo{color:var(--low);}
 .wt-acc-h{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);}
 .wt-acc-hint{display:block;color:var(--ink-faint);font-size:11.5px;margin-top:3px;}
 .wt-acc-chk{display:flex;gap:8px;align-items:center;font-size:13px;margin-top:22px;}
@@ -10562,7 +10567,7 @@ onReady(()=>{
 // dostaje własny poziomo-przewijalny kontener, więc zbyt szeroka tabela przewija
 // się sama zamiast rozpychać całą stronę w bok
 function wtWrapTableRef(t){
-  if(t.parentElement && t.parentElement.classList.contains('wt-tablewrap')) return;
+  if(!t.parentElement || t.parentElement.classList.contains('wt-tablewrap')) return;
   const wrap = document.createElement('div');
   wrap.className = 'wt-tablewrap';
   t.parentNode.insertBefore(wrap, t);
@@ -21903,6 +21908,28 @@ document.addEventListener('keydown', e=>{
     catch(e){ console.error(e); wtToast('Nie udało się wygenerować PDF.', true); }
   };
   /* Wskaźniki wypadkowości klienta za rok (Wc na 1000 zatrudnionych, Wci = dni niezdolności na wypadek). */
+  /* ===== GUS „Wypadki przy pracy w 2024 r.” (publikacja 27.11.2025, tabl. 24 i 25) — dane ostateczne =====
+     Polska: 67 000 poszkodowanych, w tym 250 w wypadkach śmiertelnych i 459 w ciężkich; wskaźnik 4,74 na 1000 pracujących;
+     2 895 336 dni niezdolności → 43,2 dnia na poszkodowanego. Wskaźnik = poszkodowani na 1000 pracujących (średnia z 31.12 dwóch lat).
+     Działy PKD 2007 (2 cyfry) → wskaźnik działu, a gdy GUS nie podaje działu — sekcji. */
+  const GUS24 = {wc:4.74, wci:43.2, n:67000, fatal:250, serious:459,
+    sec:{A:['Rolnictwo, leśnictwo, łowiectwo i rybactwo',4.81],B:['Górnictwo i wydobywanie',17.57],C:['Przetwórstwo przemysłowe',7.53],D:['Wytwarzanie i zaopatrywanie w energię',4.55],E:['Dostawa wody; ścieki i odpady; rekultywacja',13.03],F:['Budownictwo',3.27],G:['Handel; naprawa pojazdów',4.14],H:['Transport i gospodarka magazynowa',6.36],I:['Zakwaterowanie i gastronomia',3.30],J:['Informacja i komunikacja',0.69],K:['Działalność finansowa i ubezpieczeniowa',1.56],L:['Obsługa rynku nieruchomości',3.52],M:['Działalność profesjonalna, naukowa i techniczna',1.27],N:['Administrowanie i działalność wspierająca',4.47],O:['Administracja publiczna i obrona narodowa',2.60],P:['Edukacja',3.50],Q:['Opieka zdrowotna i pomoc społeczna',7.49],R:['Kultura, rozrywka i rekreacja',4.03],S:['Pozostała działalność usługowa',1.10]},
+    div:{'01':4.59,'02':5.93,'03':5.75,'05':20.47,'08':10.40,'09':15.68,'10':8.80,'11':8.05,'12':3.37,'13':6.26,'14':1.83,'15':2.05,'16':7.29,'17':9.21,'18':4.22,'19':4.48,'20':7.22,'21':6.66,'22':8.68,'23':8.23,'24':10.00,'25':8.12,'26':3.43,'27':6.54,'28':8.89,'29':7.96,'30':9.78,'31':6.90,'32':4.59,'33':5.65,'36':12.62,'37':10.75,'38':14.51,'39':11.07,'41':3.68,'42':6.41,'43':2.12,'45':2.16,'46':3.60,'47':5.01,'49':4.44,'50':4.10,'52':6.47,'55':3.80,'56':3.15,'58':1.19,'59':0.88,'60':4.27,'61':1.40,'62':0.36,'63':0.97,'64':2.12,'65':1.56,'66':0.45,'69':0.47,'70':1.37,'71':1.41,'72':4.50,'73':0.89,'74':0.55,'75':2.44,'77':3.39,'78':6.65,'79':0.46,'80':5.49,'81':4.36,'82':1.76,'86':8.02,'87':8.19,'88':4.33,'90':3.96,'91':4.41,'92':2.99,'93':4.08,'94':1.71,'95':1.92,'96':0.74},
+    voiv:{'dolnośląskie':5.49,'kujawsko-pomorskie':5.78,'lubelskie':5.07,'lubuskie':5.03,'łódzkie':5.18,'małopolskie':3.61,'mazowieckie':2.91,'opolskie':6.35,'podkarpackie':4.60,'podlaskie':5.39,'pomorskie':4.66,'śląskie':6.68,'świętokrzyskie':5.35,'warmińsko-mazurskie':5.72,'wielkopolskie':4.80,'zachodniopomorskie':6.03}};
+  const GUS_SEC_OF = d=>{ const n = +d; return n<=3?'A':n<=9?'B':n<=33?'C':n===35?'D':n<=39?'E':n<=43?'F':n<=47?'G':n<=53?'H':n<=56?'I':n<=63?'J':n<=66?'K':n===68?'L':n<=75?'M':n<=82?'N':n===84?'O':n===85?'P':n<=88?'Q':n<=93?'R':n<=96?'S':''; };
+  function gusBench(pkd){
+    const m = String(pkd||'').match(/(\d{2})/); if(!m) return null; const d = m[1], sec = GUS_SEC_OF(d); if(!sec) return null;
+    const dv = GUS24.div[d]; return {code:d, sec, secName:GUS24.sec[sec][0], wc: dv!=null ? dv : GUS24.sec[sec][1], level: dv!=null ? 'dział '+d : 'sekcja '+sec};
+  }
+  function gusCmpHtml(p, wcNum){
+    const pr = p ? wtProfileOf(p) : {}; const b = gusBench(pr.pkd); const f = v=>v.toLocaleString('pl-PL', {minimumFractionDigits:2, maximumFractionDigits:2});
+    const vs = (ref)=> wcNum==null ? '' : (wcNum>ref*1.2 ? ' <b class="wt-gus-hi">wyżej</b>' : wcNum<ref*0.8 ? ' <b class="wt-gus-lo">niżej</b>' : ' <b>podobnie</b>');
+    return '<div class="wt-gus-cmp"><b>Na tle GUS 2024</b> (poszkodowani na 1000 pracujących): Polska '+f(GUS24.wc)+vs(GUS24.wc)
+      +(b ? ' · '+esc(b.secName)+' ('+b.level+') '+f(b.wc)+vs(b.wc) : ' · <span class="small">wpisz PKD w profilu klienta, aby porównać z branżą</span>')
+      +' · średnio '+GUS24.wci.toLocaleString('pl-PL')+' dnia niezdolności na poszkodowanego'
+      +'<details><summary>Województwa (GUS 2024)</summary><div class="wt-gus-voiv">'+Object.entries(GUS24.voiv).map(([k,v])=>'<span>'+esc(k)+' <b>'+f(v)+'</b></span>').join('')+'</div></details>'
+      +'<div class="small">Źródło: GUS, „Wypadki przy pracy w 2024 r.” (27.11.2025), tabl. 24–25. Wskaźnik klienta liczony na zatrudnionych z profilu — porównanie poglądowe.</div></div>';
+  }
   function wtWypStatsHtml(cid){
     const p = wtProjectById(cid);
     const cases = allAccidentCases.filter(c=>c.projectId===cid && wtWypKind(c)==='work' && c.isWpp!=='Nie');
@@ -21918,7 +21945,8 @@ document.addEventListener('keydown', e=>{
       const wci = withDays ? (days/withDays).toFixed(1) : '—';
       return '<span class="badge blue"><span class="dot"></span>'+y+': '+cs.length+' wyp.'+(severe?' ('+severe+' ciężkich/śmiert./zbior.)':'')+' · Wc '+wc+' · Wci '+wci+'</span>';
     }).join(' ');
-    return '<div class="wt-req-summary" title="Wc = liczba wypadków / liczba zatrudnionych × 1000; Wci = dni niezdolności do pracy / liczba wypadków (z wpisaną liczbą dni). Liczba zatrudnionych z profilu klienta lub kartoteki.">'+rows+'</div>';
+    const yLast = years[0]; const nLast = cases.filter(c=>(c.eventDate||'').slice(0,4)===yLast).length;
+    return '<div class="wt-req-summary" title="Wc = liczba wypadków / liczba zatrudnionych × 1000; Wci = dni niezdolności do pracy / liczba wypadków (z wpisaną liczbą dni). Liczba zatrudnionych z profilu klienta lub kartoteki.">'+rows+'</div>'+gusCmpHtml(p, hc ? nLast/hc*1000 : null);
   }
 
   /* ---------------- Choroby zawodowe ---------------- */
@@ -23637,7 +23665,7 @@ document.addEventListener('keydown', e=>{
   function renderClientTrn(){
     const el = document.getElementById('klienciTrn');
     if(!el || !klienciCurrentId) return;
-    const list = allTrainings.filter(t=>t.projectId===klienciCurrentId).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+    const list = allTrainings.filter(t=>t.projectId===klienciCurrentId).sort((a,b)=>String(b.eventDate||b.date||'').localeCompare(String(a.eventDate||a.date||'')));
     el.innerHTML = '<div class="wt-emp-toolbar"><span class="small">Planowanie szkoleń, lista obecności, egzamin, zaświadczenia; po zakończeniu daty trafiają do kartoteki pracowników.</span><span class="wt-emp-tools"><button class="wt-btn primary" onclick="window.wtTrnEdit(null, window.wtKlienciCurrentId())">+ Nowe szkolenie</button></span></div>'
       + (list.length ? wtTrnRowsHtml(list, false) : '<div class="wt-empty">Brak szkoleń.</div>');
   }
@@ -23839,7 +23867,7 @@ document.addEventListener('keydown', e=>{
       const wc = d.hc ? (d.accWork.length/d.hc*1000).toFixed(1).replace('.',',') : '';
       const wci = d.withDays ? (d.sickDays/d.withDays).toFixed(1).replace('.',',') : '';
       out.kv = [['Wypadki przy pracy', String(d.accWork.length)], ['w tym ciężkie, śmiertelne, zbiorowe', String(d.accSev.length)], ['Wypadki w drodze do/z pracy', String(d.accCommute)],
-        ['Dni niezdolności do pracy', String(d.sickDays)], ['Wskaźnik częstości Wc (na 1000 zatrudnionych)', wc], ['Wskaźnik ciężkości Wci (dni na wypadek)', wci],
+        ['Dni niezdolności do pracy', String(d.sickDays)], ['Wskaźnik częstości Wc (na 1000 zatrudnionych)', wc], ['Wskaźnik ciężkości Wci (dni na wypadek)', wci], ['Dla porównania — GUS 2024 (poszkodowani na 1000 pracujących)', (()=>{ const b = gusBench(d.p ? wtProfileOf(d.p).pkd : ''); return 'Polska 4,74'+(b?' · '+b.secName+' ('+b.level+') '+b.wc.toLocaleString('pl-PL'):'')+' · średnio 43,2 dnia niezdolności na poszkodowanego'; })()],
         ['Wypadki przy pracy w '+(year-1)+' r. (porównanie)', String(prev)], ['Przyczyny: techniczne / organizacyjne / ludzkie', d.causes.t+' / '+d.causes.o+' / '+d.causes.h],
         ['Zdarzenia potencjalnie wypadkowe', String(d.nearMiss)], ['Choroby zawodowe: podejrzenia / stwierdzone', d.cz.length+' / '+d.czConf]];
       T(d.accWork.map(c=>[c.eventDate?fmtDatePL(c.eventDate):'', [c.employeeName, c.position].filter(Boolean).join(' — '), [c.description, c.victimEffect||c.severity].filter(Boolean).join(' · '), c.sickDays?String(c.sickDays):'']));
@@ -24880,7 +24908,7 @@ document.addEventListener('keydown', e=>{
   ];
   function wtLawChanges(){
     const own = allAppSettings.filter(d=>d.key==='law_change').map(d=>Object.assign({}, d));
-    return LAW_CHANGES_BUILTIN.concat(own).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+    return LAW_CHANGES_BUILTIN.concat(own).sort((a,b)=>String(b.eventDate||b.date||'').localeCompare(String(a.eventDate||a.date||'')));
   }
   function wtLawAffected(ch){
     return wtClientProjects().filter(p=>{ if(!wtIsRealClient(p)) return false; if(!ch.flag || ch.flag==='all') return true; const pr = wtProfileOf(p); const v = pr[ch.flag]; return v && v!=='0'; });
@@ -25276,13 +25304,13 @@ document.addEventListener('keydown', e=>{
   const accCost = {client:'', caseId:'', kind:'przy', calDays:'', workDays:'', hpd:'8', hour:'', people:'3', hrsPer:'6', downDays:'', downCost:'', repl:'', damage:'', claims:'', other:'', indirect:'0', gross:'', age50:false, budget:''};
   function accCostHtml(){
     const s = accCost;
-    const cases = s.client ? allAccidentCases.filter(c=>c.projectId===s.client).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))) : [];
+    const cases = s.client ? allAccidentCases.filter(c=>c.projectId===s.client).sort((a,b)=>String(b.eventDate||b.date||'').localeCompare(String(a.eventDate||a.date||''))) : [];
     const f = (k, label, hint, attrs)=>'<div><label>'+label+'</label><input class="wt-input" inputmode="decimal" id="acc_'+k+'" value="'+esc(s[k])+'" oninput="wtAccSet(\''+k+'\', this.value)"'+(attrs||'')+'>'+(hint?'<small class="wt-acc-hint">'+hint+'</small>':'')+'</div>';
     return '<div class="card wt-calc-card" id="accCostCard"><h3>Koszt wypadku przy pracy</h3>'
       +'<p class="small">Szacunek „od dołu” — sumuje tylko koszty, które wpiszesz (bez ogólnego mnożnika kosztów ukrytych). Przydaje się w rozmowie z zarządem o prewencji. Wypadek przy pracy: wynagrodzenia za czas niezdolności pracodawca nie wypłaca — świadczenia wypłaca ZUS (art. 92 § 1 KP obejmuje tylko wypadek w drodze do pracy lub z pracy); pracodawca traci natomiast pracę, której nikt nie wykonał, czas ludzi, produkcję i mienie.</p>'
       +'<div class="wt-calc-grid">'
       +'<div><label>Klient (opcjonalnie)</label><select class="wt-input" onchange="wtAccSet(\'client\', this.value, true)">'+wtCalcClientOpts(s.client)+'</select></div>'
-      +'<div><label>Wypadek z rejestru (opcjonalnie)</label><select class="wt-input" onchange="wtAccPickCase(this.value)"'+(cases.length?'':' disabled')+'><option value="">'+(s.client ? (cases.length?'— wybierz wypadek —':'brak wypadków w rejestrze') : 'najpierw wybierz klienta')+'</option>'+cases.map(c=>'<option value="'+c.id+'"'+(c.id===s.caseId?' selected':'')+'>'+esc((fmtDatePL(c.date)||'bez daty')+' · '+(c.employeeName||c.name||'poszkodowany')+(c.sickDays?' · '+c.sickDays+' dni niezdolności':''))+'</option>').join('')+'</select></div>'
+      +'<div><label>Wypadek z rejestru (opcjonalnie)</label><select class="wt-input" onchange="wtAccPickCase(this.value)"'+(cases.length?'':' disabled')+'><option value="">'+(s.client ? (cases.length?'— wybierz wypadek —':'brak wypadków w rejestrze') : 'najpierw wybierz klienta')+'</option>'+cases.map(c=>'<option value="'+c.id+'"'+(c.id===s.caseId?' selected':'')+'>'+esc((fmtDatePL(c.eventDate||c.date)||'bez daty')+' · '+(c.employeeName||c.name||'poszkodowany')+(c.sickDays?' · '+c.sickDays+' dni niezdolności':''))+'</option>').join('')+'</select></div>'
       +'<div><label>Rodzaj zdarzenia</label><select class="wt-input" onchange="wtAccSet(\'kind\', this.value, true)"><option value="przy"'+(s.kind==='przy'?' selected':'')+'>Wypadek przy pracy</option><option value="droga"'+(s.kind==='droga'?' selected':'')+'>Wypadek w drodze do pracy / z pracy</option></select></div>'
       +'</div><h4 class="wt-acc-h">Absencja i czas ludzi</h4><div class="wt-calc-grid">'
       +f('calDays','Dni niezdolności do pracy (kalendarzowe, z L4)', 'Z rejestru wypadków, jeśli wybrany.')
@@ -25342,7 +25370,7 @@ document.addEventListener('keydown', e=>{
   window.wtAccPdf = function(){
     const r = accCompute(); const p = accCost.client ? wtProjectById(accCost.client) : null; const c = accCost.caseId ? allAccidentCases.find(x=>x.id===accCost.caseId) : null;
     const h = '<div class="rp-title">Szacunkowy koszt wypadku '+(accCost.kind==='droga'?'w drodze do pracy / z pracy':'przy pracy')+'</div>'
-      +'<div class="rp-meta">'+(p?'<span><b>Klient:</b> '+esc(p.name)+'</span>':'')+(c?'<span><b>Zdarzenie:</b> '+esc((fmtDatePL(c.date)||'')+' '+(c.employeeName||c.name||''))+'</span>':'')+'<span><b>Data wyliczenia:</b> '+esc(fmtDatePL(wtTodayIso()))+'</span></div>'
+      +'<div class="rp-meta">'+(p?'<span><b>Klient:</b> '+esc(p.name)+'</span>':'')+(c?'<span><b>Zdarzenie:</b> '+esc((fmtDatePL(c.eventDate||c.date)||'')+' '+(c.employeeName||c.name||''))+'</span>':'')+'<span><b>Data wyliczenia:</b> '+esc(fmtDatePL(wtTodayIso()))+'</span></div>'
       +'<table class="rp-table"><thead><tr><th>Składnik</th><th>Wyliczenie</th><th style="text-align:right">Kwota</th></tr></thead><tbody>'+r.rows.filter(x=>x[1]).map(x=>'<tr><td>'+esc(x[0])+'</td><td>'+esc(x[2]||'kwota wpisana')+'</td><td style="text-align:right;white-space:nowrap">'+accZl(x[1])+'</td></tr>').join('')
       +'<tr><td colspan="2"><b>Razem</b></td><td style="text-align:right;white-space:nowrap"><b>'+accZl(r.total)+'</b></td></tr></tbody></table>'
       +'<div class="small" style="margin-top:10px">Szacunek „od dołu” z kwot podanych przez użytkownika — bez ogólnego mnożnika kosztów ukrytych, bez kar i zmian składki. Przy wypadku przy pracy wynagrodzenia za czas niezdolności pracodawca nie wypłaca (art. 92 § 1 KP — świadczenia wypłaca ZUS). Nie stanowi wyceny księgowej, ubezpieczeniowej ani prawnej.</div>';
