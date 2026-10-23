@@ -29982,13 +29982,21 @@ document.addEventListener('keydown', e=>{
     // IBP — § 6 ust. 1 i 8
     const isBuilding = o.kind!=='teren';
     let ibpNeeded = null, ibpWhy = '';
-    if(!cat) { ibpWhy = 'Uzupełnij kategorię (ZL / PM / IN)'; }
-    else if(cat==='ZL IV' && !o.explosion){ ibpNeeded = false; ibpWhy = 'Budynek mieszkalny (ZL IV) — § 6 ust. 1 obejmuje obiekty użyteczności publicznej, zamieszkania zbiorowego, produkcyjne, magazynowe i inwentarskie'; }
-    else if(o.explosion){ ibpNeeded = true; ibpWhy = 'Występuje strefa zagrożenia wybuchem'; }
+    /* § 6 ust. 1 — zakres: użyteczność publiczna, zamieszkanie zbiorowe, produkcja, magazyn, inwentarz (ZL I–III, ZL V, PM, IN); budynki
+       mieszkalne (ZL IV) poza zakresem. Gdy w IBP są strefy pożarowe — liczy się każda strefa (np. garaż PM w budynku mieszkalnym).
+       § 6 ust. 8 — zwolnienie tylko bez strefy zagrożenia wybuchem: kubatura budynku / jego części-strefy ≤ 1000 m³ (inwentarski ≤ 1500 m³),
+       obiekt inny niż budynek — powierzchnia strefy ≤ 1000 m². */
+    const zcats = ((o.ibp && o.ibp.zones) || []).map(z=>z.cat).filter(Boolean);
+    const cats = zcats.length ? Array.from(new Set(zcats)) : (cat ? [cat] : []);
+    const inScope = cats.some(c=>c!=='ZL IV');
+    const multi = cats.length>1 || zcats.length>1;
+    if(!cats.length) { ibpWhy = 'Uzupełnij kategorię (ZL / PM / IN)'; }
+    else if(!inScope){ ibpNeeded = false; ibpWhy = 'Budynek mieszkalny (ZL IV) — § 6 ust. 1 obejmuje tylko obiekty użyteczności publicznej, zamieszkania zbiorowego, produkcyjne, magazynowe i inwentarskie'+(o.explosion?' (strefa zagrożenia wybuchem nie zmienia zakresu; jeśli w budynku jest strefa innego przeznaczenia, np. garaż, dodaj ją w IBP → „Klasyfikacja pożarowa” albo jako osobny obiekt)':''); }
+    else if(o.explosion){ ibpNeeded = true; ibpWhy = 'Występuje strefa zagrożenia wybuchem — zwolnienie z § 6 ust. 8 nie przysługuje'; }
     else if(isBuilding){
-      const lim = cat==='IN' ? 1500 : 1000;
+      const lim = cats.every(c=>c==='IN') ? 1500 : 1000;
       if(vol===null) ibpWhy = 'Uzupełnij kubaturę brutto';
-      else { ibpNeeded = vol>lim; ibpWhy = 'Kubatura '+vol+' m³ '+(ibpNeeded?'>':'≤')+' '+lim+' m³'; }
+      else { ibpNeeded = vol>lim; ibpWhy = 'Kubatura '+vol+' m³ '+(ibpNeeded?'>':'≤')+' '+lim+' m³'+(lim===1500?' (budynek inwentarski)':'')+(ibpNeeded && multi?'. Zwolnienie z § 6 ust. 8 pkt 1 obejmuje też część budynku stanowiącą odrębną strefę pożarową o kubaturze ≤ 1000 m³ — taką strefę wpisz jako osobny obiekt z jej kubaturą':''); }
     } else {
       if(area===null) ibpWhy = 'Uzupełnij powierzchnię strefy';
       else { ibpNeeded = area>1000; ibpWhy = 'Powierzchnia strefy '+area+' m² '+(ibpNeeded?'>':'≤')+' 1000 m²'; }
