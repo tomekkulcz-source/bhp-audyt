@@ -2940,7 +2940,6 @@ window.__WT_FIREBASE_CONFIG__ = {
 .wt-tt-more svg{width:16px;height:16px;}
 .wt-tt-more.show, .wt-todo-row:hover .wt-tt-more, .wt-todo-row:focus-within .wt-tt-more, .wt-todo-row.selected .wt-tt-more{opacity:1;}
 .wt-tt-more:hover{background:var(--line);color:var(--ink);}
-#sec-todo .wt-todo-row.wont .wt-tt-title{text-decoration:line-through;color:var(--ink-faint);}
 #sec-todo .wt-done-toggle{border-top:0;font-size:13px;font-weight:700;color:var(--ink-soft);padding:12px 4px 6px;}
 /* menu „⋯” */
 .wt-tt-menu{position:fixed;z-index:3000;width:232px;max-width:calc(100vw - 16px);background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);padding:6px;font-size:13.5px;}
@@ -15437,7 +15436,6 @@ document.addEventListener('keydown', e=>{
       +(t.dueDate ? it('due:none', WT_TT_IC.wont, 'Usuń termin') : '')
       +it('sub', WT_TT_IC.sub, 'Dodaj krok')
       +it('pin', WT_TT_IC.pin, t.pinned?'Odepnij':'Przypnij')
-      +(t.done ? '' : it('wont', WT_TT_IC.wont, 'Nie zrobię'))
       +it('move', WT_TT_IC.move, 'Przenieś do', ' class="wt-tt-hasub"')
       +'<div class="wt-tt-msep"></div>'
       +it('dup', WT_TT_IC.dup, 'Duplikuj')
@@ -15458,8 +15456,7 @@ document.addEventListener('keydown', e=>{
     if(act.startsWith('prio:')){ wtTtMenuClose(); up({priority:+act.slice(5)}); return; }
     if(act==='sub'){ wtTtMenuClose(); window.wtSelectTask(id); setTimeout(()=>{ const s = document.getElementById('taskSubAdd'); if(s) s.focus(); }, 120); return; }
     if(act==='pin'){ wtTtMenuClose(); up({pinned:!t.pinned}); return; }
-    if(act==='wont'){ wtTtMenuClose(); await up({done:true, wontDo:true, doneAt:Date.now()}); wtToastAction('Oznaczono „nie zrobię”', 'Cofnij', ()=>DB.doc('todos/'+id).update({done:false, wontDo:false, doneAt:null})); return; }
-    if(act==='dup'){ wtTtMenuClose(); const c = Object.assign({}, t); delete c.id; c.createdAt = Date.now(); c.done = false; c.doneAt = null; c.wontDo = false; c.nextId = ''; c.subtasks = (c.subtasks||[]).map(x=>Object.assign({}, x, {done:false}));
+    if(act==='dup'){ wtTtMenuClose(); const c = Object.assign({}, t); delete c.id; c.createdAt = Date.now(); c.done = false; c.doneAt = null; delete c.wontDo; c.nextId = ''; c.subtasks = (c.subtasks||[]).map(x=>Object.assign({}, x, {done:false}));
       DB.collection('todos').add(c).then(()=>wtToast('Zduplikowano zadanie.')).catch(()=>wtToast('Nie udało się zduplikować.', true)); return; }
     if(act==='del'){ wtTtMenuClose(); window.wtDeleteTodo(id); return; }
     if(act==='move'){ wtTodoMoveMenu(id, btn); return; }
@@ -15567,9 +15564,9 @@ document.addEventListener('keydown', e=>{
     if(t.notes && t.notes.trim()) ic.push('<span class="wt-tm-ic" title="Zadanie ma notatkę">'+WT_ICS.note+'</span>');
     if(p && showList) ic.push('<span class="wt-tm-list"><span class="wt-list-dot" style="background:'+p.color+'"></span>'+esc(p.name)+'</span>');
     const di = t.dueDate && !t.done ? wtDueInfo(t.dueDate) : null;
-    const right = t.done ? '<span class="wt-tt-when">'+(t.done && t.wontDo?'nie zrobię · ':'')+esc(wtRelDay(t.doneAt))+'</span>' : (di ? '<span class="wt-tt-when wt-due-'+di.cls+'">'+esc(di.txt)+'</span>' : '');
+    const right = t.done ? '<span class="wt-tt-when">'+esc(wtRelDay(t.doneAt))+'</span>' : (di ? '<span class="wt-tt-when wt-due-'+di.cls+'">'+esc(di.txt)+'</span>' : '');
     const lbl = 'Oznacz jako '+(t.done?'do zrobienia':'zrobione');
-    return '<div class="wt-todo-row'+(t.done?' done':'')+(t.done && t.wontDo?' wont':'')+(selected?' selected':'')+'" data-id="'+t.id+'" data-done="'+(t.done?1:0)+'" draggable="true">'
+    return '<div class="wt-todo-row'+(t.done?' done':'')+(selected?' selected':'')+'" data-id="'+t.id+'" data-done="'+(t.done?1:0)+'" draggable="true">'
       +'<input type="checkbox" class="wt-todo-check'+(prio?' p'+prio:'')+'" data-action="toggle" aria-label="'+lbl+'" title="'+lbl+'"'+(t.done?' checked':'')+'>'
       +'<div class="wt-todo-main" data-action="select"><div class="wt-todo-text">'+(t.pinned?'<span class="wt-pin-ic" title="Przypięte">'+WT_TT_IC.pin+'</span>':'')+'<span class="wt-tt-title">'+esc(t.text)+'</span></div></div>'
       +(ic.length ? '<div class="wt-tt-ics" data-action="select">'+ic.join('')+'</div>' : '')
@@ -29644,6 +29641,7 @@ document.addEventListener('keydown', e=>{
     }, err=>console.error('client_projects', err));
     DB.collection('todos').orderBy('createdAt','asc').onSnapshot(snap=>{
       allTodosRaw = snap.docs.map(d=>Object.assign({id:d.id}, d.data())); allTodos = wtByMode(allTodosRaw);
+      allTodosRaw.filter(t=>t.wontDo).forEach(t=>{ t.wontDo = false; DB.doc('todos/'+t.id).update({wontDo:false}).catch(()=>{}); }); /* „Nie zrobię” usunięte — czyszczenie starych oznaczeń */
       renderTodos();
       wtMigrateLegacyProjects();
       renderClientListView(); renderClientDashboard();
