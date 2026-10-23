@@ -2202,6 +2202,7 @@ table.wt-rj-table .wt-rj-computed-empty{color:var(--ink-faint);}
 .wt-rj-pendingbanner{font-size:12.5px;padding:10px 14px;border-radius:var(--r-xs);margin:0 0 14px;background:var(--accent-soft);color:var(--accent-ink);font-weight:600;}
 
 /* arkusz do druku / PDF — poza ekranem, pokazywany tylko przy drukowaniu lub przy generowaniu obrazu */
+#rj-print-host .rp-client-report .rg-doc{font-size:11pt;color:#d8d5cc !important;margin-top:6px;}#rj-print-host .rp-client-report .rpc-stat.warn{background:#fdf1df;}#rj-print-host .rp-client-report table.wt-rg-t{width:100%;border-collapse:collapse;table-layout:auto;font-size:8pt;}#rj-print-host .rp-client-report table.wt-rg-t th,#rj-print-host .rp-client-report table.wt-rg-t td{border:1px solid #e4e1da;padding:5px 7px;text-align:left;vertical-align:top;line-height:1.35;width:auto;overflow-wrap:break-word;word-break:normal;hyphens:manual;}#rj-print-host .rp-client-report .rg-ring{position:absolute;inset:0;}#rj-print-host .rp-client-report table.wt-rg-t th{background:#f1efe9;font-size:7.5pt;font-weight:600;text-transform:none;letter-spacing:0;color:#3d3a35 !important;}#rj-print-host .rp-client-report table.wt-rg-t th:first-child,#rj-print-host .rp-client-report table.wt-rg-t td.lp{width:34px;min-width:34px;text-align:center;white-space:nowrap;overflow-wrap:normal;}#rj-print-host .rp-client-report table.wt-rg-t td.lp{font-family:var(--font-mono);color:#8f8b84 !important;}#rj-print-host .rp-client-report table.wt-rg-t td.d{font-family:var(--font-mono);white-space:nowrap;}#rj-print-host .rp-client-report table.wt-rg-t tr.blank td{height:24px;}#rj-print-host .rp-client-report .rg-st{display:inline-block;padding:2px 8px;border-radius:999px;font-size:7.3pt;font-weight:600;white-space:nowrap;}#rj-print-host .rp-client-report .rg-st.ok{background:#e3f6ec;color:#17603f !important;}#rj-print-host .rp-client-report .rg-st.warn{background:#fdf1df;color:#8a4b00 !important;}#rj-print-host .rp-client-report .rg-st.bad{background:#fde8e5;color:#9e2a20 !important;}#rj-print-host .rp-client-report .rg-st.nd{background:#f1efe9;color:#5d5a55 !important;}#rj-print-host .rp-client-report .rg-h2{margin:2px 0 0;font-family:var(--font-display);font-size:15pt;font-weight:700;letter-spacing:-.01em;color:#15171a !important;}#rj-print-host .rp-client-report .rg-basis{font-size:8pt;color:#6b6760 !important;max-width:55%;text-align:right;}#rj-print-host .rp-client-report .rg-note{font-size:8pt;line-height:1.45;color:#5d5a55 !important;background:#faf9f6;border:1px solid #e4e1da;border-radius:10px;padding:9px 12px;}#rj-print-host .rp-client-report .rg-sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:18px;text-align:center;font-size:8pt;color:#5d5a55 !important;}#rj-print-host .rp-client-report .rg-sign div{border-top:1px dotted #b3aea5;padding-top:5px;}
 #rj-print-host{display:none;background:#fff;color:#111;padding:28px;font-family:var(--font-ui);color-scheme:light;}
 #rj-print-host table,#rj-print-host tr,#rj-print-host thead,#rj-print-host tbody,
 #rj-print-host th,#rj-print-host td{color:#111 !important;}
@@ -28103,249 +28104,322 @@ document.addEventListener('keydown', e=>{
     +'<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
     +'</styleSheet>';
   const SXF = { banner:1, title:2, desc:3, legal:4, label:5, value:6, thead:7, dataL:8, dataLalt:9, dataC:10, dataCalt:11, instr:12, sigline:13, sigdate:14, footer:15 };
-  async function buildRegisterXlsx(v){
-    const def=REGISTER_DEFS[v.registerType];
-    const nCols = 1+def.columns.length;
-    const lastCol = xlColLetter(nCols);
-    const merges=[], cols=[], rows=[];
-    let r=0;
-    function addRow(height, cellsXml){ r++; rows.push('<row r="'+r+'" ht="'+height+'" customHeight="1">'+cellsXml+'</row>'); return r; }
-    function c(ref, s, text){ return '<c r="'+ref+'" s="'+s+'" t="inlineStr"><is><t xml:space="preserve">'+xmlEsc(text)+'</t></is></c>'; }
-    function cNum(ref, s, num){ return '<c r="'+ref+'" s="'+s+'"><v>'+num+'</v></c>'; }
-    function cBlank(ref, s){ return '<c r="'+ref+'" s="'+s+'"/>'; }
-    function merge(ref1, ref2){ if(ref1!==ref2) merges.push(ref1+':'+ref2); }
-
-    // baner
-    addRow(24, c('A'+(r+1), SXF.banner, 'BHP AUDYT — Kontrola i dokumentacja BHP'));
-    merge('A'+r, lastCol+r);
-    // odstęp
-    addRow(6, '');
-    // tytuł / opis / podstawa prawna
-    addRow(22, c('A'+(r+1), SXF.title, def.code+' — '+def.title)); merge('A'+r, lastCol+r);
-    addRow(18, c('A'+(r+1), SXF.desc, def.description)); merge('A'+r, lastCol+r);
-    addRow(22, c('A'+(r+1), SXF.legal, 'Podstawa prawna: '+def.legalBasis)); merge('A'+r, lastCol+r);
-    addRow(6, '');
-    // pola metadanych rejestru — jedno pole na wiersz (etykieta w A:B, wartość w C:ostatnia).
-    // Generyczne po REGISTER_DEFS[type].metaFields, więc działa niezależnie od tego, ile pól
-    // dany typ rejestru definiuje i ile kolumn ma jego tabela (np. lista obecności ma tylko
-    // 4 kolumny — dwa pola obok siebie by się tam po prostu nie zmieściły). "companyName" ma
-    // dodatkowy fallback na "versionLabel" — patrz metaVal(): w praktyce klienci wpisują nazwę
-    // firmy tylko raz, w dużym polu "Nazwa wersji / klienta" w edytorze.
-    (def.metaFields||[]).forEach(f=>{
-      const rowNum = r+1;
-      const val = f.type==='date' ? fmtDatePL(v[f.key]) : metaVal(v,f);
-      const cellsXml = c('A'+rowNum, SXF.label, f.label+':') + c('C'+rowNum, SXF.value, val);
-      addRow(20, cellsXml);
-      merge('A'+rowNum, 'B'+rowNum);
-      merge('C'+rowNum, lastCol+rowNum);
-    });
-    addRow(6, '');
-    // nagłówek tabeli
-    {
-      const rowNum = r+1;
-      let cellsXml = c('A'+rowNum, SXF.thead, 'Lp.');
-      def.columns.forEach((col,i)=>{ cellsXml += c(xlColLetter(i+2)+rowNum, SXF.thead, col.label); });
-      addRow(34, cellsXml);
+  /* ================= Rejestry w stylu raportu z audytu (PDF + Excel) =================
+     Jeden model (wtRgModel) zasila PDF rejestru (buildPrintHost → #rj-print-host, te same klasy
+     .rp-client-report co raport z audytu, więc ta sama paginacja wierszami w canvasToPdfBlob)
+     i Excel (wtRgXlsx — używa go też buildCardXlsx, czyli eksporty Terminów, oceny ryzyka, RODO
+     i wizyt). RG_DUE mówi, która kolumna rejestru jest terminem, a która datą wykonania:
+       valid — termin ważności / kolejnego przeglądu lub pomiaru (ostrzeżenie 60 dni przed),
+       task  — termin realizacji z datą wykonania (ostrzeżenie 30 dni przed),
+       plan  — termin planowany bez kolumny wykonania (po terminie: „termin minął — sprawdź”),
+       open  — usterka otwarta, dopóki nie ma daty usunięcia. */
+  const RG_DUE = {
+    protokol_odbioru_bhp:{due:'deadline', done:'completedDate', kind:'task'},
+    opiniowanie_inwestycji:{due:'deadline', done:'completedDate', kind:'task'},
+    rejestr_firm_zewnetrznych:{due:'dateTo', kind:'valid'},
+    harmonogram_komisji_bhp:{due:'plannedDate', done:'heldDate', kind:'task'},
+    rejestr_korespondencji_urzedy:{due:'responseDeadline', done:'responseDate', kind:'task'},
+    rejestr_szkolen_okresowych:{due:'validUntil', kind:'valid'},
+    harmonogram_szkolen:{due:'plannedDate', kind:'plan'},
+    rejestr_badan_profilaktycznych:{due:'validUntil', kind:'valid'},
+    alert_terminow_badan:{due:'validUntil', kind:'valid'},
+    ewidencja_orzeczen:{due:'validUntil', kind:'valid'},
+    przeglady_apteczki:{due:'earliestExpiry', kind:'valid'},
+    rejestr_ocen_ryzyka:{due:'plannedUpdateDate', kind:'valid'},
+    plan_dzialan_orz:{due:'deadline', done:'verificationDate', kind:'task'},
+    karta_przegladow_elektronarzedzi:{due:'nextReviewDate', kind:'valid'},
+    rejestr_czynnikow_szkodliwych:{due:'nextDate', kind:'valid'},
+    harmonogram_pomiarow_srodowiska:{due:'nextDate', kind:'valid'},
+    pomiary_halasu:{due:'nextDate', kind:'valid'},
+    pomiary_drgan:{due:'nextDate', kind:'valid'},
+    harmonogram_kontroli_elektrycznej:{due:'nextDate', kind:'valid'},
+    rejestr_certyfikatow_ce_soi:{due:'validUntil', kind:'valid'},
+    wykaz_pierwsza_pomoc:{due:'validUntil', kind:'valid'},
+    ewidencja_sprzetu_ppoz:{due:'nextReviewDate', kind:'valid'},
+    rejestr_usterek_udt:{done:['repairEndDate','clearedDate'], kind:'open'},
+    ewidencja_przegladow_udt:{due:'nextDate', kind:'valid'},
+    rejestr_dostosowania_maszyn:{due:'deadline', done:'completedDate', kind:'task'},
+    protokol_kontroli_wewnetrznej:{due:'deadline', done:'completedDate', kind:'task'},
+    rejestr_kontroli_warunkow_pracy:{due:'deadline', done:'completedDate', kind:'task'},
+    rejestr_zalecen_pokontrolnych:{due:'deadline', done:'actualCompletionDate', kind:'task'},
+    ewidencja_okularow_korekcyjnych:{due:'nextReviewDate', kind:'valid'},
+    program_usuwania_azbestu:{due:'plannedDate', done:'actualRemovalDate', kind:'task'},
+    rejestr_pozwolen_srodowiskowych:{due:'validUntil', kind:'valid'},
+    uprawnienia_zawodowe:{due:'validUntil', kind:'valid'}
+  };
+  const RG_DONE_LBL = {heldDate:'Odbyto', responseDate:'Odpowiedziano', actualRemovalDate:'Usunięto'};
+  const RG_OK_LBL = {valid:'Aktualne', task:'W terminie lub zrealizowane', plan:'Zaplanowane', open:'Usunięte'};
+  const RG_WARN_LBL = {valid:'Termin w ciągu 60 dni', task:'Termin w ciągu 30 dni', plan:'Termin w ciągu 30 dni lub minął', open:'Otwarte usterki'};
+  function wtRgDays(n){ return n===1 ? '1 dzień' : n+' dni'; }
+  function wtRgStatus(type, row){
+    const m = RG_DUE[type]; if(!m) return null;
+    if(m.kind==='open') return m.done.some(k=>row[k]) ? {cls:'ok', label:'Usunięta', days:null} : {cls:'warn', label:'Otwarta', days:null};
+    if(m.done && row[m.done]) return {cls:'ok', label:RG_DONE_LBL[m.done]||'Zrealizowano', days:null};
+    const days = row[m.due] ? wtDaysUntil(row[m.due]) : null;
+    if(days===null) return {cls:'nd', label:'Brak terminu', days:null};
+    if(days<0) return m.kind==='plan' ? {cls:'warn', label:'Termin minął '+wtRgDays(-days)+' temu', days} : {cls:'bad', label:'Po terminie '+wtRgDays(-days), days};
+    if(days===0) return {cls:'warn', label:'Termin dziś', days};
+    if(days<=(m.kind==='valid' ? 60 : 30)) return {cls:'warn', label:'Za '+wtRgDays(days), days};
+    return {cls:'ok', label:m.kind==='valid' ? 'Aktualne' : m.kind==='plan' ? 'Zaplanowane' : 'W terminie', days};
+  }
+  /* status z gotowego tekstu (eksporty kart — Terminy przeglądów, uprawnień itd.) */
+  function wtRgClassify(t){
+    t = String(t||'').toLowerCase(); if(!t.trim()) return null;
+    if(/wygas|po terminie|przetermin|zaległ|nieaktual|wysok/.test(t)) return 'bad';
+    if(/pilne|uwaga|za \d|wkrótce|dziś|zbliża|średn|otwart/.test(t)) return 'warn';
+    if(/ważne|aktual|w terminie|zrealiz|wykonan|odbyto|nisk|mał|akceptowal|usunięt/.test(t)) return 'ok';
+    return 'nd';
+  }
+  function wtRgToday(){ const d = new Date(); return fmtDatePL(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')); }
+  function wtRgModel(v){
+    const def = REGISTER_DEFS[v.registerType];
+    const proj = v.projectId ? wtClientProjects().find(p=>p.id===v.projectId) : null;
+    const blankForm = v.companyName==='pusty_wzor';
+    const client = blankForm ? '' : ((proj && proj.name) || metaVal(v, {key:'companyName'}) || '');
+    const cols = def.columns.filter(c=>!(c.type==='computed' && (c.compute==='daysUntil' || c.compute==='expiryStatus')));
+    const m = RG_DUE[v.registerType];
+    const filled = r=>def.columns.some(c=>c.type!=='computed' && String(r[c.key]==null?'':r[c.key]).trim());
+    const rows = (v.rows||[]).map((row,i)=>{ const f = filled(row); return {row, i, filled:f, st: m && f ? wtRgStatus(v.registerType, row) : null}; });
+    const used = rows.filter(x=>x.filled);
+    const cnt = {total:used.length, ok:0, warn:0, bad:0, nd:0};
+    used.forEach(x=>{ if(x.st) cnt[x.st.cls]++; });
+    const meta = (def.metaFields||[]).filter(f=>f.key!=='companyName').map(f=>({label:f.label, value:blankForm ? '' : ((f.type==='date' ? fmtDatePL(v[f.key]) : metaVal(v,f))||'')}));
+    const cell = (c,row)=>c.type==='date' ? fmtDatePL(row[c.key]) : (c.type==='computed' ? wtComputedCellValue(c,row) : (row[c.key]==null ? '' : String(row[c.key])));
+    const rank = {bad:0, nd:1, warn:2};
+    const action = used.filter(x=>x.st && x.st.cls!=='ok').sort((a,b)=>(rank[a.st.cls]-rank[b.st.cls]) || ((a.st.days==null?0:a.st.days)-(b.st.days==null?0:b.st.days)));
+    return {def, kind:m ? m.kind : null, client, blankForm, cols, rows, used, cnt, meta, cell, action,
+      textCols: cols.filter(c=>c.type!=='date' && c.type!=='computed').slice(0,2),
+      dueCol: m && m.due ? def.columns.find(c=>c.key===m.due) : null};
+  }
+  /* pierścień jako SVG (html2canvas nie rysuje conic-gradient) */
+  function wtRgRingSvg(cnt){
+    const R = 56, C = 2*Math.PI*R; let off = 0;
+    const seg = (n, col)=>{ if(!n || !cnt.total) return ''; const len = C*n/cnt.total; const s = '<circle cx="66" cy="66" r="'+R+'" fill="none" stroke="'+col+'" stroke-width="13" stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'" transform="rotate(-90 66 66)"/>'; off += len; return s; };
+    return '<svg class="rg-ring" width="132" height="132" viewBox="0 0 132 132"><circle cx="66" cy="66" r="'+R+'" fill="none" stroke="#3a3e43" stroke-width="13"/>'+seg(cnt.ok,'#3ecf8e')+seg(cnt.warn,'#f0a63a')+seg(cnt.bad,'#ff6b5e')+seg(cnt.nd,'#8f8b84')+'</svg>';
+  }
+  function buildPrintHost(v){
+    const M = wtRgModel(v), def = M.def, host = document.getElementById('rj-print-host');
+    const head = M.client || def.title;
+    const fs = head.length>44 ? 26 : head.length>30 ? 34 : head.length>18 ? 44 : 54;
+    const metaCols = [{l:'Stan na', v:wtRgToday()}].concat(M.meta.filter(x=>x.value).slice(0,3).map(x=>({l:x.label, v:x.value})), [{l:'Wpisów', v:String(M.cnt.total)}, {l:'Wygenerowano', v:fmtWhen(Date.now())}]);
+    const pct = M.cnt.total ? Math.round(M.cnt.ok/M.cnt.total*100) : 0;
+    const ring = M.kind && M.cnt.total
+      ? '<div class="rpc-ringwrap"><div class="rpc-ring">'+wtRgRingSvg(M.cnt)+'<div class="rpc-ring-inner" style="background:transparent"><span class="rpc-ring-pct">'+pct+'%</span><span class="rpc-ring-label">'+esc(M.kind==='valid'?'Aktualne':M.kind==='open'?'Usunięte':'W terminie')+'</span></div></div><span class="rpc-ring-sub">'+M.cnt.ok+' z '+M.cnt.total+' wpisów bez uwag</span></div>' : '';
+    const header = '<div class="rpc-header"'+(ring?'':' style="grid-template-columns:1fr"')+'><div class="rpc-headleft">'
+      +'<div class="rpc-pills"><span class="rpc-pill solid">Rejestr '+esc(def.code)+'</span><span class="rpc-pill outline">'+esc(String(def.category||'').replace(/^[A-Z]\.\s*/,''))+'</span>'+(M.blankForm?'<span class="rpc-pill outline">Wzór do wypełnienia</span>':'')+'</div>'
+      +'<div><h1 class="rpc-title" style="font-size:'+fs+'pt;line-height:.95">'+esc(head)+'</h1>'+(M.client?'<div class="rg-doc">'+esc(def.code+' — '+def.title)+'</div>':'<div class="rg-doc">'+esc(def.description||'')+'</div>')+'</div>'
+      +'<div class="rpc-metagrid" style="grid-template-columns:repeat('+metaCols.length+',auto)">'+metaCols.map(x=>'<span class="lbl">'+esc(x.l)+'</span>').join('')+metaCols.map(x=>'<span class="val">'+esc(x.v)+'</span>').join('')+'</div>'
+      +'</div>'+ring+'</div>';
+    const stats = M.kind && M.cnt.total ? '<div class="rpc-stats">'
+      +'<div class="rpc-stat total"><span class="rpc-stat-label">Wpisów w rejestrze</span><span class="rpc-stat-num">'+M.cnt.total+'</span></div>'
+      +'<div class="rpc-stat ok"><span class="rpc-stat-label withdot"><span class="dot"></span>'+esc(RG_OK_LBL[M.kind])+'</span><span class="rpc-stat-num">'+M.cnt.ok+'</span></div>'
+      +'<div class="rpc-stat warn"><span class="rpc-stat-label withdot"><span class="dot"></span>'+esc(RG_WARN_LBL[M.kind])+'</span><span class="rpc-stat-num">'+M.cnt.warn+'</span></div>'
+      +'<div class="rpc-stat bad"><span class="rpc-stat-label withdot"><span class="dot"></span>Po terminie / brak terminu</span><span class="rpc-stat-num">'+(M.cnt.bad+M.cnt.nd)+'</span></div></div>' : '';
+    const st = s=>s ? '<span class="rg-st '+s.cls+'">'+esc(s.label)+'</span>' : '';
+    const td = (c,row)=>'<td'+(c.type==='date'?' class="d"':'')+'>'+esc(M.cell(c,row))+'</td>';
+    const lp = i=>'<td class="lp">'+String(i+1).padStart(2,'0')+'</td>';
+    let action = '';
+    if(M.action.length){
+      const ac = M.textCols.concat(M.dueCol ? [M.dueCol] : []);
+      action = '<div class="rpc-sechead" style="margin-bottom:-12px"><div class="rpc-sechead-left"><span class="rpc-eyebrow2 red">Wymaga działania</span><h2 class="rg-h2">Do zaplanowania w pierwszej kolejności</h2></div></div>'
+        +'<table class="wt-rg-t"><thead><tr><th>Lp.</th>'+ac.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'<th>Status</th></tr></thead><tbody>'
+        +M.action.map(x=>'<tr>'+lp(x.i)+ac.map(c=>td(c,x.row)).join('')+'<td>'+st(x.st)+'</td></tr>').join('')+'</tbody></table>';
     }
-    const headerRow = r;
-    // wiersze danych, naprzemienne tło
-    v.rows.forEach((row,idx)=>{
-      const rowNum = r+1;
-      const alt = idx%2===1;
-      let cellsXml = cNum('A'+rowNum, alt?SXF.dataCalt:SXF.dataC, idx+1);
-      def.columns.forEach((col,i)=>{
-        const val = col.type==='date' ? fmtDatePL(row[col.key]) : (col.type==='computed' ? wtComputedCellValue(col,row) : (row[col.key]||''));
-        cellsXml += c(xlColLetter(i+2)+rowNum, alt?SXF.dataLalt:SXF.dataL, val);
+    const main = '<div class="rpc-sechead" style="margin-bottom:-12px"><div class="rpc-sechead-left"><span class="rpc-eyebrow2 gray">'+(M.action.length?'Pełna ewidencja':'Rejestr '+esc(def.code))+'</span><h2 class="rg-h2">'+esc(def.title)+'</h2></div><div class="rg-basis">Podstawa prawna: '+esc(def.legalBasis||'—')+'</div></div>'
+      +'<table class="wt-rg-t"><thead><tr><th>Lp.</th>'+M.cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+(M.kind?'<th>Status</th>':'')+'</tr></thead><tbody>'
+      +(M.rows.length ? M.rows.map(x=>'<tr'+(x.filled?'':' class="blank"')+'>'+lp(x.i)+M.cols.map(c=>td(c,x.row)).join('')+(M.kind?'<td>'+st(x.st)+'</td>':'')+'</tr>').join('') : '<tr><td colspan="'+(M.cols.length+(M.kind?2:1))+'">Brak wpisów.</td></tr>')
+      +'</tbody></table>';
+    host.innerHTML = '<div class="rp-client-report wt-rg">'+header+stats+action+main
+      +(def.instructionNote ? '<div class="rg-note">'+esc(def.instructionNote)+'</div>' : '')
+      +'<div class="rg-sign"><div>Sporządził (specjalista ds. BHP) — data i podpis</div><div>Zatwierdził (pracodawca) — data i podpis</div></div>'
+      +'<div class="rpc-footer2"><p>'+esc(def.code+' · '+def.title)+' · wygenerowano w BHP Audyt, '+esc(fmtWhen(Date.now()))+'</p><span class="brand">'+esc(M.client)+'</span></div>'
+      +'</div>';
+  }
+  /* ---- Excel w stylu raportu: ciemny nagłówek, kafle, kolorowe statusy, filtry, wydruk poziomo ---- */
+  const RG_XF = (function(){
+    const fonts = [], fills = ['<fill><patternFill patternType="none"/></fill>','<fill><patternFill patternType="gray125"/></fill>'], xfs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'], idx = {};
+    const font = (sz, color, o)=>{ o = o||{}; const x = '<font>'+(o.b?'<b/>':'')+(o.i?'<i/>':'')+'<sz val="'+sz+'"/><color rgb="FF'+color+'"/><name val="'+(o.mono?'Consolas':'Calibri')+'"/></font>'; let k = fonts.indexOf(x); if(k<0){ fonts.push(x); k = fonts.length-1; } return k; };
+    const fill = c=>{ if(!c) return 0; const x = '<fill><patternFill patternType="solid"><fgColor rgb="FF'+c+'"/><bgColor indexed="64"/></patternFill></fill>'; let k = fills.indexOf(x); if(k<0){ fills.push(x); k = fills.length-1; } return k; };
+    font(10, '15171A');
+    const borders = ['<border><left/><right/><top/><bottom/><diagonal/></border>',
+      '<border><left style="thin"><color rgb="FFE4E1DA"/></left><right style="thin"><color rgb="FFE4E1DA"/></right><top style="thin"><color rgb="FFE4E1DA"/></top><bottom style="thin"><color rgb="FFE4E1DA"/></bottom><diagonal/></border>',
+      '<border><left/><right/><top style="dotted"><color rgb="FFB3AEA5"/></top><bottom/><diagonal/></border>'];
+    const add = (name, f, bg, border, al)=>{ idx[name] = xfs.length; xfs.push('<xf numFmtId="0" fontId="'+f+'" fillId="'+fill(bg)+'" borderId="'+(border||0)+'" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment '+(al||'horizontal="left" vertical="center"')+'/></xf>'); };
+    const D = '15171A';
+    add('band', font(10,'F4F2EC'), D);
+    add('eyebrow', font(8,'D8D5CC',{mono:1}), D, 0, 'horizontal="left" vertical="center" indent="1"');
+    add('head', font(22,'F4F2EC',{b:1}), D, 0, 'horizontal="left" vertical="center" indent="1"');
+    add('doc', font(11,'D8D5CC'), D, 0, 'horizontal="left" vertical="center" indent="1"');
+    add('mlbl', font(8,'A3A09A'), D, 0, 'horizontal="left" vertical="bottom" indent="1"');
+    add('mval', font(9,'F4F2EC',{mono:1}), D, 0, 'horizontal="left" vertical="top" indent="1" wrapText="1"');
+    add('ring', font(22,'3ECF8E',{b:1}), D, 0, 'horizontal="right" vertical="center" indent="1"');
+    add('ringsub', font(8,'D8D5CC'), D, 0, 'horizontal="right" vertical="center" indent="1" wrapText="1"');
+    [['total','F1EFE9','5D5A55',D],['ok','E3F6EC','17603F','17603F'],['warn','FDF1DF','8A4B00','8A4B00'],['bad','FDE8E5','9E2A20','9E2A20']].forEach(([k,bg,lc,nc])=>{
+      add('tl_'+k, font(9,lc), bg, 0, 'horizontal="left" vertical="bottom" indent="1" wrapText="1"');
+      add('tn_'+k, font(20,nc,{b:1}), bg, 0, 'horizontal="left" vertical="top" indent="1"');
+    });
+    add('eb_red', font(8,'D9463B',{mono:1}));
+    add('eb_gray', font(8,'6B6760',{mono:1}));
+    add('h2', font(14,D,{b:1}));
+    add('basis', font(8,'6B6760',{i:1}), null, 0, 'horizontal="left" vertical="center" wrapText="1"');
+    add('th', font(9,'3D3A35',{b:1}), 'F1EFE9', 1, 'horizontal="left" vertical="center" wrapText="1"');
+    add('td', font(9,D), null, 1, 'horizontal="left" vertical="top" wrapText="1"');
+    add('tdd', font(9,D,{mono:1}), null, 1, 'horizontal="left" vertical="top"');
+    add('lp', font(9,'8F8B84',{mono:1}), null, 1, 'horizontal="center" vertical="top"');
+    [['ok','E3F6EC','17603F'],['warn','FDF1DF','8A4B00'],['bad','FDE8E5','9E2A20'],['nd','F1EFE9','5D5A55']].forEach(([k,bg,c])=>add('st_'+k, font(9,c,{b:1}), bg, 1, 'horizontal="center" vertical="top" wrapText="1"'));
+    add('note', font(8.5,'5D5A55'), 'FAF9F6', 0, 'horizontal="left" vertical="center" wrapText="1" indent="1"');
+    add('sign', font(8,'5D5A55'), null, 2, 'horizontal="center" vertical="top"');
+    add('foot', font(7.5,'8F8B84'));
+    const xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+      +'<fonts count="'+fonts.length+'">'+fonts.join('')+'</fonts><fills count="'+fills.length+'">'+fills.join('')+'</fills><borders count="'+borders.length+'">'+borders.join('')+'</borders>'
+      +'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="'+xfs.length+'">'+xfs.join('')+'</cellXfs>'
+      +'<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+    return {xml, s:idx};
+  })();
+  /* spec: {sheetName, eyebrow, headline, docLine, meta:[{label,value}], tiles:null|{total,ok,warn,bad,okLbl,warnLbl,badLbl}, ringPct, ringLbl,
+     sections:[{eyebrow, red, title, basis, columns:[{label, kind:'lp'|'date'|'status'|'text', width}], rows:[[cell…]], filter, freeze}], note, footer}
+     komórka statusu: {cls, label}; reszta: tekst / liczba */
+  async function wtRgXlsx(spec){
+    const S = RG_XF.s, sec0 = spec.sections[spec.sections.length-1];
+    const nCols = Math.max(4, ...spec.sections.map(s=>s.columns.length));
+    const L = n=>xlColLetter(n), lastCol = L(nCols);
+    const merges = [], rows = [];
+    let r = 0, freezeRow = 0, filterRef = '', printRow = 0;
+    const addRow = (h, cells)=>{ r++; rows.push('<row r="'+r+'"'+(h?' ht="'+h+'" customHeight="1"':'')+'>'+cells+'</row>'); return r; };
+    const cT = (ref, s, t)=>'<c r="'+ref+'" s="'+s+'" t="inlineStr"><is><t xml:space="preserve">'+xmlEsc(t)+'</t></is></c>';
+    const cN = (ref, s, n)=>'<c r="'+ref+'" s="'+s+'"><v>'+n+'</v></c>';
+    const cB = (ref, s)=>'<c r="'+ref+'" s="'+s+'"/>';
+    const mg = (a, b)=>{ if(a!==b) merges.push(a+':'+b); };
+    const fillRow = (s, from, to, rr)=>{ let x = ''; for(let i=from;i<=to;i++) x += cB(L(i)+rr, s); return x; };
+    /* podział nCols na k zakresów (kafle, metadane) */
+    const split = k=>{ const out = []; let a = 1; for(let i=0;i<k;i++){ const w = Math.floor((nCols-a+1)/(k-i)); out.push([a, a+w-1]); a += w; } return out; };
+    const band = (h, build)=>{ const rr = r+1; const used = build ? build(rr) : {}; let x = ''; for(let i=1;i<=nCols;i++) x += used[i] || cB(L(i)+rr, S.band); addRow(h, x); };
+    const hasRing = spec.ringPct!=null && nCols>=5;
+    const headTo = hasRing ? nCols-2 : nCols;
+    band(8);
+    band(18, rr=>{ mg('A'+rr, lastCol+rr); return {1:cT('A'+rr, S.eyebrow, spec.eyebrow||'')}; });
+    band(36, rr=>{ mg('A'+rr, L(headTo)+rr); const u = {1:cT('A'+rr, S.head, spec.headline||'')}; if(hasRing){ mg(L(nCols-1)+rr, lastCol+rr); u[nCols-1] = cT(L(nCols-1)+rr, S.ring, spec.ringPct+'%'); } return u; });
+    band(20, rr=>{ mg('A'+rr, L(headTo)+rr); const u = {1:cT('A'+rr, S.doc, spec.docLine||'')}; if(hasRing){ mg(L(nCols-1)+rr, lastCol+rr); u[nCols-1] = cT(L(nCols-1)+rr, S.ringsub, spec.ringLbl||''); } return u; });
+    const meta = (spec.meta||[]).filter(x=>x && x.label).slice(0, Math.min(5, nCols));
+    if(meta.length){
+      const rg = split(meta.length);
+      band(16, rr=>{ const u = {}; meta.forEach((x,i)=>{ mg(L(rg[i][0])+rr, L(rg[i][1])+rr); u[rg[i][0]] = cT(L(rg[i][0])+rr, S.mlbl, x.label); }); return u; });
+      band(20, rr=>{ const u = {}; meta.forEach((x,i)=>{ mg(L(rg[i][0])+rr, L(rg[i][1])+rr); u[rg[i][0]] = cT(L(rg[i][0])+rr, S.mval, x.value||'—'); }); return u; });
+    }
+    band(8);
+    if(spec.tiles){
+      addRow(8, '');
+      const t = spec.tiles, items = [['total','Wpisów w rejestrze',t.total],['ok','● '+t.okLbl,t.ok],['warn','● '+t.warnLbl,t.warn],['bad','● '+t.badLbl,t.bad]];
+      const rg = split(4);
+      [0,1].forEach(line=>{ const rr = r+1; let x = ''; items.forEach((it,i)=>{ const [a,b] = rg[i]; mg(L(a)+rr, L(b)+rr); for(let c=a;c<=b;c++) x += (c===a ? (line ? cN(L(c)+rr, S['tn_'+it[0]], it[2]) : cT(L(c)+rr, S['tl_'+it[0]], it[1])) : cB(L(c)+rr, S[(line?'tn_':'tl_')+it[0]])); }); addRow(line ? 34 : 22, x); });
+    }
+    spec.sections.forEach(sec=>{
+      addRow(10, '');
+      { const rr = r+1; addRow(14, cT('A'+rr, sec.red ? S.eb_red : S.eb_gray, sec.eyebrow||'')); mg('A'+rr, L(Math.min(nCols, 4))+rr); }
+      { const rr = r+1; const half = sec.basis && nCols>=6 ? Math.ceil(nCols/2) : nCols; let x = cT('A'+rr, S.h2, sec.title||''); mg('A'+rr, L(half)+rr);
+        if(half<nCols){ x += cT(L(half+1)+rr, S.basis, 'Podstawa prawna: '+sec.basis); mg(L(half+1)+rr, lastCol+rr); }
+        addRow(24, x); }
+      if(sec.basis && nCols<6){ const rr = r+1; addRow(30, cT('A'+rr, S.basis, 'Podstawa prawna: '+sec.basis)); mg('A'+rr, lastCol+rr); }
+      addRow(6, '');
+      const hr = r+1;
+      let hx = ''; sec.columns.forEach((c,i)=>{ const col = i+1, last = i===sec.columns.length-1; hx += cT(L(col)+hr, S.th, c.label); });
+      addRow(32, hx);
+      if(sec.freeze && !freezeRow){ freezeRow = hr; printRow = hr; }
+      sec.rows.forEach(cells=>{
+        const rr = r+1; let x = '', lines = 1;
+        sec.columns.forEach((c,i)=>{
+          const col = i+1, last = i===sec.columns.length-1, v = cells[i], ref = L(col)+rr;
+          if(c.kind==='status'){ x += v && v.label ? cT(ref, S['st_'+(v.cls||'nd')], v.label) : cB(ref, S.td); }
+          else if(c.kind==='lp'){ x += typeof v==='number' ? cN(ref, S.lp, v) : cT(ref, S.lp, v==null?'':String(v)); }
+          else { const t = v==null ? '' : String(v); x += cT(ref, c.kind==='date' ? S.tdd : S.td, t); lines = Math.max(lines, Math.ceil(t.length / Math.max(6, (c.width||14)*1.15)), (t.match(/\n/g)||[]).length+1); }
+        });
+        addRow(Math.min(160, Math.max(18, 12.5*lines+5)), x);
       });
-      addRow(20, cellsXml);
+      if(sec.filter && sec.rows.length && !filterRef) filterRef = 'A'+hr+':'+L(sec.columns.length)+r;
     });
-    addRow(6, '');
-    // instrukcja
-    addRow(28, c('A'+(r+1), SXF.instr, def.instructionNote||'Dokument wygenerowany w narzędziu BHP Audyt — uzupełniaj na bieżąco i przechowuj zgodnie z wymaganym terminem archiwizacji.'));
-    merge('A'+r, lastCol+r);
-    addRow(4, '');
-    // podpisy — jeden blok (etykieta + linia + data) na wiersz, tak samo bezpieczne dla wąskich
-    // tabel (np. 4-kolumnowa lista obecności) jak dwa obok siebie by nie były.
-    ['Opracował / Sporządził:', 'Zatwierdził (pracodawca):'].forEach(label=>{
-      {
-        const rowNum = r+1;
-        addRow(18, c('A'+rowNum, SXF.label, label));
-        merge('A'+rowNum, 'B'+rowNum);
-      }
-      {
-        const rowNum = r+1;
-        let cellsXml = '';
-        for(let i=3;i<=nCols;i++) cellsXml += cBlank(xlColLetter(i)+rowNum, SXF.sigline);
-        addRow(14, cellsXml);
-        merge('C'+rowNum, lastCol+rowNum);
-      }
-      addRow(16, c('A'+(r+1), SXF.sigdate, 'Data:'));
-      addRow(4, '');
-    });
-    addRow(14, c('A'+(r+1), SXF.footer, 'Wygenerowano w narzędziu BHP Audyt — '+fmtWhen(Date.now())));
-    merge('A'+r, lastCol+r);
-
-    // szerokości kolumn
-    cols.push('<col min="1" max="1" width="6" customWidth="1"/>');
-    def.columns.forEach((col,i)=>{
-      const w = col.type==='date' ? 13 : Math.min(30, Math.max(15, col.label.length+3));
-      cols.push('<col min="'+(i+2)+'" max="'+(i+2)+'" width="'+w+'" customWidth="1"/>');
-    });
-
+    if(spec.note){ addRow(10, ''); const rr = r+1; addRow(Math.min(120, 16+12*Math.ceil(spec.note.length/(nCols*16))), cT('A'+rr, S.note, spec.note)+fillRow(S.note, 2, nCols, rr)); mg('A'+rr, lastCol+rr); }
+    addRow(26, '');
+    { const rr = r+1; const rg = nCols>=6 ? [[2, Math.floor(nCols/2)-0], [Math.floor(nCols/2)+2, nCols-1]] : [[1, Math.ceil(nCols/2)], [Math.ceil(nCols/2)+1, nCols]];
+      let x = ''; [['Sporządził (specjalista ds. BHP) — data i podpis', rg[0]], ['Zatwierdził (pracodawca) — data i podpis', rg[1]]].forEach(([t,[a,b]])=>{ if(b<a) b = a; for(let c=a;c<=b;c++) x += c===a ? cT(L(c)+rr, S.sign, t) : cB(L(c)+rr, S.sign); mg(L(a)+rr, L(b)+rr); });
+      addRow(18, x); }
+    addRow(10, '');
+    { const rr = r+1; addRow(14, cT('A'+rr, S.foot, spec.footer||'')); mg('A'+rr, lastCol+rr); }
+    const widths = []; for(let i=1;i<=nCols;i++){ let w = 0; spec.sections.forEach(s=>{ const c = s.columns[i-1]; if(c) w = Math.max(w, c.width||14); }); widths.push(w||12); }
+    const sheetName = String(spec.sheetName||'Arkusz').replace(/[\[\]:*?\/\\]/g,'-').slice(0,31);
+    const foot = s=>xmlEsc(String(s).replace(/&/g,'&&'));
     const sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
       +'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-      +'<dimension ref="A1:'+lastCol+r+'"/>'
-      +'<sheetViews><sheetView showGridLines="0" workbookViewId="0"><pane ySplit="'+headerRow+'" topLeftCell="A'+(headerRow+1)+'" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft"/></sheetView></sheetViews>'
-      +'<cols>'+cols.join('')+'</cols>'
+      +'<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:'+lastCol+r+'"/>'
+      +'<sheetViews><sheetView showGridLines="0" workbookViewId="0">'+(freezeRow?'<pane ySplit="'+freezeRow+'" topLeftCell="A'+(freezeRow+1)+'" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft"/>':'')+'</sheetView></sheetViews>'
+      +'<cols>'+widths.map((w,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>').join('')+'</cols>'
       +'<sheetData>'+rows.join('')+'</sheetData>'
-      +(merges.length ? '<mergeCells count="'+merges.length+'">'+merges.map(m=>'<mergeCell ref="'+m+'"/>').join('')+'</mergeCells>' : '')
+      +(filterRef?'<autoFilter ref="'+filterRef+'"/>':'')
+      +(merges.length?'<mergeCells count="'+merges.length+'">'+merges.map(m=>'<mergeCell ref="'+m+'"/>').join('')+'</mergeCells>':'')
+      +'<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.6" header="0.3" footer="0.3"/>'
+      +'<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>'
+      +'<headerFooter><oddFooter>&amp;L&amp;8'+foot(spec.footer||'')+'&amp;R&amp;8Str. &amp;P z &amp;N</oddFooter></headerFooter>'
       +'</worksheet>';
-
-    const workbookXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-      +'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-      +'<sheets><sheet name="'+xmlEsc(def.code)+'" sheetId="1" r:id="rId1"/></sheets></workbook>';
-    const workbookRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-      +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-      +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
-      +'<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
-      +'</Relationships>';
-    const rootRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-      +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-      +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
-      +'</Relationships>';
-    const contentTypes = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-      +'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-      +'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-      +'<Default Extension="xml" ContentType="application/xml"/>'
-      +'<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-      +'<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
-      +'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
-      +'</Types>';
-
+    const q = "'"+sheetName.replace(/'/g,"''")+"'";
+    const names = (printRow ? '<definedName name="_xlnm.Print_Titles" localSheetId="0">'+xmlEsc(q)+'!$'+printRow+':$'+printRow+'</definedName>' : '')
+      +(filterRef ? '<definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">'+xmlEsc(q)+'!'+filterRef.replace(/([A-Z]+)(\d+)/g,'$$$1$$$2')+'</definedName>' : '');
     const zip = new JSZip();
-    zip.file('[Content_Types].xml', contentTypes);
-    zip.file('_rels/.rels', rootRels);
-    zip.file('xl/workbook.xml', workbookXml);
-    zip.file('xl/_rels/workbook.xml.rels', workbookRels);
-    zip.file('xl/styles.xml', XLSX_STYLES_XML);
+    zip.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>');
+    zip.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
+    zip.file('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+xmlEsc(sheetName)+'" sheetId="1" r:id="rId1"/></sheets>'+(names?'<definedNames>'+names+'</definedNames>':'')+'</workbook>');
+    zip.file('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
+    zip.file('xl/styles.xml', RG_XF.xml);
     zip.file('xl/worksheets/sheet1.xml', sheetXml);
     return await zip.generateAsync({type:'base64'});
+  }
+  const wtRgColW = (label, kind, sample)=>kind==='lp' ? 6 : kind==='status' ? 20 : kind==='date' ? 13 : Math.min(42, Math.max(12, Math.round(Math.max(String(label||'').length*0.75, sample||0))+3));
+  async function buildRegisterXlsx(v){
+    const M = wtRgModel(v), def = M.def;
+    const pct = M.kind && M.cnt.total ? Math.round(M.cnt.ok/M.cnt.total*100) : null;
+    const sample = c=>Math.min(40, M.rows.reduce((mx,x)=>Math.max(mx, String(M.cell(c,x.row)||'').length), 0)*0.85);
+    const columns = [{label:'Lp.', kind:'lp', width:6}].concat(M.cols.map(c=>({label:c.label, kind:c.type==='date'?'date':'text', width:wtRgColW(c.label, c.type==='date'?'date':'text', sample(c))})), M.kind ? [{label:'Status', kind:'status', width:20}] : []);
+    const sections = [];
+    if(M.action.length){
+      const ac = M.textCols.concat(M.dueCol ? [M.dueCol] : []);
+      sections.push({eyebrow:'WYMAGA DZIAŁANIA', red:true, title:'Do zaplanowania w pierwszej kolejności',
+        columns:[{label:'Lp.', kind:'lp', width:6}].concat(ac.map(c=>({label:c.label, kind:c.type==='date'?'date':'text', width:wtRgColW(c.label, c.type==='date'?'date':'text', sample(c))})), [{label:'Status', kind:'status', width:20}]),
+        rows:M.action.map(x=>[x.i+1].concat(ac.map(c=>M.cell(c,x.row)), [x.st]))});
+    }
+    sections.push({eyebrow:(M.action.length?'PEŁNA EWIDENCJA':'REJESTR '+def.code), title:def.title, basis:def.legalBasis, columns, filter:true, freeze:true,
+      rows:M.rows.map(x=>[x.i+1].concat(M.cols.map(c=>M.cell(c,x.row)), M.kind ? [x.st] : []))});
+    return wtRgXlsx({
+      sheetName:def.code, eyebrow:'REJESTR '+def.code+'   ·   '+String(def.category||'').replace(/^[A-Z]\.\s*/,'').toUpperCase()+(M.blankForm?'   ·   WZÓR DO WYPEŁNIENIA':''),
+      headline:M.client || def.title, docLine:M.client ? def.code+' — '+def.title : (def.description||''),
+      meta:[{label:'Stan na', value:M.blankForm?'':wtRgToday()}].concat(M.meta.slice(0,3), [{label:'Wpisów', value:M.blankForm?'':String(M.cnt.total)}]),
+      tiles:M.kind && M.cnt.total ? {total:M.cnt.total, ok:M.cnt.ok, warn:M.cnt.warn, bad:M.cnt.bad+M.cnt.nd, okLbl:RG_OK_LBL[M.kind], warnLbl:RG_WARN_LBL[M.kind], badLbl:'Po terminie / brak terminu'} : null,
+      ringPct:pct, ringLbl:pct==null ? '' : M.cnt.ok+' z '+M.cnt.total+' wpisów bez uwag',
+      sections, note:def.instructionNote||'', footer:def.code+' · '+def.title+(M.client?' · '+M.client:'')+' · BHP Audyt'
+    });
+  }
+  /* eksporty kart (Terminy przeglądów, uprawnień, ocena ryzyka, RODO, wizyty, Terminy BHP) — ten sam wygląd */
+  async function buildCardXlsx(opts){
+    const cols = opts.columns||[], rowsIn = opts.rows||[];
+    const val = (col,row)=>col.type==='date' ? fmtDatePL(row[col.key]) : (col.render ? col.render(row) : (row[col.key]==null ? '' : String(row[col.key])));
+    const stIdx = cols.findIndex(c=>/^status$|^ryzyko po$/i.test(String(c.label||'').trim()));
+    const data = rowsIn.map(row=>cols.map(c=>val(c,row)));
+    const cnt = {ok:0, warn:0, bad:0, nd:0}; let stTotal = 0;
+    if(stIdx>=0) data.forEach(d=>{ const k = wtRgClassify(d[stIdx]); if(k){ cnt[k]++; stTotal++; } });
+    const columns = [{label:'Lp.', kind:'lp', width:6}].concat(cols.map((c,i)=>{ const kind = i===stIdx ? 'status' : c.type==='date' ? 'date' : 'text'; const smp = Math.min(40, data.reduce((mx,d)=>Math.max(mx, String(d[i]||'').length), 0)*0.85); return {label:c.label, kind, width:kind==='status' ? Math.max(18, Math.min(30, smp+3)) : wtRgColW(c.label, kind, smp)}; }));
+    const rows = data.map((d,k)=>[k+1].concat(d.map((x,i)=>i===stIdx ? (x ? {cls:wtRgClassify(x)||'nd', label:x} : null) : x)));
+    const [headline, ...rest] = String(opts.title||'').split(' — ');
+    return wtRgXlsx({
+      sheetName:opts.sheetName||'Zestawienie', eyebrow:'ZESTAWIENIE   ·   BHP AUDYT',
+      headline: rest.length ? rest.join(' — ') : headline, docLine: rest.length ? headline+(opts.description?' · '+opts.description:'') : (opts.description||''),
+      meta:[{label:'Stan na', value:wtRgToday()}].concat((opts.metaFields||[]).slice(0,3), [{label:'Pozycji', value:String(rowsIn.length)}]),
+      tiles: stTotal ? {total:stTotal, ok:cnt.ok, warn:cnt.warn, bad:cnt.bad+cnt.nd, okLbl:'Bez uwag', warnLbl:'Zbliża się termin / uwaga', badLbl:'Po terminie / do działania'} : null,
+      ringPct: stTotal ? Math.round(cnt.ok/stTotal*100) : null, ringLbl: stTotal ? cnt.ok+' z '+stTotal+' bez uwag' : '',
+      sections:[{eyebrow:'PEŁNE ZESTAWIENIE', title:headline, basis:opts.legalBasis||'', columns, rows, filter:true, freeze:true}],
+      note:opts.instructionNote||'', footer:String(opts.title||'')+' · BHP Audyt'
+    });
   }
   /* Generyczna wersja buildRegisterXlsx dla dwóch kart klienta bez REGISTER_DEFS (Terminy
      przeglądów, Terminy uprawnień) — te same helpery (SXF, xlColLetter, JSZip, XLSX_STYLES_XML),
      tylko parametryzowana zamiast czytać z REGISTER_DEFS[type], żeby nie duplikować całego
      ręcznie pisanego generatora OOXML dwa razy więcej. */
-  async function buildCardXlsx(opts){
-    const nCols = 1+opts.columns.length;
-    const lastCol = xlColLetter(nCols);
-    const merges=[], cols=[], rows=[];
-    let r=0;
-    function addRow(height, cellsXml){ r++; rows.push('<row r="'+r+'" ht="'+height+'" customHeight="1">'+cellsXml+'</row>'); return r; }
-    function c(ref, s, text){ return '<c r="'+ref+'" s="'+s+'" t="inlineStr"><is><t xml:space="preserve">'+xmlEsc(text)+'</t></is></c>'; }
-    function cNum(ref, s, num){ return '<c r="'+ref+'" s="'+s+'"><v>'+num+'</v></c>'; }
-    function cBlank(ref, s){ return '<c r="'+ref+'" s="'+s+'"/>'; }
-    function merge(ref1, ref2){ if(ref1!==ref2) merges.push(ref1+':'+ref2); }
-
-    addRow(24, c('A'+(r+1), SXF.banner, 'BHP AUDYT — Kontrola i dokumentacja BHP'));
-    merge('A'+r, lastCol+r);
-    addRow(6, '');
-    addRow(22, c('A'+(r+1), SXF.title, opts.title)); merge('A'+r, lastCol+r);
-    if(opts.description){ addRow(18, c('A'+(r+1), SXF.desc, opts.description)); merge('A'+r, lastCol+r); }
-    if(opts.legalBasis){ addRow(22, c('A'+(r+1), SXF.legal, 'Podstawa prawna: '+opts.legalBasis)); merge('A'+r, lastCol+r); }
-    addRow(6, '');
-    (opts.metaFields||[]).forEach(f=>{
-      const rowNum = r+1;
-      const cellsXml = c('A'+rowNum, SXF.label, f.label+':') + c('C'+rowNum, SXF.value, f.value||'');
-      addRow(20, cellsXml);
-      merge('A'+rowNum, 'B'+rowNum);
-      merge('C'+rowNum, lastCol+rowNum);
-    });
-    addRow(6, '');
-    {
-      const rowNum = r+1;
-      let cellsXml = c('A'+rowNum, SXF.thead, 'Lp.');
-      opts.columns.forEach((col,i)=>{ cellsXml += c(xlColLetter(i+2)+rowNum, SXF.thead, col.label); });
-      addRow(34, cellsXml);
-    }
-    const headerRow = r;
-    (opts.rows||[]).forEach((row,idx)=>{
-      const rowNum = r+1;
-      const alt = idx%2===1;
-      let cellsXml = cNum('A'+rowNum, alt?SXF.dataCalt:SXF.dataC, idx+1);
-      opts.columns.forEach((col,i)=>{
-        const val = col.type==='date' ? fmtDatePL(row[col.key]) : (col.render ? col.render(row) : (row[col.key]||''));
-        cellsXml += c(xlColLetter(i+2)+rowNum, alt?SXF.dataLalt:SXF.dataL, val);
-      });
-      addRow(20, cellsXml);
-    });
-    addRow(6, '');
-    addRow(28, c('A'+(r+1), SXF.instr, opts.instructionNote||'Dokument wygenerowany w narzędziu BHP Audyt — uzupełniaj na bieżąco i przechowuj zgodnie z wymaganym terminem archiwizacji.'));
-    merge('A'+r, lastCol+r);
-    addRow(4, '');
-    ['Opracował / Sporządził:', 'Zatwierdził (pracodawca):'].forEach(label=>{
-      {
-        const rowNum = r+1;
-        addRow(18, c('A'+rowNum, SXF.label, label));
-        merge('A'+rowNum, 'B'+rowNum);
-      }
-      {
-        const rowNum = r+1;
-        let cellsXml = '';
-        for(let i=3;i<=nCols;i++) cellsXml += cBlank(xlColLetter(i)+rowNum, SXF.sigline);
-        addRow(14, cellsXml);
-        merge('C'+rowNum, lastCol+rowNum);
-      }
-      addRow(16, c('A'+(r+1), SXF.sigdate, 'Data:'));
-      addRow(4, '');
-    });
-    addRow(14, c('A'+(r+1), SXF.footer, 'Wygenerowano w narzędziu BHP Audyt — '+fmtWhen(Date.now())));
-    merge('A'+r, lastCol+r);
-
-    cols.push('<col min="1" max="1" width="6" customWidth="1"/>');
-    opts.columns.forEach((col,i)=>{
-      const w = col.type==='date' ? 13 : Math.min(30, Math.max(15, col.label.length+3));
-      cols.push('<col min="'+(i+2)+'" max="'+(i+2)+'" width="'+w+'" customWidth="1"/>');
-    });
-
-    const sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-      +'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-      +'<dimension ref="A1:'+lastCol+r+'"/>'
-      +'<sheetViews><sheetView showGridLines="0" workbookViewId="0"><pane ySplit="'+headerRow+'" topLeftCell="A'+(headerRow+1)+'" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft"/></sheetView></sheetViews>'
-      +'<cols>'+cols.join('')+'</cols>'
-      +'<sheetData>'+rows.join('')+'</sheetData>'
-      +(merges.length ? '<mergeCells count="'+merges.length+'">'+merges.map(m=>'<mergeCell ref="'+m+'"/>').join('')+'</mergeCells>' : '')
-      +'</worksheet>';
-
-    const workbookXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-      +'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-      +'<sheets><sheet name="'+xmlEsc(opts.sheetName)+'" sheetId="1" r:id="rId1"/></sheets></workbook>';
-    const workbookRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-      +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-      +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
-      +'<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
-      +'</Relationships>';
-    const rootRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-      +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-      +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
-      +'</Relationships>';
-    const contentTypes = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-      +'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-      +'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-      +'<Default Extension="xml" ContentType="application/xml"/>'
-      +'<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-      +'<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
-      +'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
-      +'</Types>';
-
-    const zip = new JSZip();
-    zip.file('[Content_Types].xml', contentTypes);
-    zip.file('_rels/.rels', rootRels);
-    zip.file('xl/workbook.xml', workbookXml);
-    zip.file('xl/_rels/workbook.xml.rels', workbookRels);
-    zip.file('xl/styles.xml', XLSX_STYLES_XML);
-    zip.file('xl/worksheets/sheet1.xml', sheetXml);
-    return await zip.generateAsync({type:'base64'});
-  }
   async function buildPrzXlsx(v){
     const client = (v.projectId && wtClientProjects().find(p=>p.id===v.projectId));
     return buildCardXlsx({
@@ -28384,18 +28458,6 @@ document.addEventListener('keydown', e=>{
       ],
       rows: v.rows||[]
     });
-  }
-  function buildPrintHost(v){
-    const def=REGISTER_DEFS[v.registerType];
-    const host=document.getElementById('rj-print-host');
-    const rowsHtml = v.rows.map((row,idx)=>'<tr><td>'+(idx+1)+'</td>'+def.columns.map(c=>'<td>'+esc(c.type==='date'?fmtDatePL(row[c.key]):(c.type==='computed'?wtComputedCellValue(c,row):row[c.key]))+'</td>').join('')+'</tr>').join('');
-    host.innerHTML = ''
-      +'<div class="rp-title">'+esc(def.code+' — '+def.title)+'</div>'
-      +'<div class="rp-sub">'+esc(def.description)+'</div>'
-      +'<div class="rp-basis">Podstawa prawna: '+esc(def.legalBasis)+'</div>'
-      +'<div class="rp-meta">'+(def.metaFields||[]).map(f=>'<span><b>'+esc(f.label)+':</b> '+esc((f.type==='date'?fmtDatePL(v[f.key]):metaVal(v,f))||'—')+'</span>').join('')+'</div>'
-      +'<table><thead><tr><th>Lp.</th>'+def.columns.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+rowsHtml+'</tbody></table>'
-      +'<div class="rp-footer">Wygenerowano w narzędziu BHP Audyt — '+fmtWhen(Date.now())+'</div>';
   }
   /* Dzieli zrzut #rj-print-host na strony PDF WZDŁUŻ GRANIC WIERSZY, nie w stałych odstępach
      pikseli. Poprzednia wersja (prosta pętla tnąca obrazek co dokładnie jedną wysokość strony)
