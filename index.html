@@ -15295,7 +15295,7 @@ document.addEventListener('keydown', e=>{
     if(!DB) return;
     const t = allTodos.find(x=>x.id===id);
     if(!done){
-      const upd = {done:true, doneAt:Date.now()};
+      const upd = {done:true, doneAt:Date.now(), wontDo:false};
       let nx = null;
       if(t && WT_REPEAT[t.repeat]){
         nx = wtNextRepeat(t.dueDate, t.repeat);
@@ -15310,7 +15310,7 @@ document.addEventListener('keydown', e=>{
       DB.doc('todos/'+id).update(upd).catch(()=>{});
       if(t) wtToastAction('Zrobione: „'+(String(t.text||'').length>40 ? String(t.text).slice(0,40)+'…' : (t.text||''))+'”'+(nx?' · następne '+wtDueInfo(nx).txt:''), 'Cofnij', ()=>window.wtToggleTodo(id, true));
     } else {
-      const upd = {done:false, doneAt:null};
+      const upd = {done:false, doneAt:null, wontDo:false};
       if(t && t.nextId){ const n2 = allTodos.find(x=>x.id===t.nextId); if(n2 && !n2.done) DB.doc('todos/'+n2.id).delete().catch(()=>{}); upd.nextId = ''; }
       DB.doc('todos/'+id).update(upd).catch(()=>{});
     }
@@ -15567,9 +15567,9 @@ document.addEventListener('keydown', e=>{
     if(t.notes && t.notes.trim()) ic.push('<span class="wt-tm-ic" title="Zadanie ma notatkę">'+WT_ICS.note+'</span>');
     if(p && showList) ic.push('<span class="wt-tm-list"><span class="wt-list-dot" style="background:'+p.color+'"></span>'+esc(p.name)+'</span>');
     const di = t.dueDate && !t.done ? wtDueInfo(t.dueDate) : null;
-    const right = t.done ? '<span class="wt-tt-when">'+(t.wontDo?'nie zrobię · ':'')+esc(wtRelDay(t.doneAt))+'</span>' : (di ? '<span class="wt-tt-when wt-due-'+di.cls+'">'+esc(di.txt)+'</span>' : '');
+    const right = t.done ? '<span class="wt-tt-when">'+(t.done && t.wontDo?'nie zrobię · ':'')+esc(wtRelDay(t.doneAt))+'</span>' : (di ? '<span class="wt-tt-when wt-due-'+di.cls+'">'+esc(di.txt)+'</span>' : '');
     const lbl = 'Oznacz jako '+(t.done?'do zrobienia':'zrobione');
-    return '<div class="wt-todo-row'+(t.done?' done':'')+(t.wontDo?' wont':'')+(selected?' selected':'')+'" data-id="'+t.id+'" data-done="'+(t.done?1:0)+'" draggable="true">'
+    return '<div class="wt-todo-row'+(t.done?' done':'')+(t.done && t.wontDo?' wont':'')+(selected?' selected':'')+'" data-id="'+t.id+'" data-done="'+(t.done?1:0)+'" draggable="true">'
       +'<input type="checkbox" class="wt-todo-check'+(prio?' p'+prio:'')+'" data-action="toggle" aria-label="'+lbl+'" title="'+lbl+'"'+(t.done?' checked':'')+'>'
       +'<div class="wt-todo-main" data-action="select"><div class="wt-todo-text">'+(t.pinned?'<span class="wt-pin-ic" title="Przypięte">'+WT_TT_IC.pin+'</span>':'')+'<span class="wt-tt-title">'+esc(t.text)+'</span></div></div>'
       +(ic.length ? '<div class="wt-tt-ics" data-action="select">'+ic.join('')+'</div>' : '')
