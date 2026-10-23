@@ -2867,6 +2867,14 @@ window.__WT_FIREBASE_CONFIG__ = {
 };
 </script>
 <style id="wt-tt-css">
+.wt-acc-h{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);}
+.wt-acc-hint{display:block;color:var(--ink-faint);font-size:11.5px;margin-top:3px;}
+.wt-acc-chk{display:flex;gap:8px;align-items:center;font-size:13px;margin-top:22px;}
+.wt-acc-tbl{width:100%;border-collapse:collapse;font-size:13.5px;margin-bottom:8px;}
+.wt-acc-tbl td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top;}
+.wt-acc-tbl td:last-child{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600;}
+.wt-acc-tbl td small{display:block;color:var(--ink-faint);font-size:11.5px;}
+.wt-acc-tbl tr.tot td{font-size:15px;font-weight:800;border-bottom:0;border-top:2px solid var(--line-strong);}
 /* ===== Zadania — układ jak w TickTick ===== */
 #sec-todo .wt-tasks-layout{grid-template-columns:200px minmax(0,1.15fr) minmax(0,1fr);gap:0;align-items:stretch;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:visible;min-height:70vh;}
 #sec-todo .wt-lists-col{padding:12px 8px;border-right:1px solid var(--line);background:var(--surface-2);border-radius:var(--r) 0 0 var(--r);top:calc(var(--topbar) + 8px);align-self:stretch;}
@@ -9296,7 +9304,7 @@ window.__WT_FIREBASE_CONFIG__ = {
 <section id="sec-kalkulatory" class="section">
   <div class="section-head">
     <h2>Kalkulatory i materiały</h2>
-    <p>Dane do informacji ZUS IWA, osoby do pierwszej pomocy i ewakuacji, posiłki i napoje, temperatura w pracy (§ 30a), limity dźwigania, dobór ochronników słuchu, strefa wolnego upadku, plan BIOZ i zawiadomienie inspektora pracy oraz plakaty do wydruku.</p>
+    <p>Dane do informacji ZUS IWA, osoby do pierwszej pomocy i ewakuacji, posiłki i napoje, temperatura w pracy (§ 30a), limity dźwigania, dobór ochronników słuchu, strefa wolnego upadku, plan BIOZ i zawiadomienie inspektora pracy, koszt wypadku przy pracy oraz plakaty do wydruku.</p>
   </div>
   <div id="kalkulatoryBody" class="wt-calc-wrap"></div>
   <div id="materialyBody"></div>
@@ -25253,12 +25261,93 @@ document.addEventListener('keydown', e=>{
       +'<div><label>Wskaźnik WBGT [°C] (jeśli mierzony)</label><input class="wt-input" type="number" step="0.1" id="pnWbgt"></div>'
       +'<div><label>Okres zimowy — praca na otwartej przestrzeni lub w pomieszczeniu nieogrzewanym</label><select class="wt-input" id="pnWinter"><option value="">nie</option><option value="1">tak</option></select></div></div>'
       +'<div id="pnOut2" class="wt-calc-out"></div></div>'
-      + wtCalc2Html();
+      + wtCalc2Html()
+      + accCostHtml();
     el.querySelectorAll('input,select').forEach(i=>{ if(!i.getAttribute('onchange')){ i.addEventListener('input', wtCalcRecompute); i.addEventListener('change', wtCalc2Recompute); i.addEventListener('input', wtCalc2Recompute); } });
     const p = wtProjectById(calcState.iwaClient);
     if(p){ const hc = wtProfileHeadcount(p).n; if(hc!=null) document.getElementById('iwaIns').value = hc; }
-    wtCalcRecompute(); wtCalc2Recompute();
+    wtCalcRecompute(); wtCalc2Recompute(); wtAccRender();
   }
+  /* ===== Kalkulator kosztu wypadku przy pracy (model „od dołu”: tylko kwoty wpisane przez użytkownika, bez ogólnego mnożnika) =====
+     Art. 92 § 1 KP (t.j. Dz.U. 2026 poz. 1245): wynagrodzenie chorobowe 100% wypłaca pracodawca przy wypadku W DRODZE do pracy / z pracy
+     (do 33 dni w roku, a po ukończeniu 50 r.ż. do 14 dni); wypadek PRZY PRACY nie jest wymieniony — świadczenia wypłaca ZUS z ubezpieczenia
+     wypadkowego. § 2: wynagrodzenie za każdy dzień niezdolności, także wolny. Koszty pracodawcy to więc głównie praca, której nie wykonano,
+     zastępstwa, czas zespołu powypadkowego, przestój, szkody i roszczenia. */
+  const accCost = {client:'', caseId:'', kind:'przy', calDays:'', workDays:'', hpd:'8', hour:'', people:'3', hrsPer:'6', downDays:'', downCost:'', repl:'', damage:'', claims:'', other:'', indirect:'0', gross:'', age50:false, budget:''};
+  function accCostHtml(){
+    const s = accCost;
+    const cases = s.client ? allAccidentCases.filter(c=>c.projectId===s.client).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))) : [];
+    const f = (k, label, hint, attrs)=>'<div><label>'+label+'</label><input class="wt-input" inputmode="decimal" id="acc_'+k+'" value="'+esc(s[k])+'" oninput="wtAccSet(\''+k+'\', this.value)"'+(attrs||'')+'>'+(hint?'<small class="wt-acc-hint">'+hint+'</small>':'')+'</div>';
+    return '<div class="card wt-calc-card" id="accCostCard"><h3>Koszt wypadku przy pracy</h3>'
+      +'<p class="small">Szacunek „od dołu” — sumuje tylko koszty, które wpiszesz (bez ogólnego mnożnika kosztów ukrytych). Przydaje się w rozmowie z zarządem o prewencji. Wypadek przy pracy: wynagrodzenia za czas niezdolności pracodawca nie wypłaca — świadczenia wypłaca ZUS (art. 92 § 1 KP obejmuje tylko wypadek w drodze do pracy lub z pracy); pracodawca traci natomiast pracę, której nikt nie wykonał, czas ludzi, produkcję i mienie.</p>'
+      +'<div class="wt-calc-grid">'
+      +'<div><label>Klient (opcjonalnie)</label><select class="wt-input" onchange="wtAccSet(\'client\', this.value, true)">'+wtCalcClientOpts(s.client)+'</select></div>'
+      +'<div><label>Wypadek z rejestru (opcjonalnie)</label><select class="wt-input" onchange="wtAccPickCase(this.value)"'+(cases.length?'':' disabled')+'><option value="">'+(s.client ? (cases.length?'— wybierz wypadek —':'brak wypadków w rejestrze') : 'najpierw wybierz klienta')+'</option>'+cases.map(c=>'<option value="'+c.id+'"'+(c.id===s.caseId?' selected':'')+'>'+esc((fmtDatePL(c.date)||'bez daty')+' · '+(c.employeeName||c.name||'poszkodowany')+(c.sickDays?' · '+c.sickDays+' dni niezdolności':''))+'</option>').join('')+'</select></div>'
+      +'<div><label>Rodzaj zdarzenia</label><select class="wt-input" onchange="wtAccSet(\'kind\', this.value, true)"><option value="przy"'+(s.kind==='przy'?' selected':'')+'>Wypadek przy pracy</option><option value="droga"'+(s.kind==='droga'?' selected':'')+'>Wypadek w drodze do pracy / z pracy</option></select></div>'
+      +'</div><h4 class="wt-acc-h">Absencja i czas ludzi</h4><div class="wt-calc-grid">'
+      +f('calDays','Dni niezdolności do pracy (kalendarzowe, z L4)', 'Z rejestru wypadków, jeśli wybrany.')
+      +f('workDays','Dni robocze absencji', 'Puste = 5/7 dni kalendarzowych. Wpisz 0, jeśli lukę w pracy pokrywasz zastępstwem lub nadgodzinami (pole niżej) — inaczej ten sam koszt policzysz dwa razy.')
+      +f('hpd','Godziny pracy dziennie', '')
+      +f('hour','Pełny koszt godziny pracy [zł]', 'Wynagrodzenie z narzutami pracodawcy (ZUS, PPK, FP/FGŚP) i stałymi kosztami zatrudnienia.')
+      +f('people','Inne osoby zaangażowane po zdarzeniu', 'Zespół powypadkowy, kierownik, BHP, świadkowie.')
+      +f('hrsPer','Godziny na osobę', 'Zabezpieczenie miejsca, ustalenia, protokół, wyjaśnienia, działania naprawcze.')
+      +(s.kind==='droga' ? f('gross','Wynagrodzenie miesięczne brutto poszkodowanego [zł]', 'Do wyliczenia wynagrodzenia za czas niezdolności (100%, art. 92 § 1 pkt 2 KP).')+'<div><label class="wt-acc-chk"><input type="checkbox"'+(s.age50?' checked':'')+' onchange="wtAccSet(\'age50\', this.checked)"> Poszkodowany ukończył 50 lat (limit 14 dni zamiast 33)</label></div>' : '')
+      +'</div><h4 class="wt-acc-h">Przestój, szkody, roszczenia</h4><div class="wt-calc-grid">'
+      +f('downDays','Dni przestoju (może być część dnia, np. 0,5)', '')
+      +f('downCost','Koszt dnia przestoju [zł]', 'Utracona marża, niewykorzystane moce, kary umowne.')
+      +f('repl','Zastępstwa, nadgodziny, praca tymczasowa [zł]', '')
+      +f('damage','Szkody w mieniu, naprawy, sprzątanie [zł]', '')
+      +f('claims','Roszczenia, odszkodowania, koszty prawne [zł]', 'Tylko kwoty znane — kalkulator nie dolicza grzywien ani składki.')
+      +f('other','Inne koszty [zł]', 'Np. rekrutacja i przyuczenie zastępcy, ekspertyzy.')
+      +f('indirect','Dodatkowe koszty pośrednie [% znanych kosztów]', 'Zostaw 0%, jeśli firma nie ma własnego uzasadnionego wskaźnika.')
+      +f('budget','Roczny budżet prewencji BHP do porównania [zł] (opcjonalnie)', '')
+      +'</div><div id="accCostOut" class="wt-calc-out"></div>'
+      +'<div class="wt-pz-actions" style="justify-content:flex-start;margin-top:8px"><button type="button" class="wt-btn" onclick="wtAccPdf()">Pobierz PDF z wyliczeniem</button><button type="button" class="wt-btn ghost" onclick="wtAccReset()">Wyczyść</button></div></div>';
+  }
+  const accN = v=>{ const n = parseFloat(String(v==null?'':v).replace(/\s/g,'').replace(',','.')); return isNaN(n) ? 0 : n; };
+  const accF = v=>(Math.round(v*100)/100).toLocaleString('pl-PL');
+  const accZl = v=>(Math.round(v*100)/100).toLocaleString('pl-PL', {minimumFractionDigits:2, maximumFractionDigits:2})+' zł';
+  function accCompute(){
+    const s = accCost;
+    const cal = accN(s.calDays), wd = s.workDays!=='' ? accN(s.workDays) : Math.round(cal*5/7*10)/10;
+    const hour = accN(s.hour), hpd = accN(s.hpd)||8;
+    const rows = [];
+    rows.push(['Wartość pracy utraconej przez nieobecność', wd*hpd*hour, accF(wd)+' dni rob. × '+accF(hpd)+' h × '+accZl(hour)]);
+    rows.push(['Czas osób zaangażowanych po zdarzeniu', accN(s.people)*accN(s.hrsPer)*hour, accF(accN(s.people))+' os. × '+accF(accN(s.hrsPer))+' h × '+accZl(hour)]);
+    if(s.kind==='droga'){ const lim = s.age50 ? 14 : 33; const d = Math.min(cal, lim); const daily = accN(s.gross)/30;
+      rows.push(['Wynagrodzenie za czas niezdolności (100%)', d*daily, Math.round(d)+' dni (limit '+lim+' w roku) × '+accZl(daily)+' — art. 92 § 1 pkt 2 KP; uproszczenie: podstawa = brutto / 30']); }
+    rows.push(['Przestój', accN(s.downDays)*accN(s.downCost), accF(accN(s.downDays))+' dni × '+accZl(accN(s.downCost))]);
+    rows.push(['Zastępstwa, nadgodziny', accN(s.repl), '']);
+    rows.push(['Szkody w mieniu, naprawy', accN(s.damage), '']);
+    rows.push(['Roszczenia, odszkodowania, koszty prawne', accN(s.claims), '']);
+    rows.push(['Inne', accN(s.other), '']);
+    const known = rows.reduce((a,r)=>a+Math.round(r[1]*100)/100, 0);
+    const ind = known*accN(s.indirect)/100;
+    if(ind) rows.push(['Dodatkowe koszty pośrednie', ind, accF(accN(s.indirect))+'% znanych kosztów']);
+    const total = known + Math.round(ind*100)/100;
+    return {rows, total, wd};
+  }
+  function wtAccRender(){
+    const out = document.getElementById('accCostOut'); if(!out) return; const r = accCompute();
+    const budget = accN(accCost.budget);
+    out.innerHTML = '<table class="wt-acc-tbl">'+r.rows.filter(x=>x[1]).map(x=>'<tr><td>'+esc(x[0])+(x[2]?'<small>'+esc(x[2])+'</small>':'')+'</td><td>'+accZl(x[1])+'</td></tr>').join('')
+      +'<tr class="tot"><td>Szacowany koszt zdarzenia</td><td>'+accZl(r.total)+'</td></tr></table>'
+      +(budget ? '<p class="small">To '+(Math.round(r.total/budget*1000)/10).toLocaleString('pl-PL')+'% rocznego budżetu prewencji ('+accZl(budget)+'). Porównanie pokazuje skalę — nie dowodzi, że dany środek zapobiegłby zdarzeniu.</p>' : '')
+      +(r.total ? '' : '<p class="small">Wpisz koszty, aby zobaczyć szacunek. Zero to punkt startowy, a nie stwierdzenie, że wypadek nic nie kosztował.</p>')
+      +'<p class="small">Pośrednio wypadek może też podnieść stopę składki wypadkowej (dane z informacji ZUS IWA — kalkulator powyżej) — tej kwoty kalkulator nie dolicza.</p>';
+  }
+  window.wtAccSet = function(k, v, rerender){ accCost[k] = v; if(rerender){ const c = document.getElementById('accCostCard'); if(c){ c.outerHTML = accCostHtml(); } } wtAccRender(); };
+  window.wtAccPickCase = function(id){ accCost.caseId = id; const c = allAccidentCases.find(x=>x.id===id); if(c){ if(c.sickDays) accCost.calDays = String(c.sickDays); accCost.workDays = ''; accCost.kind = (typeof wtWypKind==='function' && wtWypKind(c)==='commute') ? 'droga' : 'przy'; } const el = document.getElementById('accCostCard'); if(el) el.outerHTML = accCostHtml(); wtAccRender(); };
+  window.wtAccReset = function(){ Object.assign(accCost, {caseId:'', calDays:'', workDays:'', hour:'', downDays:'', downCost:'', repl:'', damage:'', claims:'', other:'', indirect:'0', gross:'', age50:false, budget:''}); const el = document.getElementById('accCostCard'); if(el) el.outerHTML = accCostHtml(); wtAccRender(); };
+  window.wtAccPdf = function(){
+    const r = accCompute(); const p = accCost.client ? wtProjectById(accCost.client) : null; const c = accCost.caseId ? allAccidentCases.find(x=>x.id===accCost.caseId) : null;
+    const h = '<div class="rp-title">Szacunkowy koszt wypadku '+(accCost.kind==='droga'?'w drodze do pracy / z pracy':'przy pracy')+'</div>'
+      +'<div class="rp-meta">'+(p?'<span><b>Klient:</b> '+esc(p.name)+'</span>':'')+(c?'<span><b>Zdarzenie:</b> '+esc((fmtDatePL(c.date)||'')+' '+(c.employeeName||c.name||''))+'</span>':'')+'<span><b>Data wyliczenia:</b> '+esc(fmtDatePL(wtTodayIso()))+'</span></div>'
+      +'<table class="rp-table"><thead><tr><th>Składnik</th><th>Wyliczenie</th><th style="text-align:right">Kwota</th></tr></thead><tbody>'+r.rows.filter(x=>x[1]).map(x=>'<tr><td>'+esc(x[0])+'</td><td>'+esc(x[2]||'kwota wpisana')+'</td><td style="text-align:right;white-space:nowrap">'+accZl(x[1])+'</td></tr>').join('')
+      +'<tr><td colspan="2"><b>Razem</b></td><td style="text-align:right;white-space:nowrap"><b>'+accZl(r.total)+'</b></td></tr></tbody></table>'
+      +'<div class="small" style="margin-top:10px">Szacunek „od dołu” z kwot podanych przez użytkownika — bez ogólnego mnożnika kosztów ukrytych, bez kar i zmian składki. Przy wypadku przy pracy wynagrodzenia za czas niezdolności pracodawca nie wypłaca (art. 92 § 1 KP — świadczenia wypłaca ZUS). Nie stanowi wyceny księgowej, ubezpieczeniowej ani prawnej.</div>';
+    wtHtmlToPdf(h, 'Koszt_wypadku_'+(p?String(p.name).replace(/[^\wąćęłńóśźżĄĆĘŁŃÓŚŹŻ-]+/g,'_'):'szacunek')+'.pdf', 'portrait', 900);
+  };
   /* ===== Kalkulatory z kompendium (2026-10): § 30a, dźwiganie, ochronniki słuchu, strefa wolnego upadku, BIOZ/OIP =====
      Wszystkie progi z tekstów aktów (api.sejm.gov.pl): rozp. MPiPS 26.09.1997 § 30a (Dz.U. 2026 poz. 927), rozp. MPiPS 14.03.2000
      (t.j. Dz.U. 2018 poz. 1139) § 13, § 17, rozp. RM 19.06.2023 (Dz.U. poz. 1240) zał. 1 cz. I pkt 1 ppkt 4, rozp. RM 3.04.2017
