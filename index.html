@@ -2866,6 +2866,148 @@ window.__WT_FIREBASE_CONFIG__ = {
   appId: "1:755642851819:web:edfdc8f984487e833579ae"
 };
 </script>
+<style id="wt-tt-css">
+/* ===== Zadania — układ jak w TickTick ===== */
+#sec-todo .wt-tasks-layout{grid-template-columns:200px minmax(0,1.15fr) minmax(0,1fr);gap:0;align-items:stretch;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:visible;min-height:70vh;}
+#sec-todo .wt-lists-col{padding:12px 8px;border-right:1px solid var(--line);background:var(--surface-2);border-radius:var(--r) 0 0 var(--r);top:calc(var(--topbar) + 8px);align-self:stretch;}
+#sec-todo .wt-list-item{padding:7px 10px;font-size:13.5px;}
+#sec-todo .wt-list-item.active{background:color-mix(in srgb, var(--accent) 12%, var(--surface));}
+.wt-tt-navlab{font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;margin:12px 10px 4px;}
+#sec-todo .wt-tasks-main{padding:16px 18px 24px;min-width:0;border-right:1px solid var(--line);}
+.wt-tt-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.wt-tt-head .wt-tasks-header{margin:0;flex:1;min-width:0;font-size:20px;font-weight:700;}
+/* szybkie dodawanie — jedna linia, narzędzia po kliknięciu */
+#sec-todo .wt-tt-add{background:var(--surface-2);border:1px solid transparent;border-radius:10px;padding:2px 6px 2px 10px;margin-bottom:14px;}
+#sec-todo .wt-tt-add:focus-within, #sec-todo .wt-tt-add.wt-tt-addopen{background:var(--surface);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+#sec-todo .wt-tt-add .wt-qa-row{align-items:center;gap:6px;}
+.wt-tt-plus{display:inline-flex;color:var(--ink-faint);}
+.wt-tt-plus svg{width:17px;height:17px;}
+#sec-todo .wt-tt-add .wt-input{padding:9px 2px;font-size:14px;}
+.wt-tt-addtools{display:none;align-items:center;gap:2px;flex:0 0 auto;}
+.wt-tt-add.wt-tt-addopen .wt-tt-addtools, .wt-tt-add:focus-within .wt-tt-addtools{display:inline-flex;}
+.wt-tt-tool{display:inline-flex;align-items:center;gap:4px;border:0;background:transparent;color:var(--ink-faint);border-radius:7px;padding:6px;cursor:pointer;font:inherit;font-size:12px;font-weight:600;}
+.wt-tt-tool:hover{background:var(--surface-2);color:var(--ink);}
+.wt-tt-tool svg{width:17px;height:17px;}
+.wt-tt-tool.on{color:var(--accent-ink);}
+.wt-tt-tool > span{display:none;}
+.wt-tt-tool.on > span{display:inline;}
+.wt-tt-listsel{font:inherit;font-size:12px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink-soft);padding:4px 6px;max-width:150px;min-width:0;}
+.wt-tt-pop{display:flex;flex-wrap:wrap;gap:6px;padding:8px 2px 8px 24px;}
+.wt-tt-pop[hidden]{display:none;}
+#sec-todo .wt-qa-hint{padding:0 0 8px 24px;margin-top:0;}
+.wt-tt-sechint{display:inline-flex;align-items:center;gap:6px;color:var(--ink-soft);}
+.wt-tt-sechint button{border:0;background:var(--surface-2);color:var(--ink-soft);border-radius:50%;width:18px;height:18px;cursor:pointer;line-height:1;padding:0;}
+/* sekcje i wiersze */
+.wt-tsec{margin-bottom:6px;border-radius:10px;transition:background .12s, box-shadow .12s;}
+.wt-tsec.wt-drop{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent) inset;}
+.wt-tsec-none.empty{min-height:0;}
+#sec-todo .wt-tsec-none.empty{display:none;}
+#sec-todo.wt-tt-dragging .wt-tsec-none.empty{display:block;min-height:34px;border:1.5px dashed var(--line-strong);}
+.wt-tsec-head{display:flex;align-items:center;gap:4px;padding:8px 2px 4px;}
+.wt-tsec-fold{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:2px 4px;margin:0;cursor:pointer;font:inherit;color:var(--ink);flex:1;min-width:0;text-align:left;}
+.wt-tsec-chev{display:inline-flex;color:var(--ink-faint);transition:transform .15s;}
+.wt-tsec-chev svg{width:13px;height:13px;}
+.wt-tsec-chev.open{transform:rotate(90deg);}
+.wt-tsec-name{font-size:12.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wt-tsec-n{font-size:12px;color:var(--ink-faint);font-weight:600;}
+.wt-tsec-head.g-over .wt-tsec-name{color:var(--crit);}
+.wt-tsec-head.g-today .wt-tsec-name{color:var(--high);}
+.wt-tsec-head.pin .wt-tsec-name{color:var(--accent-ink);}
+.wt-tsec-head.nosec .wt-tsec-name{color:var(--ink-faint);}
+.wt-tsec-tools{display:inline-flex;opacity:0;transition:opacity .12s;}
+.wt-tsec-head:hover .wt-tsec-tools, .wt-tsec-head:focus-within .wt-tsec-tools{opacity:1;}
+.wt-tsec-empty{font-size:12.5px;color:var(--ink-faint);padding:6px 10px 10px 30px;}
+.wt-tt-addsec{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--ink-faint);font:inherit;font-size:13px;padding:8px 4px;cursor:pointer;margin-top:4px;}
+.wt-tt-addsec:hover{color:var(--accent-ink);}
+.wt-tt-addsec svg{width:16px;height:16px;}
+#sec-todo .wt-todo-row{border:0;border-bottom:1px solid var(--line);border-radius:8px;background:transparent;margin:0;padding:8px 6px 8px 8px;gap:10px;min-height:40px;}
+#sec-todo .wt-todo-row:hover{background:var(--surface-2);border-color:var(--line);}
+#sec-todo .wt-todo-row.selected{background:color-mix(in srgb, var(--accent) 10%, var(--surface));box-shadow:none;border-color:transparent;}
+#sec-todo .wt-todo-row.dragging{opacity:.4;}
+#sec-todo .wt-todo-check{width:17px;height:17px;border-radius:5px;margin:0;}
+#sec-todo .wt-todo-check:checked::after{left:4.5px;top:1.5px;width:4.5px;height:8.5px;}
+#sec-todo .wt-todo-text{font-size:14px;gap:6px;}
+.wt-tt-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.wt-tt-ics{display:inline-flex;align-items:center;gap:8px;color:var(--ink-faint);font-size:11.5px;flex:0 1 auto;min-width:0;overflow:hidden;}
+.wt-tt-ics .wt-tm-ic{display:inline-flex;align-items:center;gap:3px;}
+.wt-tt-ics svg{width:14px;height:14px;}
+.wt-tt-ics .wt-tm-list{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+.wt-tt-when{font-size:12px;font-weight:600;color:var(--ink-faint);white-space:nowrap;flex:0 0 auto;font-variant-numeric:tabular-nums;}
+.wt-tt-when.wt-due-over{color:var(--crit);}
+.wt-tt-when.wt-due-today{color:var(--high);}
+.wt-tt-when.wt-due-soon{color:var(--accent-ink);}
+.wt-tt-more{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:0;background:transparent;color:var(--ink-faint);border-radius:6px;cursor:pointer;flex:0 0 auto;padding:0;opacity:0;}
+.wt-tt-more svg{width:16px;height:16px;}
+.wt-tt-more.show, .wt-todo-row:hover .wt-tt-more, .wt-todo-row:focus-within .wt-tt-more, .wt-todo-row.selected .wt-tt-more{opacity:1;}
+.wt-tt-more:hover{background:var(--line);color:var(--ink);}
+#sec-todo .wt-todo-row.wont .wt-tt-title{text-decoration:line-through;color:var(--ink-faint);}
+#sec-todo .wt-done-toggle{border-top:0;font-size:13px;font-weight:700;color:var(--ink-soft);padding:12px 4px 6px;}
+/* menu „⋯” */
+.wt-tt-menu{position:fixed;z-index:3000;width:232px;max-width:calc(100vw - 16px);background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);padding:6px;font-size:13.5px;}
+.wt-tt-menu > button, .wt-tt-mscroll > button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:var(--ink);font:inherit;padding:8px 10px;border-radius:8px;cursor:pointer;text-align:left;}
+.wt-tt-menu > button:hover, .wt-tt-mscroll > button:hover{background:var(--surface-2);}
+.wt-tt-menu > button svg, .wt-tt-mscroll > button svg{width:17px;height:17px;color:var(--ink-soft);flex:0 0 auto;}
+.wt-tt-menu button.on{background:var(--accent-soft);}
+.wt-tt-menu button.danger, .wt-tt-menu button.danger svg{color:var(--crit);}
+.wt-tt-menu .wt-tt-hasub::after{content:"›";margin-left:auto;color:var(--ink-faint);font-size:16px;}
+.wt-tt-mh{font-size:11px;font-weight:700;color:var(--ink-faint);padding:6px 10px 2px;text-transform:uppercase;letter-spacing:.05em;}
+.wt-tt-mrow{display:flex;gap:4px;padding:2px 6px 4px;}
+.wt-tt-mrow button{flex:1;display:inline-flex;align-items:center;justify-content:center;height:34px;border:0;background:transparent;border-radius:8px;cursor:pointer;color:var(--ink-soft);}
+.wt-tt-mrow button:hover{background:var(--surface-2);}
+.wt-tt-mrow button svg{width:19px;height:19px;}
+.wt-tt-msep{height:1px;background:var(--line);margin:4px 2px;}
+.wt-tt-mback svg{transform:rotate(180deg);}
+.wt-tt-mscroll{max-height:300px;overflow:auto;}
+.wt-tt-mdot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 auto;}
+.wt-tt-mnote{font-size:12px;color:var(--ink-faint);padding:6px 10px;}
+/* panel szczegółów */
+#sec-todo .wt-note-editor{border:0;border-radius:0 var(--r) var(--r) 0;padding:12px 20px 20px;min-height:70vh;top:calc(var(--topbar) + 8px);}
+.wt-tt-dbar{display:flex;align-items:center;gap:8px;padding:2px 0 12px;margin-bottom:12px;border-bottom:1px solid var(--line);}
+.wt-tt-dsep{width:1px;height:18px;background:var(--line);}
+.wt-tt-duebtn{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--ink-faint);font:inherit;font-size:13.5px;font-weight:600;padding:5px 8px;border-radius:7px;cursor:pointer;}
+.wt-tt-duebtn:hover{background:var(--surface-2);}
+.wt-tt-duebtn svg{width:16px;height:16px;}
+.wt-tt-duebtn.set.wt-due-later, .wt-tt-duebtn.set.wt-due-soon{color:var(--accent-ink);}
+.wt-tt-duebtn.wt-due-over{color:var(--crit);}
+.wt-tt-duebtn.wt-due-today{color:var(--high);}
+#sec-todo textarea.wt-tt-dtitle{font-size:21px;font-weight:700;line-height:1.3;border:0;background:transparent;resize:none;padding:0;margin:0 0 8px;color:var(--ink);font-family:var(--font-ui);min-height:0;flex:0 0 auto;overflow:hidden;}
+#sec-todo textarea.wt-tt-dtitle:focus{outline:none;box-shadow:none;}
+#sec-todo textarea.wt-tt-ddesc{flex:0 0 auto;min-height:18vh;font-size:14px;color:var(--ink);margin-bottom:12px;}
+#sec-todo textarea.wt-tt-ddesc::placeholder{color:var(--ink-faint);}
+#sec-todo .wt-tt-props{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line);}
+#sec-todo .wt-tt-props.open{box-shadow:0 0 0 3px var(--accent-soft);border-radius:8px;}
+.wt-tt-hideprio{display:none;}
+.wt-tt-prompt{position:fixed;inset:0;z-index:3100;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:16px;}
+.wt-tt-prompt-box{background:var(--surface);border-radius:14px;padding:18px;width:min(380px,100%);box-shadow:0 20px 50px rgba(0,0,0,.25);}
+.wt-tt-prompt-box h3{margin:0 0 12px;font-size:16px;}
+.wt-tt-prompt-box .wt-input{width:100%;}
+.wt-tt-prompt-act{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+.wt-tt-fab{display:none;}
+@media (max-width:1080px){
+  #sec-todo .wt-tasks-layout{grid-template-columns:190px minmax(0,1fr);}
+  #sec-todo .wt-tasks-main{border-right:0;}
+  #sec-todo .wt-note-editor{grid-column:1 / -1;border-top:1px solid var(--line);border-radius:0 0 var(--r) var(--r);}
+}
+@media (max-width:760px){
+  #sec-todo .wt-tasks-layout{grid-template-columns:1fr;border:0;background:transparent;min-height:0;}
+  #sec-todo .wt-lists-col{display:none;}
+  #sec-todo .wt-tasks-main{padding:0 0 90px;border:0;}
+  .wt-tt-head .wt-tasks-header{font-size:26px;}
+  #sec-todo .wt-tsec{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:4px 10px;margin-bottom:12px;}
+  #sec-todo .wt-tsec-none.empty{display:none;}
+  #sec-todo .wt-tsec-head{padding:10px 2px 6px;}
+  #sec-todo .wt-tsec-name{font-size:15px;}
+  #sec-todo .wt-tsec-tools{opacity:1;}
+  #sec-todo .wt-todo-row{border-bottom:0;padding:11px 2px;min-height:46px;}
+  #sec-todo .wt-todo-text{font-size:15.5px;}
+  #sec-todo .wt-tt-more{opacity:1;}
+  #sec-todo .wt-tt-ics .wt-tm-list{font-size:0;gap:0;}
+  #sec-todo .wt-tt-ics .wt-tm-list .wt-list-dot{width:8px;height:8px;}
+  #sec-todo .wt-done-toggle{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 14px;}
+  #sec-todo .wt-tt-add{margin-bottom:12px;}
+  #sec-todo .wt-note-editor{border:0;}
+}
+</style>
 </head>
 <body>
 <div class="topbar">
@@ -7583,30 +7725,30 @@ window.__WT_FIREBASE_CONFIG__ = {
 
 <section id="sec-zrodla" class="section"><div class="section-head"><h2>Źródła wiedzy</h2><p>Zweryfikowane źródła do bieżącej pracy: instytucje, portale branżowe, ppoż., ochrona środowiska, kanały YouTube, społeczności, narzędzia AI i literatura. Oceny są subiektywne — informacje z portali i social mediów zawsze porównaj z ISAP lub wytycznymi PIP/CIOP-PIB.</p></div><div class="searchbar"><input type="text" id="search-zrodla" placeholder="Szukaj źródła… (np. „ryzyko”, „normy”, „szkolenia”)" oninput="liveSearch('zrodla')">
       <span class="count" id="count-zrodla"></span><button class="clearbtn" onclick="clearSearch('zrodla')">Wyczyść</button></div><table class="ref searchable-scope"><thead><tr><th colspan="4">Instytucje państwowe</th></tr></thead><tbody><tr class="srow" data-s="pip — państwowa inspekcja pracy oficjalne wytyczne, interpretacje przepisów, protokoły pokontrolne, harmonogramy darmowych szkoleń pip.gov.pl"><td><strong>PIP — Państwowa Inspekcja Pracy</strong></td><td class="small">Oficjalne wytyczne, interpretacje przepisów, protokoły pokontrolne, harmonogramy darmowych szkoleń</td><td class="small mono"><a href="https://pip.gov.pl" target="_blank" rel="noopener">pip.gov.pl</a></td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="ciop-pib — centralny instytut ochrony pracy baza wiedzy naukowej i technicznej: normy, badania, ergonomia, czynniki szkodliwe, śoi ciop.pl"><td><strong>CIOP-PIB — Centralny Instytut Ochrony Pracy</strong></td><td class="small">Baza wiedzy naukowej i technicznej: normy, badania, ergonomia, czynniki szkodliwe, ŚOI</td><td class="small mono"><a href="https://ciop.pl" target="_blank" rel="noopener">ciop.pl</a></td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="udt — urząd dozoru technicznego eksploatacja maszyn dozorowych, zmiany w prawie technicznym, wymagania uprawnień udt.gov.pl"><td><strong>UDT — Urząd Dozoru Technicznego</strong></td><td class="small">Eksploatacja maszyn dozorowych, zmiany w prawie technicznym, wymagania uprawnień</td><td class="small mono"><a href="https://udt.gov.pl" target="_blank" rel="noopener">udt.gov.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="zus — prewencja wypadkowa dofinansowania na poprawę bhp (do 300 tys. zł), statystyki wypadkowe, poradniki zus.pl/prewencja"><td><strong>ZUS — Prewencja wypadkowa</strong></td><td class="small">Dofinansowania na poprawę bhp (do 300 tys. zł), statystyki wypadkowe, poradniki</td><td class="small mono"><a href="https://zus.pl/prewencja" target="_blank" rel="noopener">zus.pl/prewencja</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="gis / sanepid — główny inspektorat sanitarny wytyczne sanitarne, higiena pracy, choroby zawodowe, czynniki biologiczne gov.pl/web/gis"><td><strong>GIS / Sanepid — Główny Inspektorat Sanitarny</strong></td><td class="small">Wytyczne sanitarne, higiena pracy, choroby zawodowe, czynniki biologiczne</td><td class="small mono"><a href="https://gov.pl/web/gis" target="_blank" rel="noopener">gov.pl/web/gis</a></td><td><span class="rate" title="3/5">★★★<span class="dim">★★</span></span></td></tr><tr class="srow" data-s="isap — internetowy system aktów prawnych oficjalna baza wszystkich polskich aktów prawnych — zawsze sprawdzaj tekst jednolity tutaj isap.sejm.gov.pl"><td><strong>ISAP — Internetowy System Aktów Prawnych</strong></td><td class="small">Oficjalna baza wszystkich polskich aktów prawnych — zawsze sprawdzaj tekst jednolity tutaj</td><td class="small mono"><a href="https://isap.sejm.gov.pl" target="_blank" rel="noopener">isap.sejm.gov.pl</a></td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="eur-lex — prawo unii europejskiej dyrektywy bhp: maszynowa 2006/42/we, narzędziowa 2009/104/we, o śoi 2016/425 eur-lex.europa.eu"><td><strong>EUR-Lex — Prawo Unii Europejskiej</strong></td><td class="small">Dyrektywy bhp: maszynowa 2006/42/WE, narzędziowa 2009/104/WE, o ŚOI 2016/425</td><td class="small mono"><a href="https://eur-lex.europa.eu" target="_blank" rel="noopener">eur-lex.europa.eu</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr></tbody></table><table class="ref searchable-scope"><thead><tr><th colspan="4">Portale branżowe BHP</th></tr></thead><tbody><tr class="srow" data-s="portal bhp artykuły eksperckie, aktualności prawne, wzory dokumentów, gotowe oceny ryzyka portalbhp.pl"><td><strong>Portal BHP</strong></td><td class="small">Artykuły eksperckie, aktualności prawne, wzory dokumentów, gotowe oceny ryzyka</td><td class="small mono"><a href="https://portalbhp.pl" target="_blank" rel="noopener">portalbhp.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="atest — ochrona pracy cyfrowe wydanie miesięcznika, analizy wypadków, wywiady z ekspertami pip i ciop-pib atest.com.pl"><td><strong>Atest — Ochrona Pracy</strong></td><td class="small">Cyfrowe wydanie miesięcznika, analizy wypadków, wywiady z ekspertami PIP i CIOP-PIB</td><td class="small mono"><a href="https://atest.com.pl" target="_blank" rel="noopener">atest.com.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="kultura bhp — portal i podcast miękki aspekt bezpieczeństwa: psychologia, świadomość, nowoczesne szkolenia kulturabhp.pl"><td><strong>Kultura BHP — portal i podcast</strong></td><td class="small">Miękki aspekt bezpieczeństwa: psychologia, świadomość, nowoczesne szkolenia</td><td class="small mono"><a href="https://kulturabhp.pl" target="_blank" rel="noopener">kulturabhp.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="infor — prawo pracy / bhp aktualizacje prawne, orzecznictwo, interpretacje ministerstwa pracy i pip infor.pl/prawo/bhp"><td><strong>INFOR — Prawo Pracy / BHP</strong></td><td class="small">Aktualizacje prawne, orzecznictwo, interpretacje Ministerstwa Pracy i PIP</td><td class="small mono"><a href="https://infor.pl/prawo/bhp" target="_blank" rel="noopener">infor.pl/prawo/bhp</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="bhp od podszewki praktyczny blog: checklisty, tłumaczenie przepisów na prosty język bhpodpodszewki.pl"><td><strong>BHP od podszewki</strong></td><td class="small">Praktyczny blog: checklisty, tłumaczenie przepisów na prosty język</td><td class="small mono"><a href="https://bhpodpodszewki.pl" target="_blank" rel="noopener">bhpodpodszewki.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="safetyexpert.pl poradniki: służba bhp, ocena ryzyka, dokumentacja, obowiązki pracodawcy safetyexpert.pl"><td><strong>SafetyExpert.pl</strong></td><td class="small">Poradniki: służba bhp, ocena ryzyka, dokumentacja, obowiązki pracodawcy</td><td class="small mono"><a href="https://safetyexpert.pl" target="_blank" rel="noopener">safetyexpert.pl</a></td><td><span class="rate" title="3/5">★★★<span class="dim">★★</span></span></td></tr><tr class="srow" data-s="promotor bhp nowinki technologiczne, śoi, case study z zakładów produkcyjnych i magazynów promotorbhp.pl"><td><strong>Promotor BHP</strong></td><td class="small">Nowinki technologiczne, ŚOI, case study z zakładów produkcyjnych i magazynów</td><td class="small mono"><a href="https://promotorbhp.pl" target="_blank" rel="noopener">promotorbhp.pl</a></td><td><span class="rate" title="3/5">★★★<span class="dim">★★</span></span></td></tr><tr class="srow" data-s="ospsbhp — stowarzyszenie służb bhp aktualności, konferencje, szkolenia, networking behapowców ospsbhp.pl"><td><strong>OSPSBHP — Stowarzyszenie Służb BHP</strong></td><td class="small">Aktualności, konferencje, szkolenia, networking behapowców</td><td class="small mono"><a href="https://ospsbhp.pl" target="_blank" rel="noopener">ospsbhp.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr></tbody></table><table class="ref searchable-scope"><thead><tr><th colspan="4">Ochrona przeciwpożarowa</th></tr></thead><tbody><tr class="srow" data-s="komenda główna psp oficjalne przepisy i wytyczne, wymagania ppoż., kampanie prewencyjne gov.pl/web/kgpsp"><td><strong>Komenda Główna PSP</strong></td><td class="small">Oficjalne przepisy i wytyczne, wymagania ppoż., kampanie prewencyjne</td><td class="small mono"><a href="https://gov.pl/web/kgpsp" target="_blank" rel="noopener">gov.pl/web/kgpsp</a></td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="cnbop-pib centrum certyfikujące sprzęt ppoż., normy dla gaśnic i systemów ssp cnbop.pl"><td><strong>CNBOP-PIB</strong></td><td class="small">Centrum certyfikujące sprzęt ppoż., normy dla gaśnic i systemów SSP</td><td class="small mono"><a href="https://cnbop.pl" target="_blank" rel="noopener">cnbop.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="pkn — polski komitet normalizacyjny normy pn-en: en 3 (gaśnice), en 54 (ssp), en 1838 (oświetlenie ewak.), en 12101 pkn.pl"><td><strong>PKN — Polski Komitet Normalizacyjny</strong></td><td class="small">Normy PN-EN: EN 3 (gaśnice), EN 54 (SSP), EN 1838 (oświetlenie ewak.), EN 12101</td><td class="small mono"><a href="https://pkn.pl" target="_blank" rel="noopener">pkn.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr></tbody></table><table class="ref searchable-scope"><thead><tr><th colspan="4">Ochrona środowiska</th></tr></thead><tbody><tr class="srow" data-s="gioś — główny inspektorat ochrony środowiska kontrole środowiskowe, wyniki państwowego monitoringu środowiska, raporty gov.pl/web/gios"><td><strong>GIOŚ — Główny Inspektorat Ochrony Środowiska</strong></td><td class="small">Kontrole środowiskowe, wyniki Państwowego Monitoringu Środowiska, raporty</td><td class="small mono"><a href="https://gov.pl/web/gios" target="_blank" rel="noopener">gov.pl/web/gios</a></td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="bdo — baza danych o odpadach obowiązkowy rejestr, ewidencja odpadów, karty przekazania odpadów (kpo) rejestr-bdo.mos.gov.pl"><td><strong>BDO — Baza Danych o Odpadach</strong></td><td class="small">Obowiązkowy rejestr, ewidencja odpadów, karty przekazania odpadów (KPO)</td><td class="small mono"><a href="https://rejestr-bdo.mos.gov.pl" target="_blank" rel="noopener">rejestr-bdo.mos.gov.pl</a></td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="ministerstwo klimatu i środowiska aktualne przepisy środowiskowe (reach, clp, goz), zmiany legislacyjne gov.pl/web/klimat"><td><strong>Ministerstwo Klimatu i Środowiska</strong></td><td class="small">Aktualne przepisy środowiskowe (REACH, CLP, GOZ), zmiany legislacyjne</td><td class="small mono"><a href="https://gov.pl/web/klimat" target="_blank" rel="noopener">gov.pl/web/klimat</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="echa — europejska agencja chemikaliów baza substancji reach, karty charakterystyki sds, klasyfikacje clp/ghs echa.europa.eu/pl"><td><strong>ECHA — Europejska Agencja Chemikaliów</strong></td><td class="small">Baza substancji REACH, karty charakterystyki SDS, klasyfikacje CLP/GHS</td><td class="small mono"><a href="https://echa.europa.eu/pl" target="_blank" rel="noopener">echa.europa.eu/pl</a></td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="krajowy rejestr prtr raporty środowiskowe dużych zakładów, dane o emisjach do powietrza/wód/gleby prtr.mos.gov.pl"><td><strong>Krajowy Rejestr PRTR</strong></td><td class="small">Raporty środowiskowe dużych zakładów, dane o emisjach do powietrza/wód/gleby</td><td class="small mono"><a href="https://prtr.mos.gov.pl" target="_blank" rel="noopener">prtr.mos.gov.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr></tbody></table><table class="ref searchable-scope"><thead><tr><th colspan="4">YouTube</th></tr></thead><tbody><tr class="srow" data-s="sensowne bhp tłumaczenie trudnych przepisów na zrozumiały język, porady dla behapowców @sensownebhp"><td><strong>Sensowne BHP</strong></td><td class="small">Tłumaczenie trudnych przepisów na zrozumiały język, porady dla behapowców</td><td class="small mono">@SensowneBHP</td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="państwowa inspekcja pracy (kanał oficjalny) zapisy webinarów, kampanie społeczne, omówienia wypadków śmiertelnych @panstwowainspekcjapracy"><td><strong>Państwowa Inspekcja Pracy (kanał oficjalny)</strong></td><td class="small">Zapisy webinarów, kampanie społeczne, omówienia wypadków śmiertelnych</td><td class="small mono">@PanstwowaInspekcjaPracy</td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="ciop-pib wyniki badań, wykłady z konferencji, vr w szkoleniach bhp @cioppib"><td><strong>CIOP-PIB</strong></td><td class="small">Wyniki badań, wykłady z konferencji, VR w szkoleniach bhp</td><td class="small mono">@CIOPPIB</td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="prawnik na budowie prawo budowlane i odpowiedzialność za bhp na budowie, kazusy @prawniknabudowie"><td><strong>Prawnik na budowie</strong></td><td class="small">Prawo budowlane i odpowiedzialność za bhp na budowie, kazusy</td><td class="small mono">@prawniknabudowie</td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr></tbody></table><table class="ref searchable-scope"><thead><tr><th colspan="4">Społeczności i fora</th></tr></thead><tbody><tr class="srow" data-s="praktycy bhp (grupa fb) aktywna grupa — szybkie odpowiedzi praktyków na trudne sytuacje facebook: praktycy bhp"><td><strong>Praktycy BHP (grupa FB)</strong></td><td class="small">Aktywna grupa — szybkie odpowiedzi praktyków na trudne sytuacje</td><td class="small mono">Facebook: Praktycy BHP</td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="sensowne bhp (grupa fb) merytoryczne dyskusje bez hejtu, moderowana, wysoka jakość facebook: sensowne bhp"><td><strong>Sensowne BHP (grupa FB)</strong></td><td class="small">Merytoryczne dyskusje bez hejtu, moderowana, wysoka jakość</td><td class="small mono">Facebook: Sensowne BHP</td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="forum bhpex jedno z nielicznych aktywnych dedykowanych forów bhp w polsce bhpex.pl/forum"><td><strong>Forum BHPEX</strong></td><td class="small">Jedno z nielicznych aktywnych dedykowanych forów bhp w Polsce</td><td class="small mono"><a href="https://bhpex.pl/forum" target="_blank" rel="noopener">bhpex.pl/forum</a></td><td><span class="rate" title="3/5">★★★<span class="dim">★★</span></span></td></tr><tr class="srow" data-s="linkedin — bhp / ehs professionals networking, obserwacja firm doradczych, śledzenie zmian legislacyjnych linkedin"><td><strong>LinkedIn — BHP / EHS Professionals</strong></td><td class="small">Networking, obserwacja firm doradczych, śledzenie zmian legislacyjnych</td><td class="small mono">LinkedIn</td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr></tbody></table><table class="ref searchable-scope"><thead><tr><th colspan="4">Narzędzia AI i cyfrowe</th></tr></thead><tbody><tr class="srow" data-s="claude ai (anthropic) tworzenie dokumentacji, ocen ryzyka, instrukcji, analiza przepisów claude.ai"><td><strong>Claude AI (Anthropic)</strong></td><td class="small">Tworzenie dokumentacji, ocen ryzyka, instrukcji, analiza przepisów</td><td class="small mono"><a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a></td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="lex.pl profesjonalny system prawny z ai — wyszukiwanie przepisów i orzecznictwa lex.pl"><td><strong>Lex.pl</strong></td><td class="small">Profesjonalny system prawny z AI — wyszukiwanie przepisów i orzecznictwa</td><td class="small mono"><a href="https://lex.pl" target="_blank" rel="noopener">lex.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr></tbody></table><table class="ref searchable-scope"><thead><tr><th colspan="4">Literatura polecana</th></tr></thead><tbody><tr class="srow" data-s="bhp w praktyce — bogdan rączkowski kompendium behapowca — kupuj co roku najnowsze wydanie wyd. c.h.beck"><td><strong>BHP w praktyce — Bogdan Rączkowski</strong></td><td class="small">Kompendium behapowca — kupuj co roku najnowsze wydanie</td><td class="small mono">Wyd. C.H.Beck</td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="22 zadania służby bhp — sebastian kryczka praktyczny przewodnik krok po kroku, ze wzorami dokumentów wyd. infor"><td><strong>22 zadania służby bhp — Sebastian Kryczka</strong></td><td class="small">Praktyczny przewodnik krok po kroku, ze wzorami dokumentów</td><td class="small mono">Wyd. INFOR</td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="dochodzenie powypadkowe — sebastian kryczka dowody, protokół, zus iwa, odpowiedzialność pracodawcy wyd. infor"><td><strong>Dochodzenie powypadkowe — Sebastian Kryczka</strong></td><td class="small">Dowody, protokół, ZUS IWA, odpowiedzialność pracodawcy</td><td class="small mono">Wyd. INFOR</td><td><span class="rate" title="5/5">★★★★★<span class="dim"></span></span></td></tr><tr class="srow" data-s="bezpieczeństwo maszyn i urządzeń — ciop-pib wymagania zasadnicze, dyrektywa maszynowa, ocena zgodności ce, loto ciop.pl"><td><strong>Bezpieczeństwo maszyn i urządzeń — CIOP-PIB</strong></td><td class="small">Wymagania zasadnicze, Dyrektywa Maszynowa, ocena zgodności CE, LOTO</td><td class="small mono"><a href="https://ciop.pl" target="_blank" rel="noopener">ciop.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr><tr class="srow" data-s="ocena ryzyka zawodowego — teoria i praktyka — ciop-pib metody: pn-en iec 31010, fmea, what-if, matryca ryzyka ciop.pl"><td><strong>Ocena ryzyka zawodowego — teoria i praktyka — CIOP-PIB</strong></td><td class="small">Metody: PN-EN IEC 31010, FMEA, What-if, matryca ryzyka</td><td class="small mono"><a href="https://ciop.pl" target="_blank" rel="noopener">ciop.pl</a></td><td><span class="rate" title="4/5">★★★★<span class="dim">★</span></span></td></tr></tbody></table><div class="no-results" id="noresults-zrodla">Brak wyników.</div></section>
-<section id="sec-todo" class="section">
+<section id="sec-todo" class="section wt-tt">
   <div class="section-head">
     <h2>Zadania</h2>
-    <p>Zadania z notatkami, uporządkowane w listy dla poszczególnych klientów/projektów — zapisywane automatycznie i dostępne przy każdym kolejnym otwarciu, na każdym urządzeniu. Kliknij zadanie, aby dodać do niego notatkę.</p>
+    <p>Zadania z notatkami, w listach dla klientów i projektów, z sekcjami (np. „NA TERAZ” / „NA POTEM”) — zapisywane automatycznie, na każdym urządzeniu. Kliknij zadanie, aby zobaczyć szczegóły; „⋯” albo prawy przycisk myszy otwiera szybkie opcje; zadania można przeciągać między sekcjami i listami.</p>
   </div>
   <div class="wt-tasks-layout">
     <div class="wt-lists-col" id="todoListsNav"></div>
     <div class="wt-tasks-main">
-      <h3 class="wt-tasks-header" id="todoListHeader"></h3>
-      <div class="wt-qa-box" id="todoQuickAdd">
+      <div class="wt-tt-head"><h3 class="wt-tasks-header" id="todoListHeader"></h3><button type="button" class="wt-tt-more show" id="todoListMore" onclick="wtTodoListMenu(event)" title="Opcje listy" aria-label="Opcje listy"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg></button></div>
+      <div class="wt-qa-box wt-tt-add" id="todoQuickAdd">
         <div class="wt-qa-row">
-          <input class="wt-input grow" id="todoInput" type="text" placeholder="Dodaj zadanie… np. „Szkolenie magazynierów jutro”" maxlength="300" autocomplete="off" onkeydown="if(event.key==='Enter') wtAddTodo();" oninput="wtTodoQaParse()">
-          <button class="wt-btn primary" onclick="wtAddTodo()">
-            <svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
-            Dodaj
-          </button>
+          <span class="wt-tt-plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+          <input class="wt-input grow" id="todoInput" type="text" placeholder="Dodaj zadanie" maxlength="300" autocomplete="off" onfocus="this.closest('.wt-tt-add').classList.add('wt-tt-addopen')" onkeydown="if(event.key==='Enter') wtAddTodo(); else if(event.key==='Escape'){ this.blur(); wtTodoQaDatePop(false); }" oninput="wtTodoQaParse()">
+          <span class="wt-tt-addtools">
+            <button type="button" class="wt-tt-tool" id="todoQaDateIc" onclick="wtTodoQaDatePop()" title="Termin" aria-label="Termin"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v11a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM4 10h16M8 4v4M16 4v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button type="button" class="wt-tt-tool" id="todoQaPrio" onclick="wtTodoQaCyclePrio()" title="Priorytet — kliknij, aby zmienić" aria-label="Priorytet"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Priorytet</span></button>
+            <select class="wt-tt-listsel" id="todoAddListSelect" title="Do jakiej listy trafi nowe zadanie" aria-label="Lista"></select>
+          </span>
         </div>
-        <div class="wt-qa-opts">
+        <div class="wt-tt-pop" id="todoQaDatePop" hidden>
           <button type="button" class="wt-chip" data-qadue="0" onclick="wtTodoQaSetDue(0)">Dziś</button>
           <button type="button" class="wt-chip" data-qadue="1" onclick="wtTodoQaSetDue(1)">Jutro</button>
           <button type="button" class="wt-chip" data-qadue="7" onclick="wtTodoQaSetDue(7)">Za tydzień</button>
           <button type="button" class="wt-chip" id="todoQaDateBtn" onclick="wtTodoQaOpenDate()" title="Wybierz datę z kalendarza"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v11a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM4 10h16M8 4v4M16 4v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="todoQaDateLbl">Wybierz datę</span></button><input type="date" id="todoQaDate" class="wt-qa-dateinp" aria-label="Termin zadania" style="display:none" onchange="wtTodoQaPickDate(this.value)" onblur="wtTodoQaCloseDate()">
-          <button type="button" class="wt-chip" id="todoQaPrio" onclick="wtTodoQaCyclePrio()" title="Priorytet — kliknij, aby zmienić"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Priorytet</span></button>
-          <select class="status-select" id="todoAddListSelect" title="Do jakiej listy trafi nowe zadanie"></select>
         </div>
         <div class="wt-qa-hint" id="todoQaHint"></div>
       </div>
@@ -7618,23 +7760,29 @@ window.__WT_FIREBASE_CONFIG__ = {
       <div id="todoDoneWrap" style="display:none;"><div id="todoDone"></div></div>
     </div>
     <div class="wt-note-editor" id="taskDetailCol">
-      <div id="taskDetailEmpty" class="wt-empty">Wybierz zadanie z listy, aby zobaczyć lub dodać do niego notatkę.</div>
+      <div id="taskDetailEmpty" class="wt-empty">Wybierz zadanie z listy, aby zobaczyć szczegóły.</div>
       <div id="taskDetailEditor" style="display:none;flex-direction:column;flex:1;">
         <div class="wt-sheet-head"><button type="button" class="wt-sheet-close" onclick="wtCloseEditorSheet('taskDetailCol')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Zadania</button></div>
-        <div class="wt-td-titlerow">
+        <div class="wt-tt-dbar">
           <input type="checkbox" class="wt-todo-check" id="taskDetailDone" onchange="wtTaskDetailToggleDone()" title="Oznacz jako zrobione" aria-label="Oznacz jako zrobione">
-          <input class="wt-note-title" id="taskDetailTitle" type="text" placeholder="Treść zadania" maxlength="300">
+          <span class="wt-tt-dsep"></span>
+          <button type="button" class="wt-tt-duebtn" id="taskDetailDueBtn" onclick="wtTaskDetailDueToggle()"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v11a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM4 10h16M8 4v4M16 4v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Termin</span></button>
+          <span style="flex:1"></span>
+          <button type="button" class="wt-tt-tool" id="taskDetailFlagBtn" onclick="wtTaskDetailFlag(event)" title="Priorytet" aria-label="Priorytet"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button type="button" class="wt-tt-tool" onclick="if(todoSelectedTaskId) wtTodoMenu(todoSelectedTaskId, {type:'click', currentTarget:this})" title="Więcej" aria-label="Więcej opcji"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg></button>
         </div>
-        <div class="wt-props">
-          <label for="taskDetailListSelect">Lista</label><div><select class="status-select" id="taskDetailListSelect"></select></div>
-          <label for="taskDetailDue">Termin</label><div><input type="date" id="taskDetailDue"><button type="button" class="wt-chip" onclick="wtTaskSetDue(0)">Dziś</button><button type="button" class="wt-chip" onclick="wtTaskSetDue(1)">Jutro</button><button type="button" class="wt-chip" onclick="wtTaskSetDue(7)">+7 dni</button><button type="button" class="wt-chip" onclick="wtTaskSetDue('')">Bez terminu</button></div>
-          <label>Priorytet</label><div><div class="wt-prio-seg" id="taskDetailPrio"><button type="button" data-prio="0" onclick="wtTaskSetPrio(0)">Brak</button><button type="button" data-prio="1" onclick="wtTaskSetPrio(1)"><i style="background:var(--accent)"></i>Niski</button><button type="button" data-prio="2" onclick="wtTaskSetPrio(2)"><i style="background:var(--high)"></i>Średni</button><button type="button" data-prio="3" onclick="wtTaskSetPrio(3)"><i style="background:var(--crit)"></i>Wysoki</button></div></div>
-          <label for="taskDetailRepeat">Powtarzaj</label><div><select class="status-select" id="taskDetailRepeat" onchange="wtTaskSetRepeat(this.value)"><option value="">Nie powtarzaj</option><option value="daily">Codziennie</option><option value="weekly">Co tydzień</option><option value="monthly">Co miesiąc</option><option value="yearly">Co rok</option></select></div>
-        </div>
+        <textarea class="wt-tt-dtitle" id="taskDetailTitle" rows="1" placeholder="Treść zadania" maxlength="300" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+        <textarea id="taskDetailNotes" class="wt-tt-ddesc" placeholder="Opis — napisz coś… (szczegóły, ustalenia, linki)"></textarea>
         <div class="wt-sub-head">Kroki <span id="taskSubCount"></span></div>
         <div class="wt-sub-list" id="taskSubList"></div>
         <input class="wt-input wt-sub-add" id="taskSubAdd" type="text" placeholder="+ Dodaj krok (Enter)" maxlength="200" onkeydown="if(event.key==='Enter'){event.preventDefault();wtSubAdd('task');}">
-        <textarea id="taskDetailNotes" placeholder="Notatka do zadania… (szczegóły, ustalenia, linki)"></textarea>
+        <div class="wt-props wt-tt-props" id="taskDetailProps">
+          <label for="taskDetailListSelect">Lista</label><div><select class="status-select" id="taskDetailListSelect"></select></div>
+          <label for="taskDetailSecSelect" class="wt-tt-secrow">Sekcja</label><div class="wt-tt-secrow"><select class="status-select" id="taskDetailSecSelect" onchange="wtTaskSetSection(this.value)"></select></div>
+          <label for="taskDetailDue">Termin</label><div><input type="date" id="taskDetailDue"><button type="button" class="wt-chip" onclick="wtTaskSetDue(0)">Dziś</button><button type="button" class="wt-chip" onclick="wtTaskSetDue(1)">Jutro</button><button type="button" class="wt-chip" onclick="wtTaskSetDue(7)">+7 dni</button><button type="button" class="wt-chip" onclick="wtTaskSetDue('')">Bez terminu</button></div>
+          <label for="taskDetailRepeat">Powtarzaj</label><div><select class="status-select" id="taskDetailRepeat" onchange="wtTaskSetRepeat(this.value)"><option value="">Nie powtarzaj</option><option value="daily">Codziennie</option><option value="weekly">Co tydzień</option><option value="monthly">Co miesiąc</option><option value="yearly">Co rok</option></select></div>
+          <span class="wt-tt-hideprio"><label>Priorytet</label><div><div class="wt-prio-seg" id="taskDetailPrio"><button type="button" data-prio="0" onclick="wtTaskSetPrio(0)">Brak</button><button type="button" data-prio="1" onclick="wtTaskSetPrio(1)"><i style="background:var(--accent)"></i>Niski</button><button type="button" data-prio="2" onclick="wtTaskSetPrio(2)"><i style="background:var(--high)"></i>Średni</button><button type="button" data-prio="3" onclick="wtTaskSetPrio(3)"><i style="background:var(--crit)"></i>Wysoki</button></div></div></span>
+        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
           <span class="wt-note-status" id="taskDetailStatus"></span>
           <button class="wt-btn danger ghost" onclick="wtDeleteTodo()">Usuń zadanie</button>
@@ -15029,7 +15177,7 @@ document.addEventListener('keydown', e=>{
   window.wtCloseEditorSheet = function(colId){ const c = document.getElementById(colId); if(c) c.classList.remove('wt-mopen'); };
 
   /* ---- szybkie dodawanie: termin z przycisków, z kalendarza albo rozpoznany w tekście ---- */
-  let todoQa = {due:'', src:'', prio:0, parsed:null, ignore:''};
+  let todoQa = {due:'', src:'', prio:0, parsed:null, ignore:'', section:''};
   function wtParseDue(text){
     const today = new Date(); today.setHours(0,0,0,0);
     const B = '(?:^|\\s)', E = '(?=[\\s,;!?]|$)';
@@ -15065,11 +15213,14 @@ document.addEventListener('keydown', e=>{
     const pb = document.getElementById('todoQaPrio');
     if(pb){ const p = todoQa.prio; pb.classList.toggle('on', !!p); pb.querySelector('span').textContent = p ? 'Priorytet: '+WT_PRIO[p].l.toLowerCase() : 'Priorytet'; pb.querySelector('svg').style.color = p ? WT_PRIO[p].c : ''; }
     const h = document.getElementById('todoQaHint'); if(!h) return;
-    if(!due){ h.innerHTML = ''; return; }
+    { const ic = document.getElementById('todoQaDateIc'); if(ic) ic.classList.toggle('on', !!due); }
+    const secO = todoQa.section ? wtTodoSecs(todoSelectedList).find(x=>x.id===todoQa.section) : null;
+    const secH = secO ? '<span class="wt-tt-sechint">do sekcji: <b>'+esc(secO.name)+'</b><button type="button" title="Bez sekcji" aria-label="Bez sekcji" onclick="todoQaClearSec()">×</button></span>' : '';
+    if(!due){ h.innerHTML = secH; return; }
     const i = wtDueInfo(due), d = new Date(due+'T00:00:00');
     h.innerHTML = '<span class="wt-due wt-due-'+i.cls+'">'+WT_ICS.cal+'Termin: '+esc(WT_WD_FULL[d.getDay()]+', '+d.getDate()+' '+WT_MON_GEN[d.getMonth()])+'</span>'
       +(todoQa.src==='parse' ? '<span class="wt-qa-from">rozpoznane w tekście: „'+esc(todoQa.parsed.matched)+'”</span>' : '')
-      +'<button type="button" title="Bez terminu" aria-label="Usuń termin" onclick="wtTodoQaClearDue()">×</button>';
+      +'<button type="button" title="Bez terminu" aria-label="Usuń termin" onclick="wtTodoQaClearDue()">×</button>'+secH;
   }
   window.wtTodoQaSetDue = function(n){
     const iso = wtIsoPlus(+n);
@@ -15117,10 +15268,12 @@ document.addEventListener('keydown', e=>{
     const projectId = addSel ? addSel.value : '';
     const prio = todoQa.prio;
     input.value='';
-    todoQa = {due:'', src:'', prio:0, parsed:null, ignore:''};
+    const sectionId = (todoQa.section && wtTodoSecs(projectId).some(x=>x.id===todoQa.section)) ? todoQa.section : '';
+    todoQa = {due:'', src:'', prio:0, parsed:null, ignore:'', section:''};
+    wtTodoQaDatePop(false);
     const di = document.getElementById('todoQaDate'); if(di) di.value = '';
     wtTodoQaRender();
-    DB.collection('todos').add(Object.assign({text, notes:'', projectId, done:false, createdAt:Date.now(), doneAt:null, dueDate:due||'', priority:prio, subtasks:[], repeat:''}, wtModeTag())).catch(()=>{ wtToast('Nie udało się zapisać zadania.', true); });
+    DB.collection('todos').add(Object.assign({text, notes:'', projectId, done:false, createdAt:Date.now(), doneAt:null, dueDate:due||'', priority:prio, subtasks:[], repeat:'', sectionId}, wtModeTag())).catch(()=>{ wtToast('Nie udało się zapisać zadania.', true); });
     /* zadanie, którego nie widać na bieżącej liście (np. dodane na jutro w widoku „Dziś”) — mówimy, gdzie jest */
     const visible = WT_SMART[todoSelectedList] ? wtTodoMatchesSmart({dueDate:due}, todoSelectedList) : (todoSelectedList==='all' || todoSelectedList===projectId);
     if(!visible) wtToast('Dodano'+(due?' — termin '+wtDueInfo(due).txt:'')+'. Zadanie jest w „Wszystkie”.');
@@ -15173,7 +15326,7 @@ document.addEventListener('keydown', e=>{
     DB.doc('todos/'+id).delete().catch(()=>{ wtToast('Nie udało się usunąć zadania.', true); });
   };
   window.wtSelectTodoList = function(id){
-    todoSelectedList = id;
+    todoSelectedList = id; todoQa.section = '';
     renderTodos();
     const addSel = document.getElementById('todoAddListSelect');
     if(addSel) addSel.value = (id==='all' || WT_SMART[id]) ? '' : id;
@@ -15190,30 +15343,159 @@ document.addEventListener('keydown', e=>{
     renderTaskDetail();
     if(allTodos.some(t=>t.id===id)) wtOpenEditorSheet('taskDetailCol');
   };
-  function todoRowHtml(t, showList){
-    const p = t.projectId ? wtProjectById(t.projectId) : null;
-    const prio = +t.priority||0;
-    const subs = Array.isArray(t.subtasks) ? t.subtasks : [];
-    const subDone = subs.filter(x=>x.done).length;
-    const selected = t.id===todoSelectedTaskId;
-    const meta = [];
-    if(t.dueDate && !t.done) meta.push(wtDueChip(t.dueDate));
-    if(t.done) meta.push('<span>zrobione '+esc(wtRelDay(t.doneAt))+'</span>');
-    if(WT_REPEAT[t.repeat]) meta.push('<span class="wt-tm-ic" title="Powtarza się: '+WT_REPEAT[t.repeat].toLowerCase()+'">'+WT_ICS.repeat+'</span>');
-    if(subs.length) meta.push('<span class="wt-tm-ic'+(subDone===subs.length?' ok':'')+'" title="Kroki">'+WT_ICS.sub+subDone+'/'+subs.length+'</span>');
-    if(t.notes && t.notes.trim()) meta.push('<span class="wt-tm-ic" title="Zadanie ma notatkę">'+WT_ICS.note+'</span>');
-    if(p && showList) meta.push('<span class="wt-tm-list"><span class="wt-list-dot" style="background:'+p.color+'"></span>'+esc(p.name)+'</span>');
-    const lbl = 'Oznacz jako '+(t.done?'do zrobienia':'zrobione');
-    return '<div class="wt-todo-row'+(t.done?' done':'')+(selected?' selected':'')+'" data-id="'+t.id+'" data-done="'+(t.done?1:0)+'">'
-      +'<input type="checkbox" class="wt-todo-check'+(prio?' p'+prio:'')+'" data-action="toggle" aria-label="'+lbl+'" title="'+lbl+'"'+(t.done?' checked':'')+'>'
-      +'<div class="wt-todo-main" data-action="select">'
-      +'<div class="wt-todo-text">'+esc(t.text)+'</div>'
-      +(meta.length ? '<div class="wt-todo-meta">'+meta.join('')+'</div>' : '')
-      +'</div>'
-      +(prio && !t.done ? '<span class="wt-todo-flag" title="Priorytet: '+WT_PRIO[prio].l.toLowerCase()+'" style="color:'+WT_PRIO[prio].c+'">'+WT_ICS.flag+'</span>' : '')
-      +'<span class="wt-iconbtn danger wt-todo-del" data-action="delete" title="Usuń">'+WT_ICS.del+'</span>'
-      +'</div>';
+  /* ---- Zadania jak w TickTick: sekcje w liście (np. „NA TERAZ” / „NA POTEM”), zwijane; menu „⋯” przy zadaniu
+     (termin, priorytet, krok, przypnij, nie zrobię, przenieś, duplikuj, usuń), przeciąganie między sekcjami i listami.
+     Sekcje list: app_settings {key:'todo_sections', lists:{'_inbox'|projectId: [{id,name}]}}; zadanie: sectionId, pinned, wontDo. ---- */
+  const WT_TT_IC = {
+    more:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg>',
+    chev:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    sun:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    tom:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 18h16M7 18a5 5 0 0 1 10 0M12 7V4M5.6 10.6 3.9 8.9M18.4 10.6l1.7-1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    week:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v11a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM4 10h16M8 4v4M16 4v4M9 15h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 13l2 2-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    cal:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v11a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM4 10h16M8 4v4M16 4v4M8 14h2M12 14h2M16 14h0M8 17h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    flag:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    flagF:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M5 4h11l-2 4 2 4H5z" fill="currentColor"/></svg>',
+    sub:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 5v6a3 3 0 0 0 3 3h11M15 10l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    pin:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 4h6l-1 5 3 3v2H7v-2l3-3zM12 14v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    wont:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    move:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M11 12h9M17 9l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    dup:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.8"/></svg>',
+    del:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    sec:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7M17 15v6M14 18h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    done:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 12.5l2.4 2.4 4.6-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    inbox:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 13l2.5-7.5A1.5 1.5 0 0 1 7.9 4.5h8.2a1.5 1.5 0 0 1 1.4 1L20 13v5.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM4 13h4.5l1 2h5l1-2H20" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+    attach:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 11.5l-7.8 7.8a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
+  };
+  const wtTodoSecDoc = ()=>(typeof allAppSettings!=='undefined' ? allAppSettings : []).find(d=>d.key==='todo_sections') || null;
+  const wtTodoSecKey = list=>list==='' ? '_inbox' : list;
+  const wtTodoIsRealList = list=>list==='' || !!wtProjectById(list);
+  function wtTodoSecs(list){ const d = wtTodoSecDoc(); const l = d && d.lists && d.lists[wtTodoSecKey(list)]; return Array.isArray(l) ? l : []; }
+  async function wtTodoSecsSave(list, arr){
+    if(!DB) return; const d = wtTodoSecDoc(); const key = wtTodoSecKey(list);
+    try{ if(d){ const lists = Object.assign({}, d.lists||{}); lists[key] = arr; d.lists = lists; await DB.doc('app_settings/'+d.id).update({lists, updatedAt:Date.now()}); }
+      else await DB.collection('app_settings').add({key:'todo_sections', lists:{[key]:arr}, createdAt:Date.now(), updatedAt:Date.now()}); }
+    catch(e){ console.error(e); wtToast('Nie udało się zapisać sekcji.', true); }
+    renderTodos();
   }
+  let wtTodoCollapsed = {}; try{ wtTodoCollapsed = JSON.parse(localStorage.getItem('wtTodoSecCollapsed')||'{}')||{}; }catch(e){}
+  const wtTodoCollSave = ()=>{ try{ localStorage.setItem('wtTodoSecCollapsed', JSON.stringify(wtTodoCollapsed)); }catch(e){} };
+  window.wtTodoSecToggle = function(sid){ wtTodoCollapsed[sid] = !wtTodoCollapsed[sid]; wtTodoCollSave(); renderTodos(); };
+  window.wtTodoAddSection = async function(){
+    const list = todoSelectedList; if(!wtTodoIsRealList(list)){ wtToast('Sekcje dodasz w konkretnej liście (Skrzynka albo lista klienta).', true); return; }
+    const name = await wtPrompt('Nazwa nowej sekcji', '', 'np. NA TERAZ, NA POTEM, Do zamówienia'); if(!name) return;
+    const arr = wtTodoSecs(list).concat([{id:'sec'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), name:name.trim().slice(0,60)}]);
+    await wtTodoSecsSave(list, arr);
+  };
+  window.wtTodoRenameSection = async function(sid){
+    const list = todoSelectedList; const arr = wtTodoSecs(list).map(x=>Object.assign({}, x)); const s = arr.find(x=>x.id===sid); if(!s) return;
+    const name = await wtPrompt('Nowa nazwa sekcji', s.name, ''); if(!name) return; s.name = name.trim().slice(0,60); await wtTodoSecsSave(list, arr);
+  };
+  window.wtTodoMoveSection = async function(sid, dir){
+    const list = todoSelectedList; const arr = wtTodoSecs(list).slice(); const i = arr.findIndex(x=>x.id===sid); const j = i+dir; if(i<0 || j<0 || j>=arr.length) return;
+    [arr[i], arr[j]] = [arr[j], arr[i]]; await wtTodoSecsSave(list, arr);
+  };
+  window.wtTodoDeleteSection = async function(sid){
+    const list = todoSelectedList; const s = wtTodoSecs(list).find(x=>x.id===sid); if(!s) return;
+    const tasks = allTodos.filter(t=>t.sectionId===sid);
+    if(!await wtConfirm('Usunąć sekcję „'+s.name+'”?'+(tasks.length?' Zadania z niej ('+tasks.length+') zostaną na liście, bez sekcji.':''), 'Usuń sekcję', 'danger')) return;
+    for(const t of tasks) await DB.doc('todos/'+t.id).update({sectionId:''}).catch(()=>{});
+    await wtTodoSecsSave(list, wtTodoSecs(list).filter(x=>x.id!==sid));
+  };
+  window.wtTodoAddToSection = function(sid){ todoQa.section = sid; const i = document.getElementById('todoInput'); wtTodoQaRender(); if(i){ i.focus(); i.scrollIntoView({block:'center', behavior:'smooth'}); } };
+  /* własne okno z polem tekstowym zamiast window.prompt (blokowanego w ramce claude.ai) */
+  function wtPrompt(title, val, ph){
+    return new Promise(res=>{
+      let ov = document.getElementById('wtPromptOv'); if(ov) ov.remove();
+      ov = document.createElement('div'); ov.id = 'wtPromptOv'; ov.className = 'wt-tt-prompt';
+      ov.innerHTML = '<div class="wt-tt-prompt-box" role="dialog" aria-modal="true"><h3>'+esc(title)+'</h3><input class="wt-input" type="text" maxlength="60" value="'+esc(val||'')+'" placeholder="'+esc(ph||'')+'"><div class="wt-tt-prompt-act"><button type="button" class="wt-btn ghost" data-r="0">Anuluj</button><button type="button" class="wt-btn primary" data-r="1">Zapisz</button></div></div>';
+      document.body.appendChild(ov);
+      const inp = ov.querySelector('input'); setTimeout(()=>{ inp.focus(); inp.select(); }, 20);
+      const done = ok=>{ const v = inp.value.trim(); ov.remove(); res(ok && v ? v : null); };
+      ov.addEventListener('click', e=>{ if(e.target===ov) done(false); const b = e.target.closest('[data-r]'); if(b) done(b.dataset.r==='1'); });
+      inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); done(true); } else if(e.key==='Escape') done(false); });
+    });
+  }
+  /* ---- menu „⋯” zadania ---- */
+  function wtTtMenuClose(){ const m = document.getElementById('wtTtMenu'); if(m) m.remove(); document.removeEventListener('mousedown', wtTtMenuOutside, true); }
+  function wtTtMenuOutside(e){ const m = document.getElementById('wtTtMenu'); if(m && !m.contains(e.target)) wtTtMenuClose(); }
+  function wtTtMenuPlace(m, x, y){ document.body.appendChild(m); const r = m.getBoundingClientRect(); const W = window.innerWidth, H = window.innerHeight;
+    m.style.left = Math.max(8, Math.min(x, W - r.width - 8))+'px'; m.style.top = Math.max(8, Math.min(y, H - r.height - 8))+'px';
+    setTimeout(()=>document.addEventListener('mousedown', wtTtMenuOutside, true), 0); }
+  window.wtTodoMenu = function(id, ev){
+    wtTtMenuClose(); const t = allTodos.find(x=>x.id===id); if(!t) return;
+    const prio = +t.priority||0;
+    const m = document.createElement('div'); m.id = 'wtTtMenu'; m.className = 'wt-tt-menu'; m.setAttribute('role','menu');
+    const it = (act, ic, lbl, extra)=>'<button type="button" role="menuitem" data-m="'+act+'"'+(extra||'')+'>'+ic+'<span>'+esc(lbl)+'</span></button>';
+    m.innerHTML = '<div class="wt-tt-mh">Termin</div><div class="wt-tt-mrow">'
+      +'<button type="button" data-m="due:0" title="Dziś">'+WT_TT_IC.sun+'</button><button type="button" data-m="due:1" title="Jutro">'+WT_TT_IC.tom+'</button><button type="button" data-m="due:7" title="Za tydzień">'+WT_TT_IC.week+'</button><button type="button" data-m="due:pick" title="Wybierz datę">'+WT_TT_IC.cal+'</button></div>'
+      +'<div class="wt-tt-mh">Priorytet</div><div class="wt-tt-mrow">'+[3,2,1,0].map(p=>'<button type="button" data-m="prio:'+p+'" class="'+(p===prio?'on':'')+'" title="'+WT_PRIO[p].l+'" style="color:'+(WT_PRIO[p].c||'var(--ink-faint)')+'">'+(p?WT_TT_IC.flagF:WT_TT_IC.flag)+'</button>').join('')+'</div>'
+      +'<div class="wt-tt-msep"></div>'
+      +it('sub', WT_TT_IC.sub, 'Dodaj krok')
+      +it('pin', WT_TT_IC.pin, t.pinned?'Odepnij':'Przypnij')
+      +(t.done ? '' : it('wont', WT_TT_IC.wont, 'Nie zrobię'))
+      +it('move', WT_TT_IC.move, 'Przenieś do', ' class="wt-tt-hasub"')
+      +'<div class="wt-tt-msep"></div>'
+      +it('dup', WT_TT_IC.dup, 'Duplikuj')
+      +it('del', WT_TT_IC.del, 'Usuń', ' class="danger"');
+    m.addEventListener('click', e=>{ const b = e.target.closest('[data-m]'); if(!b) return; e.stopPropagation(); wtTodoMenuAct(id, b.dataset.m, b); });
+    const r = ev && ev.currentTarget && ev.type==='click' ? ev.currentTarget.getBoundingClientRect() : null;
+    wtTtMenuPlace(m, r ? r.right - 230 : (ev ? ev.clientX : 100), r ? r.bottom + 4 : (ev ? ev.clientY : 100));
+  };
+  async function wtTodoMenuAct(id, act, btn){
+    const t = allTodos.find(x=>x.id===id); if(!t || !DB) return;
+    const up = d=>DB.doc('todos/'+id).update(d).catch(()=>wtToast('Nie udało się zapisać.', true));
+    if(act.startsWith('due:')){ const v = act.slice(4); wtTtMenuClose();
+      if(v==='pick'){ window.wtSelectTask(id); setTimeout(()=>{ const d = document.getElementById('taskDetailDue'); if(d){ d.focus(); try{ d.showPicker(); }catch(e){} } }, 120); return; }
+      up({dueDate:wtIsoPlus(+v)}); return; }
+    if(act.startsWith('prio:')){ wtTtMenuClose(); up({priority:+act.slice(5)}); return; }
+    if(act==='sub'){ wtTtMenuClose(); window.wtSelectTask(id); setTimeout(()=>{ const s = document.getElementById('taskSubAdd'); if(s) s.focus(); }, 120); return; }
+    if(act==='pin'){ wtTtMenuClose(); up({pinned:!t.pinned}); return; }
+    if(act==='wont'){ wtTtMenuClose(); await up({done:true, wontDo:true, doneAt:Date.now()}); wtToastAction('Oznaczono „nie zrobię”', 'Cofnij', ()=>DB.doc('todos/'+id).update({done:false, wontDo:false, doneAt:null})); return; }
+    if(act==='dup'){ wtTtMenuClose(); const c = Object.assign({}, t); delete c.id; c.createdAt = Date.now(); c.done = false; c.doneAt = null; c.wontDo = false; c.nextId = ''; c.subtasks = (c.subtasks||[]).map(x=>Object.assign({}, x, {done:false}));
+      DB.collection('todos').add(c).then(()=>wtToast('Zduplikowano zadanie.')).catch(()=>wtToast('Nie udało się zduplikować.', true)); return; }
+    if(act==='del'){ wtTtMenuClose(); window.wtDeleteTodo(id); return; }
+    if(act==='move'){ wtTodoMoveMenu(id, btn); return; }
+    if(act.startsWith('to:')){ wtTtMenuClose(); const [pid, sid] = act.slice(3).split('|'); up({projectId:pid, sectionId:sid||''}); wtToast('Przeniesiono zadanie.'); return; }
+  }
+  function wtTodoMoveMenu(id, btn){
+    const t = allTodos.find(x=>x.id===id); const m = document.getElementById('wtTtMenu'); if(!m || !t) return;
+    const opt = (pid, sid, lbl, dot, indent)=>'<button type="button" data-m="to:'+pid+'|'+(sid||'')+'"'+((t.projectId||'')===pid && (t.sectionId||'')===(sid||'') ? ' class="on"' : '')+(indent?' style="padding-left:34px"':'')+'>'+(dot||'')+'<span>'+esc(lbl)+'</span></button>';
+    const lists = [['', 'Skrzynka', '<span class="wt-tt-mdot" style="background:var(--ink-faint)"></span>']].concat(allProjects.map(p=>[p.id, p.name, '<span class="wt-tt-mdot" style="background:'+p.color+'"></span>']));
+    m.innerHTML = '<button type="button" data-back="1" class="wt-tt-mback">'+WT_TT_IC.chev+'<span>Przenieś do…</span></button><div class="wt-tt-mscroll">'
+      + lists.map(([pid, lbl, dot])=>opt(pid, '', lbl, dot) + wtTodoSecs(pid).map(s=>opt(pid, s.id, s.name, '', true)).join('')).join('') + '</div>';
+    m.querySelector('[data-back]').addEventListener('click', e=>{ e.stopPropagation(); const r = m.getBoundingClientRect(); wtTtMenuClose(); window.wtTodoMenu(id, {clientX:r.left, clientY:r.top}); });
+  }
+  window.wtTodoListMenu = function(ev){
+    wtTtMenuClose(); const real = wtTodoIsRealList(todoSelectedList);
+    const m = document.createElement('div'); m.id = 'wtTtMenu'; m.className = 'wt-tt-menu'; m.setAttribute('role','menu');
+    m.innerHTML = (real ? '<button type="button" data-l="sec">'+WT_TT_IC.sec+'<span>Dodaj sekcję</span></button>' : '<div class="wt-tt-mnote">Sekcje dodasz w konkretnej liście (Skrzynka albo lista klienta).</div>')
+      +'<button type="button" data-l="done">'+WT_TT_IC.done+'<span>'+(todoDoneOpen?'Zwiń ukończone':'Pokaż ukończone')+'</span></button>';
+    m.addEventListener('click', e=>{ const b = e.target.closest('[data-l]'); if(!b) return; wtTtMenuClose(); if(b.dataset.l==='sec') window.wtTodoAddSection(); else window.wtToggleDoneSection(); });
+    const r = ev.currentTarget.getBoundingClientRect(); wtTtMenuPlace(m, r.right - 220, r.bottom + 4);
+  };
+  /* ---- przeciąganie zadań: na sekcję albo na listę w panelu list ---- */
+  let wtTtDragId = null;
+  function wtTodoWireDnD(){
+    const sec = document.getElementById('sec-todo'); if(!sec || sec.dataset.wtDnd) return; sec.dataset.wtDnd = '1';
+    sec.addEventListener('dragstart', e=>{ const r = e.target.closest && e.target.closest('.wt-todo-row[data-id]'); if(!r) return; wtTtDragId = r.dataset.id; r.classList.add('dragging'); sec.classList.add('wt-tt-dragging'); try{ e.dataTransfer.setData('text/plain', wtTtDragId); e.dataTransfer.effectAllowed = 'move'; }catch(x){} });
+    sec.addEventListener('dragend', ()=>{ wtTtDragId = null; sec.classList.remove('wt-tt-dragging'); sec.querySelectorAll('.dragging,.wt-drop').forEach(x=>x.classList.remove('dragging','wt-drop')); });
+    const target = e=>e.target.closest && (e.target.closest('.wt-tsec[data-sec]') || e.target.closest('#todoListsNav .wt-list-item[data-list]'));
+    sec.addEventListener('dragover', e=>{ if(!wtTtDragId) return; const t = target(e); if(!t) return; const l = t.dataset.list; if(t.matches('.wt-list-item') && (WT_SMART[l] || l==='all' || l==='completed')) return; e.preventDefault(); sec.querySelectorAll('.wt-drop').forEach(x=>{ if(x!==t) x.classList.remove('wt-drop'); }); t.classList.add('wt-drop'); });
+    sec.addEventListener('dragleave', e=>{ const t = target(e); if(t && !t.contains(e.relatedTarget)) t.classList.remove('wt-drop'); });
+    sec.addEventListener('drop', e=>{ if(!wtTtDragId || !DB) return; const t = target(e); if(!t) return; e.preventDefault(); const id = wtTtDragId; t.classList.remove('wt-drop');
+      if(t.matches('.wt-tsec')){ DB.doc('todos/'+id).update({sectionId:t.dataset.sec==='_none'?'':t.dataset.sec}).catch(()=>{}); }
+      else { const l = t.dataset.list; if(WT_SMART[l] || l==='all' || l==='completed') return; DB.doc('todos/'+id).update({projectId:l, sectionId:''}).then(()=>wtToast('Przeniesiono zadanie.')).catch(()=>{}); } });
+    sec.addEventListener('contextmenu', e=>{ const r = e.target.closest('.wt-todo-row[data-id]'); if(!r || e.target.closest('input,textarea')) return; e.preventDefault(); window.wtTodoMenu(r.dataset.id, e); });
+    sec.addEventListener('click', e=>{ const b = e.target.closest('[data-action="menu"]'); if(!b) return; e.stopPropagation(); const r = b.closest('[data-id]'); if(r) window.wtTodoMenu(r.dataset.id, {type:'click', currentTarget:b}); }, true);
+  }
+  /* szybkie dodawanie: kalendarz w rozwijanym okienku zamiast rzędu przycisków */
+  window.wtTodoQaDatePop = function(force){
+    const p = document.getElementById('todoQaDatePop'); if(!p) return;
+    const open = force===undefined ? p.hidden : force; p.hidden = !open;
+    const b = document.getElementById('todoQaDateIc'); if(b) b.classList.toggle('on', open || !!todoQa.due);
+  };
+  window.todoQaClearSec = function(){ todoQa.section=''; wtTodoQaRender(); };
+  window.wtTodoQaFab = function(){ const i = document.getElementById('todoInput'); const box = document.getElementById('todoQuickAdd'); if(box) box.classList.add('wt-tt-addopen'); if(i){ i.scrollIntoView({block:'center'}); i.focus(); } };
   /* telefon: panel wyboru listy (widoki + klienci + nowa lista) otwierany z tytułu listy */
   window.wtTodoListSheetClose = function(){ ['wtLsheet','wtLsheetScrim'].forEach(id=>{ const e = document.getElementById(id); if(e) e.classList.remove('show'); }); };
   window.wtTodoListSheetOpen = function(){
@@ -15247,46 +15529,105 @@ document.addEventListener('keydown', e=>{
     const p = wtProjectById(todoSelectedList);
     return p ? '<span class="wt-list-dot" style="background:'+p.color+'"></span> '+esc(p.name) : 'Wszystkie zadania';
   }
+  function todoRowHtml(t, showList){
+    const p = t.projectId ? wtProjectById(t.projectId) : null;
+    const prio = +t.priority||0;
+    const subs = Array.isArray(t.subtasks) ? t.subtasks : [];
+    const subDone = subs.filter(x=>x.done).length;
+    const selected = t.id===todoSelectedTaskId;
+    const ic = [];
+    if(WT_REPEAT[t.repeat]) ic.push('<span class="wt-tm-ic" title="Powtarza się: '+WT_REPEAT[t.repeat].toLowerCase()+'">'+WT_ICS.repeat+'</span>');
+    if(subs.length) ic.push('<span class="wt-tm-ic'+(subDone===subs.length?' ok':'')+'" title="Kroki">'+WT_ICS.sub+subDone+'/'+subs.length+'</span>');
+    if(t.notes && t.notes.trim()) ic.push('<span class="wt-tm-ic" title="Zadanie ma notatkę">'+WT_ICS.note+'</span>');
+    if(p && showList) ic.push('<span class="wt-tm-list"><span class="wt-list-dot" style="background:'+p.color+'"></span>'+esc(p.name)+'</span>');
+    const di = t.dueDate && !t.done ? wtDueInfo(t.dueDate) : null;
+    const right = t.done ? '<span class="wt-tt-when">'+(t.wontDo?'nie zrobię · ':'')+esc(wtRelDay(t.doneAt))+'</span>' : (di ? '<span class="wt-tt-when wt-due-'+di.cls+'">'+esc(di.txt)+'</span>' : '');
+    const lbl = 'Oznacz jako '+(t.done?'do zrobienia':'zrobione');
+    return '<div class="wt-todo-row'+(t.done?' done':'')+(t.wontDo?' wont':'')+(selected?' selected':'')+'" data-id="'+t.id+'" data-done="'+(t.done?1:0)+'" draggable="true">'
+      +'<input type="checkbox" class="wt-todo-check'+(prio?' p'+prio:'')+'" data-action="toggle" aria-label="'+lbl+'" title="'+lbl+'"'+(t.done?' checked':'')+'>'
+      +'<div class="wt-todo-main" data-action="select"><div class="wt-todo-text">'+(t.pinned?'<span class="wt-pin-ic" title="Przypięte">'+WT_TT_IC.pin+'</span>':'')+'<span class="wt-tt-title">'+esc(t.text)+'</span></div></div>'
+      +(ic.length ? '<div class="wt-tt-ics" data-action="select">'+ic.join('')+'</div>' : '')
+      +right
+      +'<button type="button" class="wt-tt-more" data-action="menu" title="Więcej" aria-label="Więcej opcji zadania">'+WT_TT_IC.more+'</button>'
+      +'</div>';
+  }
   function renderTodos(){
     const activeEl=document.getElementById('todoActive');
     if(!activeEl) return;
+    wtTodoWireDnD();
     const actAll = allTodos.filter(t=>!t.done);
-    wtRenderListsNav('todoListsNav', actAll, todoSelectedList, window.wtSelectTodoList, true);
+    if(todoSelectedList!=='completed' && todoSelectedList!=='all' && !WT_SMART[todoSelectedList] && todoSelectedList!=='' && !wtProjectById(todoSelectedList)) todoSelectedList = 'all';
+    wtRenderListsNav('todoListsNav', actAll, todoSelectedList==='completed' ? '__none' : todoSelectedList, window.wtSelectTodoList, true);
+    { const nav = document.getElementById('todoListsNav');
+      if(nav){ const firstProj = [...nav.querySelectorAll('.wt-list-item[data-list]')].find(x=>wtProjectById(x.dataset.list));
+        const lab = document.createElement('div'); lab.className = 'wt-tt-navlab'; lab.textContent = 'Listy';
+        if(firstProj) nav.insertBefore(lab, firstProj); else { const nr = document.getElementById('todoListsNavNewListRow'); if(nr) nav.insertBefore(lab, nr); }
+        const nDone = allTodos.filter(t=>t.done).length;
+        const c = document.createElement('div'); c.className = 'wt-list-item wt-smart'+(todoSelectedList==='completed'?' active':''); c.dataset.list = 'completed';
+        c.innerHTML = '<span class="wt-list-ic">'+WT_TT_IC.done+'</span>Ukończone<span class="wt-list-count">'+(nDone||'')+'</span>';
+        const sep = document.createElement('div'); sep.className = 'wt-list-sep';
+        nav.appendChild(sep); nav.appendChild(c); } }
     const header = document.getElementById('todoListHeader');
     if(header){
       const chev = '<span class="wt-th-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
-      const hh = wtTodoListHeaderHtml();
+      const hh = todoSelectedList==='completed' ? WT_TT_IC.done+' Ukończone' : wtTodoListHeaderHtml();
       header.innerHTML = hh.indexOf('<small class="wt-th-date">')>=0 ? hh.replace('<small class="wt-th-date">', chev+'<small class="wt-th-date">') : hh+chev;
       if(!header.dataset.wtPick){ header.dataset.wtPick = '1'; header.addEventListener('click', ()=>{ if(wtIsPhone()) window.wtTodoListSheetOpen(); }); }
     }
+    const qa = document.getElementById('todoQuickAdd'); if(qa) qa.style.display = todoSelectedList==='completed' ? 'none' : '';
     const smart = !!WT_SMART[todoSelectedList];
-    const showList = todoSelectedList==='all' || smart;
+    const showList = todoSelectedList==='all' || smart || todoSelectedList==='completed';
+    const sortT = a=>a.sort((x,y)=>((+y.priority||0)-(+x.priority||0)) || String(x.dueDate||'9999').localeCompare(String(y.dueDate||'9999')) || ((x.createdAt||0)-(y.createdAt||0)));
+    const doneToggle=document.getElementById('todoDoneToggle'), doneWrap=document.getElementById('todoDoneWrap'), doneEl=document.getElementById('todoDone'), doneCount=document.getElementById('todoDoneCount');
+    if(todoSelectedList==='completed'){
+      const all = allTodos.filter(t=>t.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
+      activeEl.innerHTML = all.length ? '<div class="wt-tsec wt-tsec-flat">'+all.map(t=>todoRowHtml(t, true)).join('')+'</div>' : '<div class="wt-empty">Nie masz jeszcze ukończonych zadań.</div>';
+      doneToggle.style.display='none'; doneWrap.style.display='none'; doneEl.innerHTML='';
+      return;
+    }
     const active = wtFilterByList(actAll, todoSelectedList);
     const sameDay = ts=>ts && new Date(ts).toDateString()===new Date().toDateString();
     const done = (smart ? (todoSelectedList==='today' ? allTodos.filter(t=>t.done && sameDay(t.doneAt)) : [])
       : wtFilterByList(allTodos.filter(t=>t.done), todoSelectedList)).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
-
-    /* grupy po terminie, w grupie: priorytet, potem termin, potem kolejność dodania */
-    const G = [['over','Po terminie'],['today','Dziś'],['tom','Jutro'],['week','Najbliższe 7 dni'],['later','Później'],['none','Bez terminu']];
-    const gkey = t=>{ const n = t.dueDate ? wtDaysUntil(t.dueDate) : null; return n===null ? 'none' : n<0 ? 'over' : n===0 ? 'today' : n===1 ? 'tom' : n<=7 ? 'week' : 'later'; };
-    const byG = {}; active.forEach(t=>{ (byG[gkey(t)] = byG[gkey(t)] || []).push(t); });
-    Object.values(byG).forEach(a=>a.sort((x,y)=>((+y.priority||0)-(+x.priority||0)) || String(x.dueDate||'').localeCompare(String(y.dueDate||'')) || ((x.createdAt||0)-(y.createdAt||0))));
-    const present = G.filter(([k])=>byG[k]);
+    const pinned = sortT(active.filter(t=>t.pinned));
+    const rest = active.filter(t=>!t.pinned);
+    const secs = wtTodoIsRealList(todoSelectedList) ? wtTodoSecs(todoSelectedList) : [];
+    const blockHead = (sid, name, n, opts)=>'<div class="wt-tsec-head'+(opts&&opts.cls?' '+opts.cls:'')+'">'
+      +(opts && opts.fold ? '<button type="button" class="wt-tsec-fold" onclick="wtTodoSecToggle(\''+sid+'\')" aria-expanded="'+(!wtTodoCollapsed[sid])+'"><span class="wt-tsec-chev'+(wtTodoCollapsed[sid]?'':' open')+'">'+WT_TT_IC.chev+'</span>' : '<span class="wt-tsec-fold">')
+      +'<span class="wt-tsec-name">'+esc(name)+'</span><span class="wt-tsec-n">'+n+'</span>'+(opts && opts.fold ? '</button>' : '</span>')
+      +(opts && opts.tools ? '<span class="wt-tsec-tools"><button type="button" class="wt-tt-more show" title="Dodaj zadanie do sekcji" onclick="wtTodoAddToSection(\''+sid+'\')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button type="button" class="wt-tt-more show" title="Opcje sekcji" onclick="wtTodoSecMenu(\''+sid+'\', event)">'+WT_TT_IC.more+'</button></span>' : '')
+      +'</div>';
+    let html = '';
+    if(pinned.length) html += '<div class="wt-tsec" data-sec="_pin">'+blockHead('_pin','Przypięte',pinned.length,{fold:true, cls:'pin'})+(wtTodoCollapsed._pin?'':pinned.map(t=>todoRowHtml(t, showList)).join(''))+'</div>';
+    if(secs.length){
+      const ids = new Set(secs.map(s=>s.id));
+      const none = sortT(rest.filter(t=>!t.sectionId || !ids.has(t.sectionId)));
+      html += '<div class="wt-tsec wt-tsec-none'+(none.length?'':' empty')+'" data-sec="_none">'+(none.length ? blockHead('_nosec','Bez sekcji',none.length,{fold:true, cls:'nosec'})+(wtTodoCollapsed._nosec?'':none.map(t=>todoRowHtml(t, showList)).join('')) : '')+'</div>';
+      secs.forEach(s=>{ const ts = sortT(rest.filter(t=>t.sectionId===s.id));
+        html += '<div class="wt-tsec" data-sec="'+esc(s.id)+'">'+blockHead(s.id, s.name, ts.length, {fold:true, tools:true})
+          +(wtTodoCollapsed[s.id] ? '' : (ts.length ? ts.map(t=>todoRowHtml(t, showList)).join('') : '<div class="wt-tsec-empty">Przeciągnij tu zadanie albo kliknij +</div>'))+'</div>'; });
+    } else {
+      const G = [['over','Po terminie'],['today','Dziś'],['tom','Jutro'],['week','Najbliższe 7 dni'],['later','Później'],['none','Bez terminu']];
+      const gkey = t=>{ const n = t.dueDate ? wtDaysUntil(t.dueDate) : null; return n===null ? 'none' : n<0 ? 'over' : n===0 ? 'today' : n===1 ? 'tom' : n<=7 ? 'week' : 'later'; };
+      const byG = {}; rest.forEach(t=>{ (byG[gkey(t)] = byG[gkey(t)] || []).push(t); });
+      Object.values(byG).forEach(sortT);
+      const present = G.filter(([k])=>byG[k]);
+      html += present.map(([k,label])=>'<div class="wt-tsec wt-tsec-g wt-tgroup-'+k+'" data-sec="_none">'+(present.length===1 && k==='none' && !pinned.length ? '' : blockHead('_g'+k, label, byG[k].length, {fold:true, cls:'g-'+k}))
+        +(wtTodoCollapsed['_g'+k] ? '' : byG[k].map(t=>todoRowHtml(t, showList)).join(''))+'</div>').join('');
+    }
     if(!active.length){
       const EMPTY = {today:'Na dziś nic nie zostało — wszystko zrobione.', week:'Brak zadań z terminem w najbliższych 7 dniach.', overdue:'Nic po terminie.'};
-      activeEl.innerHTML='<div class="wt-empty">'+(EMPTY[todoSelectedList] || (allTodos.length?'Brak zadań na tej liście.':'Brak zadań. Dodaj pierwsze powyżej.'))+'</div>';
-    } else {
-      activeEl.innerHTML = present.map(([k,label])=>(present.length===1 && k==='none' ? '' : '<div class="wt-tgroup wt-tgroup-'+k+'">'+label+' <span>'+byG[k].length+'</span></div>')
-        + byG[k].map(t=>todoRowHtml(t, showList)).join('')).join('');
+      html = (secs.length ? html : '') + (secs.length ? '' : '<div class="wt-empty">'+(EMPTY[todoSelectedList] || (allTodos.length?'Brak zadań na tej liście.':'Brak zadań. Dodaj pierwsze powyżej.'))+'</div>');
     }
-
-    const doneToggle=document.getElementById('todoDoneToggle'), doneWrap=document.getElementById('todoDoneWrap'), doneEl=document.getElementById('todoDone'), doneCount=document.getElementById('todoDoneCount');
+    if(wtTodoIsRealList(todoSelectedList)) html += '<button type="button" class="wt-tt-addsec" onclick="wtTodoAddSection()">'+WT_TT_IC.sec+'Dodaj sekcję</button>';
+    activeEl.innerHTML = html;
     if(done.length){
       doneToggle.style.display='flex';
       doneCount.textContent=done.length;
       doneToggle.childNodes.forEach(n=>{ if(n.nodeType===3 && /Ukończone/.test(n.textContent)) n.textContent = smart ? ' Ukończone dziś (' : ' Ukończone ('; });
       doneEl.innerHTML = done.map(t=>todoRowHtml(t, showList)).join('');
       doneWrap.style.display = todoDoneOpen ? '' : 'none';
+      doneToggle.classList.toggle('open', todoDoneOpen);
     } else {
       doneToggle.style.display='none';
       doneWrap.style.display='none';
@@ -15294,8 +15635,39 @@ document.addEventListener('keydown', e=>{
     }
     const dc = document.getElementById('taskDetailDone');
     if(dc && todoSelectedTaskId){ const st = allTodos.find(t=>t.id===todoSelectedTaskId); if(st) dc.checked = !!st.done; }
+    wtTaskDetailHeadRender();
   }
-
+  window.wtTodoSecMenu = function(sid, ev){
+    wtTtMenuClose(); const arr = wtTodoSecs(todoSelectedList); const i = arr.findIndex(x=>x.id===sid);
+    const m = document.createElement('div'); m.id = 'wtTtMenu'; m.className = 'wt-tt-menu';
+    m.innerHTML = '<button type="button" data-s="add"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Dodaj zadanie</span></button>'
+      +'<button type="button" data-s="ren">'+WT_TT_IC.sec+'<span>Zmień nazwę</span></button>'
+      +(i>0?'<button type="button" data-s="up"><svg viewBox="0 0 24 24" fill="none"><path d="M12 19V5M6 11l6-6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Przesuń wyżej</span></button>':'')
+      +(i<arr.length-1?'<button type="button" data-s="down"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M6 13l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Przesuń niżej</span></button>':'')
+      +'<div class="wt-tt-msep"></div><button type="button" data-s="del" class="danger">'+WT_TT_IC.del+'<span>Usuń sekcję</span></button>';
+    m.addEventListener('click', e=>{ const b = e.target.closest('[data-s]'); if(!b) return; wtTtMenuClose(); const a = b.dataset.s;
+      if(a==='add') window.wtTodoAddToSection(sid); else if(a==='ren') window.wtTodoRenameSection(sid); else if(a==='up') window.wtTodoMoveSection(sid, -1); else if(a==='down') window.wtTodoMoveSection(sid, 1); else window.wtTodoDeleteSection(sid); });
+    const r = ev.currentTarget.getBoundingClientRect(); wtTtMenuPlace(m, r.right - 220, r.bottom + 4);
+  };
+  /* pasek nad tytułem w szczegółach: termin i priorytet jak w TickTick */
+  function wtTaskDetailHeadRender(){
+    const t = allTodos.find(x=>x.id===todoSelectedTaskId); const db = document.getElementById('taskDetailDueBtn'), fb = document.getElementById('taskDetailFlagBtn'); if(!t || !db) return;
+    const di = t.dueDate ? wtDueInfo(t.dueDate) : null;
+    db.innerHTML = WT_TT_IC.cal+'<span>'+(di ? esc(di.txt)+(t.repeat && WT_REPEAT[t.repeat] ? ' · '+WT_REPEAT[t.repeat].toLowerCase() : '') : 'Termin')+'</span>';
+    db.className = 'wt-tt-duebtn'+(di?' wt-due-'+di.cls+' set':'');
+    if(fb){ const p = +t.priority||0; fb.style.color = p ? WT_PRIO[p].c : ''; fb.innerHTML = p ? WT_TT_IC.flagF : WT_TT_IC.flag; fb.title = 'Priorytet: '+WT_PRIO[p].l.toLowerCase(); }
+    const ss = document.getElementById('taskDetailSecSelect');
+    if(ss){ const secs = wtTodoSecs(t.projectId||''); ss.innerHTML = '<option value="">Bez sekcji</option>'+secs.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>').join(''); ss.value = secs.some(s=>s.id===t.sectionId) ? t.sectionId : ''; ss.closest('.wt-tt-secrow').style.display = secs.length ? '' : 'none'; }
+  }
+  window.wtTaskDetailDueToggle = function(){ const p = document.getElementById('taskDetailProps'); if(!p) return; p.classList.toggle('open'); if(p.classList.contains('open')){ const d = document.getElementById('taskDetailDue'); if(d) d.focus(); } };
+  window.wtTaskDetailFlag = function(ev){
+    if(!todoSelectedTaskId) return; wtTtMenuClose(); const t = allTodos.find(x=>x.id===todoSelectedTaskId); const prio = t ? +t.priority||0 : 0;
+    const m = document.createElement('div'); m.id = 'wtTtMenu'; m.className = 'wt-tt-menu';
+    m.innerHTML = '<div class="wt-tt-mh">Priorytet</div>'+[3,2,1,0].map(p=>'<button type="button" data-p="'+p+'"'+(p===prio?' class="on"':'')+'><span style="color:'+(WT_PRIO[p].c||'var(--ink-faint)')+';display:inline-flex">'+(p?WT_TT_IC.flagF:WT_TT_IC.flag)+'</span><span>'+WT_PRIO[p].l+'</span></button>').join('');
+    m.addEventListener('click', e=>{ const b = e.target.closest('[data-p]'); if(!b) return; wtTtMenuClose(); window.wtTaskSetPrio(+b.dataset.p); });
+    const r = ev.currentTarget.getBoundingClientRect(); wtTtMenuPlace(m, r.right - 200, r.bottom + 4);
+  };
+  window.wtTaskSetSection = function(v){ if(!todoSelectedTaskId || !DB) return; DB.doc('todos/'+todoSelectedTaskId).update({sectionId:v}).catch(()=>wtToast('Nie udało się zapisać sekcji.', true)); };
   /* ---- panel szczegółów zadania: pełnowymiarowa notatka po prawej, bez małego okienka z przewijaniem ---- */
   function wtRefreshTaskListSelect(){
     const sel = document.getElementById('taskDetailListSelect');
@@ -15354,7 +15726,7 @@ document.addEventListener('keydown', e=>{
     const t = allTodos.find(x=>x.id===todoSelectedTaskId);
     if(!t){ empty.style.display=''; editor.style.display='none'; window.wtCloseEditorSheet('taskDetailCol'); return; }
     empty.style.display='none'; editor.style.display='flex';
-    document.getElementById('taskDetailTitle').value=t.text||'';
+    { const ti = document.getElementById('taskDetailTitle'); ti.value=t.text||''; ti.style.height='auto'; setTimeout(()=>{ ti.style.height=ti.scrollHeight+'px'; }, 0); }
     document.getElementById('taskDetailDone').checked=!!t.done;
     wtRefreshTaskListSelect();
     document.getElementById('taskDetailListSelect').value=t.projectId||'';
@@ -15365,6 +15737,7 @@ document.addEventListener('keydown', e=>{
     wtSubRender('task', Array.isArray(t.subtasks) ? t.subtasks : []);
     document.getElementById('taskSubAdd').value='';
     document.getElementById('taskDetailStatus').textContent='Zapisano '+fmtWhen(t.doneAt||t.createdAt);
+    wtTaskDetailHeadRender();
   }
   function wtTaskPrioRender(p){ document.querySelectorAll('#taskDetailPrio [data-prio]').forEach(b=>b.classList.toggle('on', +b.dataset.prio===p)); }
   window.wtTaskSetPrio = function(p){
@@ -24157,7 +24530,7 @@ document.addEventListener('keydown', e=>{
     nav.addEventListener('click', e=>{
       const b = e.target.closest('[data-bn]'); if(!b) return;
       const k = b.dataset.bn;
-      if(k==='plus') return openSheet();
+      if(k==='plus'){ const st = document.getElementById('sec-todo'); if(st && st.classList.contains('active') && window.wtTodoQaFab){ window.wtTodoQaFab(); return; } return openSheet(); }
       if(k==='search'){ const g = document.getElementById('gsearch'); if(g){ window.scrollTo(0,0); g.focus(); } return; }
       if(k==='klienci'){ showSection('klienci'); if(window.wtKlienciShowList) window.wtKlienciShowList(); window.scrollTo(0,0); return; }
       showSection(k); window.scrollTo(0,0);
@@ -28707,6 +29080,7 @@ document.addEventListener('keydown', e=>{
       else if(el.dataset.action==='select') window.wtSelectTask(row.dataset.id);
     });
     document.getElementById('taskDetailTitle').addEventListener('input', ()=>{ if(todoSelectedTaskId) scheduleSaveTask(todoSelectedTaskId); });
+    document.getElementById('taskDetailTitle').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('taskDetailNotes').focus(); } });
     document.getElementById('taskDetailNotes').addEventListener('input', ()=>{ if(todoSelectedTaskId) scheduleSaveTask(todoSelectedTaskId); });
     document.getElementById('taskDetailDue').addEventListener('input', ()=>{ if(todoSelectedTaskId) scheduleSaveTask(todoSelectedTaskId); });
     document.getElementById('taskDetailListSelect').addEventListener('change', e=>window.wtMoveSelectedTask(e.target.value));
@@ -29422,6 +29796,7 @@ document.addEventListener('keydown', e=>{
       }
       wtRenderLegalWatchBanner();
       wtRenderBackupReminderBanner();
+      try{ renderTodos(); }catch(e){}
       try{ wtRenderMyPerms(); wtRenderOverdueRegPanel(); }catch(e){}
       if(window.wtQuizMigrateHistory) window.wtQuizMigrateHistory();
       if(window.wtQuizRenderHistory) window.wtQuizRenderHistory();
