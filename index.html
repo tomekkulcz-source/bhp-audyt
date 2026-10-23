@@ -2977,7 +2977,7 @@ window.__WT_FIREBASE_CONFIG__ = {
 #sec-todo .wt-tt-props{display:none;margin:-4px 0 14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);}
 #sec-todo .wt-tt-props.open{display:grid;}
 #sec-todo .wt-tt-props .wt-tt-hrow{display:none !important;}
-.wt-tt-listchip{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--ink-soft);font:inherit;font-size:12.5px;font-weight:600;padding:5px 8px;border-radius:7px;cursor:pointer;max-width:220px;min-width:0;}
+.wt-tt-listchip{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--ink-soft);font:inherit;font-size:12.5px;font-weight:600;padding:5px 8px;border-radius:7px;cursor:pointer;max-width:min(320px,60%);min-width:0;}
 .wt-tt-listchip span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .wt-tt-listchip:hover{background:var(--surface-2);color:var(--ink);}
 #sec-todo #taskDetailStatus{white-space:nowrap;font-size:11.5px;}
@@ -7790,7 +7790,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <input class="wt-input wt-sub-add" id="taskSubAdd" type="text" placeholder="+ Dodaj krok (Enter)" maxlength="200" onkeydown="if(event.key==='Enter'){event.preventDefault();wtSubAdd('task');}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
           <span style="display:flex;align-items:center;gap:10px;min-width:0"><button type="button" class="wt-tt-listchip" id="taskDetailListChip" onclick="wtTaskListChip(this)" title="Przenieś do innej listy lub sekcji"></button><span class="wt-note-status" id="taskDetailStatus"></span></span>
-          <button class="wt-btn danger ghost" onclick="wtDeleteTodo()">Usuń zadanie</button>
+          
         </div>
       </div>
     </div>
