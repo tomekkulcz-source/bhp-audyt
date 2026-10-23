@@ -2866,6 +2866,7 @@ window.__WT_FIREBASE_CONFIG__ = {
   appId: "1:755642851819:web:edfdc8f984487e833579ae"
 };
 </script>
+<style>.wt-q-out{margin-top:8px;padding:8px 10px;border:1px solid var(--line,#ddd);border-radius:8px}.wt-q-out b{display:inline}</style>
 <style id="wt-tt-css">
 .wt-gus-cmp{font-size:12.5px;color:var(--ink-soft);margin:8px 0 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);line-height:1.6;}
 .wt-gus-cmp details{margin-top:4px;}
@@ -25293,7 +25294,8 @@ document.addEventListener('keydown', e=>{
       +'<div><label>Okres zimowy — praca na otwartej przestrzeni lub w pomieszczeniu nieogrzewanym</label><select class="wt-input" id="pnWinter"><option value="">nie</option><option value="1">tak</option></select></div></div>'
       +'<div id="pnOut2" class="wt-calc-out"></div></div>'
       + wtCalc2Html()
-      + accCostHtml();
+      + accCostHtml()
+      + '<div class="card wt-calc-card"><h3>Gęstość obciążenia ogniowego Q<sub>d</sub></h3><p class="small">PN-B-02852:2001 — 176 materiałów z załącznika A, udział 10% / 20% masy, klasa odporności pożarowej (§ 212 ust. 4 WT), względny czas trwania pożaru (rys. 1 normy), woda do zewnętrznego gaszenia, hydranty i zapas w zbiorniku (rozp. MSWiA z 24.07.2009 r.).</p><div class="wt-pz-actions" style="justify-content:flex-start"><button type="button" class="wt-btn primary" onclick="window.wtQCalcOpen()">Otwórz kalkulator Q<sub>d</sub></button></div></div>';
     el.querySelectorAll('input,select').forEach(i=>{ if(!i.getAttribute('onchange')){ i.addEventListener('input', wtCalcRecompute); i.addEventListener('change', wtCalc2Recompute); i.addEventListener('input', wtCalc2Recompute); } });
     const p = wtProjectById(calcState.iwaClient);
     if(p){ const hc = wtProfileHeadcount(p).n; if(hc!=null) document.getElementById('iwaIns').value = hc; }
@@ -31706,9 +31708,19 @@ document.addEventListener('keydown', e=>{
   let wtQState = null;
   window.wtIbpQCalc = function(zi){
     const o = wtIbpObj(); if(!o) return; const ibp = wtIbpPending || ibpOf(o); const z = (ibp.zones||[])[zi]; if(!z) return;
-    wtQState = {zi, F: z.area||'', rows: (z.qRows && z.qRows.length) ? JSON.parse(JSON.stringify(z.qRows)) : [{m:'',g:'',qc:''}]};
+    wtQState = {zi, F: z.area||'', Fz: z.area||'', sup:'', hg: ibpQHg(ibp), rows: (z.qRows && z.qRows.length) ? JSON.parse(JSON.stringify(z.qRows)) : [{m:'',g:'',qc:''}]};
     wtQRender();
   };
+  /* samodzielny kalkulator (Kalkulatory) — bez zapisu do IBP */
+  let wtQFree = null;
+  window.wtQCalcOpen = function(){ if(!wtQFree) wtQFree = {zi:null, F:'', Fz:'', sup:'', hg:'1', rows:[{m:'',g:'',qc:'',red:'1'}]}; wtQState = wtQFree; wtQRender(); };
+  /* grupa wysokości z kroku „Klasyfikacja pożarowa” IBP: '1' = jedna kondygnacja nadziemna, inaczej N/SW/W/WW */
+  function ibpQHg(ibp){ if(!ibp) return '1'; if(klNum(ibp.floorsAbove)===1) return '1'; return ibp.hgOverride || klHgByHeight(klNum(ibp.heightM)) || '1'; }
+  /* Względny czas trwania pożaru — rysunek 1 PN-B-02852:2001 (krzywa łamana, węzły odczytane z rysunku w pełnych godzinach);
+     powyżej 5900 MJ/m² zawsze 8 h (rozdz. 3 normy). Wynik zaokrąglany w górę do 0,1 h (na korzyść bezpieczeństwa). */
+  const Q_T_NODES = [[0,0],[920,1],[1820,2],[2770,3],[3330,4],[3880,5],[4450,6],[5180,7],[5900,8]];
+  function qFireHours(Q){ if(!(Q>0)) return 0; if(Q>=5900) return 8; for(let i=1;i<Q_T_NODES.length;i++){ const a = Q_T_NODES[i-1], b = Q_T_NODES[i]; if(Q<=b[0]){ const t = a[1]+(Q-a[0])/(b[0]-a[0])*(b[1]-a[1]); return Math.ceil(t*10-1e-9)/10; } } return 8; }
+  const Q_HG_COL = {'1':0, N:1, SW:2, W:3, WW:4}, Q_HG_LBL = {'1':'jedna kondygnacja nadziemna', N:'wielokondygnacyjny niski (N)', SW:'średniowysoki (SW)', W:'wysoki (W)', WW:'wysokościowy (WW)'};
   /* Q liczone bez zaokrąglania (zaokrąglenie przed porównaniem z progami 200/500/1000/2000/4000/5900 MJ/m² mogłoby zmienić przedział);
      ujemne masy / ciepła spalania są pomijane i zgłaszane. */
   const Q_TH = [200,500,1000,2000,4000,5900];
@@ -31720,14 +31732,30 @@ document.addEventListener('keydown', e=>{
   function wtQResHtml(r){ let h = 'Σ G·Q<sub>c</sub> = '+qFmt(r.sum)+' MJ · Q<sub>d</sub> = <b>'+qFmt(r.Q)+' MJ/m²</b>';
     if(r.bad) h += '<br><span class="small" style="color:var(--crit)">Pominięto '+r.bad+' '+(r.bad===1?'wiersz':'wiersze')+' z ujemną masą lub ciepłem spalania — popraw dane.</span>';
     if(!r.F && r.sum) h += '<br><span class="small" style="color:var(--crit)">Podaj powierzchnię F, aby policzyć Q.</span>';
-    const o = wtIbpObj(); const ibp = o ? (wtIbpPending || ibpOf(o)) : null; const z = ibp && (ibp.zones||[])[wtQState.zi];
-    if(r.Q>5900) h += '<br><span class="small">Q powyżej 5900 MJ/m² — względny czas trwania pożaru przyjmuje się 8 h (PN-B-02852, rozdz. 3).</span>';
-    else if(r.Q) h += '<br><span class="small">Względny czas trwania pożaru odczytaj z rysunku 1 normy PN-B-02852 (potrzebny m.in. do zapasu wody w zbiorniku, maks. 4 h — § 6 ust. 10 pkt 1 rozp. z 24.07.2009 r.).</span>';
-    if(z && z.cat==='PM' && r.F && r.Q){ const w = pmWater(r.Q, r.F); h += '<br><span class="small">Woda do zewnętrznego gaszenia dla tej strefy (tabela nr 2 rozp. MSWiA z 24.07.2009 r.): <b>'+w+' dm³/s</b> · klasa odporności pożarowej — w „Klasyfikacji pożarowej”.</span>'; }
+    if(!(r.F>0) || !(r.Q>0)) return h;
+    const st = wtQState, ri = PM_WATER_Q.findIndex(x=>r.Q<=x);
+    h += '<br><span class="small">Przedział: '+['do 200','ponad 200 do 500','ponad 500 do 1000','ponad 1000 do 2000','ponad 2000 do 4000','ponad 4000'][ri]+' MJ/m² (górna granica należy do przedziału).</span>';
+    /* udział materiałów */
+    const parts = st.rows.map(x=>({m:x.m||'materiał', v:(ppozNum(x.g)||0)*(ppozNum(x.red)||1)*(ppozNum(x.qc)||0)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+    if(parts.length>1) h += '<br><span class="small">Udział w obciążeniu: '+parts.slice(0,5).map(x=>esc(x.m)+' '+(x.v/r.sum*100).toLocaleString('pl-PL',{maximumFractionDigits:1})+'%').join(' · ')+'</span>';
+    /* klasa odporności pożarowej PM — § 212 ust. 4 */
+    const col = Q_HG_COL[st.hg||'1'] ?? 0, row = KL_PM_TABLE.find(x=>r.Q<=x.max), cls = row.c[col];
+    h += '<div class="wt-q-out"><b>Klasa odporności pożarowej (strefa PM): '+(cls?'„'+cls+'”':'— budynek niedopuszczalny (§ 228 ust. 1)')+'</b><span class="small"> · '+Q_HG_LBL[st.hg||'1']+' · § 212 ust. 4 WT</span></div>';
+    /* czas trwania pożaru */
+    const t = qFireHours(r.Q);
+    h += '<div class="wt-q-out"><b>Względny czas trwania pożaru: '+t.toLocaleString('pl-PL')+' h</b><span class="small"> · '+(r.Q>=5900?'Q ≥ 5900 MJ/m² — przyjmuje się 8 h (PN-B-02852, rozdz. 3)':'odczyt z krzywej rys. 1 PN-B-02852, zaokrąglony w górę do 0,1 h')+'</span></div>';
+    /* woda — tabela nr 2, § 10 ust. 8, § 6 ust. 10 pkt 1 */
+    const Fz = ppozNum(st.Fz) || r.F, w = pmWater(r.Q, Fz), sup = Math.max(0, ppozNum(st.sup)||0), miss = Math.max(0, w-sup), tt = Math.min(t, 4), tank = Math.ceil(miss*tt*3.6*10-1e-9)/10;
+    h += '<div class="wt-q-out"><b>Woda do zewnętrznego gaszenia: '+w+' dm³/s</b><span class="small"> · tabela nr 2 rozp. MSWiA z 24.07.2009 r. (§ 6 ust. 3) dla Q = '+qFmt(r.Q)+' MJ/m² i strefy '+qFmt(Fz)+' m²</span>'
+      +'<br><span class="small">Hydranty zewnętrzne (§ 10 ust. 8): '+Math.ceil(w/10)+' × DN 80 (10 dm³/s) albo '+Math.ceil(w/15)+' × DN 100 (15 dm³/s); odległość między hydrantami do 150 m, najbliższy do 75 m od obiektu (§ 10 ust. 6).</span>'
+      +'<br><span class="small">Zapas w zbiorniku (§ 6 ust. 10 pkt 1): '+(miss? '<b>'+tank.toLocaleString('pl-PL')+' m³</b> = brakująca wydajność '+miss+' dm³/s × '+tt.toLocaleString('pl-PL')+' h'+(t>4?' (czas ograniczony do 4 h)':'')+' × 3,6' : 'nie jest potrzebny — wodociąg zapewnia wymaganą wydajność')+'.</span>'
+      +'<br><span class="small">Tabela nr 2 dotyczy budynków PM — nie obejmuje m.in. stacji paliw, zbiorników gazów i cieczy palnych, składowisk poza budynkami i obiektów gospodarki rolnej (§ 6 ust. 4–9); dla garaży nie więcej niż 20 dm³/s.</span></div>';
+    if(r.Q>500) h += '<br><span class="small">Q > 500 MJ/m²: w strefie PM o powierzchni > 200 m² wymagane hydranty wewnętrzne 52 (przy Q ≤ 1000 dopuszczalne 33) — § 19 ust. 3–4 rozp. MSWiA z 7.06.2010 r.</span>';
     return h; }
   function wtQRender(){
     const r = wtQSum();
-    wtPpozModal('Gęstość obciążenia ogniowego — strefa '+(wtQState.zi+1),
+    const ibpMode = wtQState.zi!==null && wtQState.zi!==undefined;
+    wtPpozModal('Gęstość obciążenia ogniowego'+(ibpMode?' — strefa '+(wtQState.zi+1):''),
       '<p class="small">Q<sub>d</sub> = Σ (G<sub>i</sub> · Q<sub>ci</sub>) / F — masa materiałów palnych [kg] × ciepło spalania [MJ/kg], podzielone przez powierzchnię rzutu pomieszczenia / strefy / składowiska [m²], przy założeniu równomiernego rozmieszczenia (PN-B-02852:2001, pkt 2). Lista materiałów i ich Q<sub>c</sub> — z załącznika A normy ('+Q_PRESETS.length+' materiałów — komplet z normy); dla materiałów spoza listy przyjmij ciepło spalania z badań lub karty charakterystyki.</p>'
       +'<details class="wt-q-help"><summary>Które materiały liczyć w 10% lub 20% masy, a które pominąć</summary><ul>'
       +'<li><b>Pomija się</b> materiały zanurzone w wodzie i roztworach wodnych oraz o zawartości wody ponad 60%.</li>'
@@ -31735,14 +31763,18 @@ document.addEventListener('keydown', e=>{
       +'<li><b>20% masy</b>: zboże, cukier, mąka, kasze w workach ułożonych w stosy (nie dotyczy nasion oleistych); papa smołowa i asfaltowa w rolkach; papier w procesach poligraficznych prasowany w paczki półproduktu i gotowy wyrób po obróbce introligatorskiej w pełnopaletowych ładunkach > 400 kg.</li>'
       +'<li>Strefa z kilku pomieszczeń: Q strefy = Σ (Q<sub>di</sub> · F<sub>i</sub>) / Σ F<sub>i</sub> — policz każde pomieszczenie osobno albo wpisz łącznie wszystkie materiały i powierzchnię strefy.</li></ul><p class="small">Zasady wg PN-B-02852:2001, pkt 2.2.2–2.2.4 (streszczenie).</p></details>'
       +'<datalist id="wtQList">'+Q_PRESETS.map(p=>'<option value="'+esc(p[0])+'">').join('')+'</datalist>'
-      +'<label class="wt-pz-f"><span>Powierzchnia F [m²]</span><input class="wt-input" inputmode="decimal" value="'+esc(wtQState.F)+'" oninput="window.wtQSet(-1,\'F\',this.value)"></label>'
+      +'<div class="wt-ibp-lrow"><label class="wt-pz-f" style="flex:1 1 150px"><span>Powierzchnia F [m²]</span><input class="wt-input" inputmode="decimal" value="'+esc(wtQState.F)+'" oninput="window.wtQSet(-1,\'F\',this.value)"></label>'
+      +'<label class="wt-pz-f" style="flex:1 1 200px"><span>Budynek (do klasy odporności, § 212)</span><select class="wt-input" onchange="window.wtQSet(\'hg\',0,this.value)">'+Object.keys(Q_HG_LBL).map(k=>'<option value="'+k+'"'+(String(wtQState.hg||'1')===k?' selected':'')+'>'+Q_HG_LBL[k]+'</option>').join('')+'</select></label>'
+      +'<label class="wt-pz-f" style="flex:1 1 150px"><span>Powierzchnia strefy pożarowej [m²]</span><input class="wt-input" id="wtQFz" inputmode="decimal" value="'+esc(wtQState.Fz)+'" oninput="window.wtQSet(\'Fz\',0,this.value)"></label>'
+      +'<label class="wt-pz-f" style="flex:1 1 150px"><span>Wydajność wodociągu [dm³/s]</span><input class="wt-input" inputmode="decimal" placeholder="0 = brak / nieznana" value="'+esc(wtQState.sup)+'" oninput="window.wtQSet(\'sup\',0,this.value)"></label></div>'
+      +'<p class="small" style="margin-top:-4px">Do tabeli wody wchodzi powierzchnia całej strefy pożarowej — zmień ją, jeśli Q liczysz dla jednego pomieszczenia w większej strefie.</p>'
       +'<div class="wt-ibp-list">'+wtQState.rows.map((row,i)=>'<div class="wt-ibp-lrow"><label class="wt-pz-f" style="flex:2 1 180px"><span>Materiał</span><input class="wt-input" list="wtQList" value="'+esc(row.m)+'" oninput="window.wtQSet('+i+',\'m\',this.value)"></label><label class="wt-pz-f" style="flex:1 1 90px"><span>Masa G [kg]</span><input class="wt-input" inputmode="decimal" value="'+esc(row.g)+'" oninput="window.wtQSet('+i+',\'g\',this.value)"></label><label class="wt-pz-f" style="flex:1 1 90px"><span>Q<sub>c</sub> [MJ/kg]</span><input class="wt-input" inputmode="decimal" id="wtQc'+i+'" value="'+esc(row.qc)+'" oninput="window.wtQSet('+i+',\'qc\',this.value)"></label><label class="wt-pz-f" style="flex:1 1 100px"><span>Udział masy</span><select class="wt-input" onchange="window.wtQSet('+i+',\'red\',this.value)">'+[['1','100%'],['0.1','10% (pkt 2.2.3)'],['0.2','20% (pkt 2.2.4)']].map(o=>'<option value="'+o[0]+'"'+(String(row.red||'1')===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select></label><button type="button" class="wt-btn ghost danger" onclick="window.wtQDel('+i+')">×</button></div>').join('')
       +'<button type="button" class="wt-btn ghost" onclick="window.wtQAdd()">+ Materiał</button></div>'
       +'<div class="wt-ibp-qres" id="wtQRes">'+wtQResHtml(r)+'</div>',
-      ()=>{ const res = wtQSum(); if(!(res.F>0)){ wtToast('Podaj powierzchnię F strefy.', true); return false; } if(res.bad){ wtToast('Popraw wiersze z ujemną masą lub ciepłem spalania.', true); return false; } wtIbpSet('zones.'+wtQState.zi+'.q', qStore(res.Q)); wtIbpSet('zones.'+wtQState.zi+'.qRows', wtQState.rows); wtIbpRerenderSoon(); wtToast('Wpisano Q = '+qFmt(res.Q)+' MJ/m².'); return true; }, 'Wpisz Q do strefy');
+      !ibpMode ? null : ()=>{ const res = wtQSum(); if(!(res.F>0)){ wtToast('Podaj powierzchnię F strefy.', true); return false; } if(res.bad){ wtToast('Popraw wiersze z ujemną masą lub ciepłem spalania.', true); return false; } wtIbpSet('zones.'+wtQState.zi+'.q', qStore(res.Q)); wtIbpSet('zones.'+wtQState.zi+'.qRows', wtQState.rows); wtIbpRerenderSoon(); wtToast('Wpisano Q = '+qFmt(res.Q)+' MJ/m².'); return true; }, 'Wpisz Q do strefy');
   }
   window.wtQSet = function(i, k, v){
-    if(i<0) wtQState.F = v; else { wtQState.rows[i][k] = v; if(k==='m'){ const p = Q_PRESETS.find(x=>x[0]===v); if(p){ wtQState.rows[i].qc = String(p[1]); const el = document.getElementById('wtQc'+i); if(el) el.value = p[1]; } } }
+    if(typeof i==='string'){ wtQState[i] = v; } else if(i<0){ if(String(wtQState.Fz)===String(wtQState.F)) wtQState.Fz = v; wtQState.F = v; const fz = document.getElementById('wtQFz'); if(fz) fz.value = wtQState.Fz; } else { wtQState.rows[i][k] = v; if(k==='m'){ const p = Q_PRESETS.find(x=>x[0]===v); if(p){ wtQState.rows[i].qc = String(p[1]); const el = document.getElementById('wtQc'+i); if(el) el.value = p[1]; } } }
     const r = wtQSum(); const el = document.getElementById('wtQRes'); if(el) el.innerHTML = wtQResHtml(r);
   };
   window.wtQAdd = function(){ wtQState.rows.push({m:'',g:'',qc:'',red:'1'}); wtQRender(); };
