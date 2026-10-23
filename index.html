@@ -2965,6 +2965,7 @@ window.__WT_FIREBASE_CONFIG__ = {
 .wt-tt-mnote{font-size:12px;color:var(--ink-faint);padding:6px 10px;}
 /* panel szczegółów */
 #sec-todo .wt-note-editor{border:0;border-radius:0 var(--r) var(--r) 0;padding:12px 20px 20px;min-height:70vh;top:calc(var(--topbar) + 8px);}
+.wt-tt-dbar[hidden], .wt-tt-dfoot[hidden]{display:none !important;}
 .wt-tt-dbar{display:flex;align-items:center;gap:8px;padding:2px 0 12px;margin-bottom:12px;border-bottom:1px solid var(--line);}
 .wt-tt-dsep{width:1px;height:18px;background:var(--line);}
 .wt-tt-duebtn{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--ink-faint);font:inherit;font-size:13.5px;font-weight:600;padding:5px 8px;border-radius:7px;cursor:pointer;}
@@ -2973,7 +2974,7 @@ window.__WT_FIREBASE_CONFIG__ = {
 .wt-tt-duebtn.set.wt-due-later, .wt-tt-duebtn.set.wt-due-soon{color:var(--accent-ink);}
 .wt-tt-duebtn.wt-due-over{color:var(--crit);}
 .wt-tt-duebtn.wt-due-today{color:var(--high);}
-#sec-todo textarea.wt-tt-dtitle{font-size:21px;font-weight:700;line-height:1.3;border:0;background:transparent;resize:none;padding:0;margin:0 0 8px;color:var(--ink);font-family:var(--font-ui);min-height:0;flex:0 0 auto;overflow:hidden;}
+#sec-todo textarea.wt-tt-dtitle{font-size:21px;font-weight:700;line-height:1.3;border:0;background:transparent;resize:none;padding:6px 0 0;margin:0 0 8px;color:var(--ink);font-family:var(--font-ui);min-height:0;flex:0 0 auto;overflow:hidden;}
 #sec-todo textarea.wt-tt-dtitle:focus{outline:none;box-shadow:none;}
 #sec-todo textarea.wt-tt-ddesc{flex:0 0 auto;min-height:18vh;font-size:14px;color:var(--ink);margin-bottom:12px;}
 #sec-todo textarea.wt-tt-ddesc::placeholder{color:var(--ink-faint);}
@@ -7765,7 +7766,7 @@ window.__WT_FIREBASE_CONFIG__ = {
       <div id="taskDetailEmpty" class="wt-empty">Wybierz zadanie z listy, aby zobaczyć szczegóły.</div>
       <div id="taskDetailEditor" style="display:none;flex-direction:column;flex:1;">
         <div class="wt-sheet-head"><button type="button" class="wt-sheet-close" onclick="wtCloseEditorSheet('taskDetailCol')"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Zadania</button></div>
-        <div class="wt-tt-dbar">
+        <div class="wt-tt-dbar" hidden>
           <input type="checkbox" class="wt-todo-check" id="taskDetailDone" onchange="wtTaskDetailToggleDone()" title="Oznacz jako zrobione" aria-label="Oznacz jako zrobione">
           <span class="wt-tt-dsep"></span>
           <span class="wt-tt-duebtn" id="taskDetailDueBtn"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v11a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM4 10h16M8 4v4M16 4v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Termin</span></span>
@@ -7785,7 +7786,7 @@ window.__WT_FIREBASE_CONFIG__ = {
         <div class="wt-sub-head">Kroki <span id="taskSubCount"></span></div>
         <div class="wt-sub-list" id="taskSubList"></div>
         <input class="wt-input wt-sub-add" id="taskSubAdd" type="text" placeholder="+ Dodaj krok (Enter)" maxlength="200" onkeydown="if(event.key==='Enter'){event.preventDefault();wtSubAdd('task');}">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+        <div class="wt-tt-dfoot" hidden>
           <span style="display:flex;align-items:center;gap:10px;min-width:0"><button type="button" class="wt-tt-listchip" id="taskDetailListChip" onclick="wtTaskListChip(this)" title="Przenieś do innej listy lub sekcji"></button><span class="wt-note-status" id="taskDetailStatus"></span></span>
           
         </div>
