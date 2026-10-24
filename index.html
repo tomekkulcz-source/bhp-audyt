@@ -1683,6 +1683,16 @@ html[data-theme="dark"] .wt-area-chip.os{background:rgba(129,199,132,.18);color:
 .wt-area-toggle{display:inline-flex;margin-top:10px;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--surface-2)}
 .wt-area-toggle button{border:0;background:transparent;color:var(--ink-soft);font:inherit;font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;cursor:pointer}
 .wt-area-toggle button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+.wt-svc-pick{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0}
+.wt-svc-pick .lbl{font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-right:2px}
+.wt-svc-opt{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:5px 11px 5px 8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--surface);user-select:none}
+.wt-svc-opt input{margin:0;accent-color:currentColor}
+.wt-svc-opt.bhp{color:#1D4ED8} .wt-svc-opt.ppoz{color:#B42E19} .wt-svc-opt.os{color:#23692A}
+html[data-theme="dark"] .wt-svc-opt.bhp{color:#93C5FD} html[data-theme="dark"] .wt-svc-opt.ppoz{color:#FFA48C} html[data-theme="dark"] .wt-svc-opt.os{color:#A5D6A7}
+.wt-svc-opt:has(input:checked){background:var(--surface-2);border-color:currentColor}
+.wt-svc-opt:has(input:disabled){cursor:default;opacity:.85}
+.wt-svc-opt span{color:var(--ink)}
 </style>
 <style>
 /* ===== Boczne menu: zwijanie po kategoriach + własny kolor na kategorię ===== */
@@ -9150,6 +9160,7 @@ temat!"><td class="zw-lp mono"></td><td class="small">BHP / Książki</td><td><s
   </div>
   <div class="wt-toolbar wt-kl-listonly">
     <input class="wt-input grow" id="klienciNewInput" type="text" placeholder="Nazwa nowego klienta / firmy…" maxlength="120" onkeydown="if(event.key==='Enter') wtKlienciCreate();">
+    <span class="wt-svc-pick" role="group" aria-label="Usługi dla nowego klienta"><span class="lbl">Usługi:</span><label class="wt-svc-opt bhp"><input type="checkbox" id="klNewSvc_bhp" checked><span>BHP</span></label><label class="wt-svc-opt ppoz"><input type="checkbox" id="klNewSvc_ppoz"><span>PPOŻ</span></label><label class="wt-svc-opt os"><input type="checkbox" id="klNewSvc_os"><span>OŚ</span></label></span>
     <button class="wt-btn primary" onclick="wtKlienciCreate()">
       <svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
       Nowy klient
@@ -11353,6 +11364,11 @@ document.addEventListener('keydown', e=>{
   let wtAreaAll = false; try{ wtAreaAll = localStorage.getItem('wt_area_all')==='1'; }catch(e){}
   const wtByMode = arr=>{ if(wtAreaAll) return arr.slice(); const m = wtCurMode(); return arr.filter(x=>(x.mode||'bhp')===m); };
   const WT_AREA_L = {bhp:'BHP', ppoz:'PPOŻ', os:'OŚ'};
+  /* wybór usług przy dodawaniu klienta — locked: usługa bieżącego modułu (zawsze zaznaczona) */
+  function wtSvcPickHtml(prefix, locked){
+    return '<div class="wt-svc-pick" role="group" aria-label="Usługi dla klienta"><span class="lbl">Usługi:</span>'+['bhp','ppoz','os'].map(a=>'<label class="wt-svc-opt '+a+'"><input type="checkbox" id="'+prefix+a+'"'+(a===locked?' checked disabled':'')+'><span>'+WT_AREA_L[a]+'</span></label>').join('')+'</div>';
+  }
+  function wtSvcPickRead(prefix, locked){ const sv = {}; ['bhp','ppoz','os'].forEach(a=>{ const el = document.getElementById(prefix+a); sv[a] = a===locked || !!(el && el.checked); }); return sv; }
   function wtHasMultiArea(){ try{ return (allProjects||[]).some(p=>p.isClient!==false && p.services && (p.services.ppoz===true || p.services.os===true)); }catch(e){ return false; } }
   /* usługi klienta → dozwolone obszary (bez klienta: wszystkie) */
   function wtAreasForProject(pid){
@@ -26899,10 +26915,15 @@ document.addEventListener('keydown', e=>{
     const name = input.value.trim();
     if(!name){ wtToast('Wpisz nazwę klienta / firmy.', true); input.focus(); return; }
     if(!DB){ wtToast('Dodawanie klientów jest dostępne po otwarciu tego narzędzia jako strony na claude.ai.', true); return; }
+    const sv = wtSvcPickRead('klNewSvc_', '');
+    if(!sv.bhp && !sv.ppoz && !sv.os){ wtToast('Zaznacz co najmniej jedną usługę: BHP, PPOŻ albo OŚ.', true); return; }
     input.value='';
+    ['ppoz','os'].forEach(a=>{ const c = document.getElementById('klNewSvc_'+a); if(c) c.checked = false; }); { const c = document.getElementById('klNewSvc_bhp'); if(c) c.checked = true; }
     /* po dodaniu od razu otwieramy panel nowego klienta — następny krok to uzupełnienie umowy i profilu */
-    DB.collection('client_projects').add({name, color: wtNextListColor(), createdAt: Date.now(), isClient:true})
-      .then(ref=>{ wtToast('Dodano klienta „'+name+'”.'); setTimeout(()=>{ if(ref && ref.id && window.wtKlienciOpen) window.wtKlienciOpen(ref.id); }, 250); })
+    DB.collection('client_projects').add({name, color: wtNextListColor(), createdAt: Date.now(), isClient:true, services:sv})
+      .then(ref=>{ const others = ['ppoz','os'].filter(a=>sv[a]).map(a=>WT_AREA_L[a]);
+        if(!sv.bhp){ wtToast('Dodano „'+name+'” — klient jest w module '+others.join(' i ')+' (bez BHP).'); return; }
+        wtToast('Dodano klienta „'+name+'”'+(others.length?' — także w module '+others.join(' i '):'')+'.'); setTimeout(()=>{ if(ref && ref.id && window.wtKlienciOpen) window.wtKlienciOpen(ref.id); }, 250); })
       .catch(()=>{ wtToast('Nie udało się dodać klienta.', true); });
   };
 
@@ -31006,8 +31027,8 @@ document.addEventListener('keydown', e=>{
     const others = allProjects.filter(p=>p.isClient!==false && !(p.services && p.services.ppoz===true)).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pl'));
     wtPpozModal('Klient w module PPOŻ',
       (others.length ? '<label class="wt-pz-f"><span>Istniejący klient (z kartoteki firm)</span><select class="wt-input" id="wtPzAddSel"><option value="">— wybierz —</option>'+others.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name||'')+'</option>').join('')+'</select></label><p class="small wt-pz-or">albo</p>' : '')
-      +'<label class="wt-pz-f"><span>Nowa firma (tylko PPOŻ)</span><input class="wt-input" id="wtPzAddNew" placeholder="Nazwa firmy"></label>'
-      +'<p class="small">Dane firmy są wspólne dla BHP i PPOŻ — w trybie BHP firma pojawi się tylko, jeśli zaznaczysz u niej obsługę BHP.</p>',
+      +'<label class="wt-pz-f"><span>Nowa firma</span><input class="wt-input" id="wtPzAddNew" placeholder="Nazwa firmy"></label>'+wtSvcPickHtml('wtPzNewSvc_', 'ppoz')
+      +'<p class="small">Dane firmy są wspólne dla BHP, PPOŻ i OŚ — firma pojawia się w danym module tylko przy zaznaczonej usłudze. Usługi zmienisz też później w karcie klienta.</p>',
       async ()=>{
         const sel = (document.getElementById('wtPzAddSel')||{}).value, nm = (document.getElementById('wtPzAddNew').value||'').trim();
         if(!DB){ wtToast('Zapis wymaga otwarcia narzędzia jako strony.', true); return false; }
@@ -31017,7 +31038,7 @@ document.addEventListener('keydown', e=>{
           window.wtPpozPickClient(sel); wtToast('Dodano klienta do modułu PPOŻ.'); return true;
         }
         if(!nm){ wtToast('Wybierz klienta albo wpisz nazwę nowej firmy.', true); return false; }
-        const ref = await DB.collection('client_projects').add({name:nm, color:wtNextListColor(), createdAt:Date.now(), isClient:true, services:{bhp:false, ppoz:true}});
+        const ref = await DB.collection('client_projects').add({name:nm, color:wtNextListColor(), createdAt:Date.now(), isClient:true, services:wtSvcPickRead('wtPzNewSvc_', 'ppoz')});
         if(ref && ref.id) window.wtPpozPickClient(ref.id);
         wtToast('Dodano firmę do modułu PPOŻ.'); return true;
       }, 'Dodaj');
@@ -33312,14 +33333,14 @@ document.addEventListener('keydown', e=>{
     const others = allProjects.filter(p=>p.isClient!==false && !(p.services && p.services.os===true)).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pl'));
     wtPpozModal('Klient w module OŚ',
       (others.length ? '<label class="wt-pz-f"><span>Istniejący klient (z kartoteki firm)</span><select class="wt-input" id="wtOsAddSel"><option value="">— wybierz —</option>'+others.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name||'')+'</option>').join('')+'</select></label><p class="small wt-pz-or">albo</p>' : '')
-      +'<label class="wt-pz-f"><span>Nowa firma (tylko OŚ)</span><input class="wt-input" id="wtOsAddNew" placeholder="Nazwa firmy"></label>'
-      +'<p class="small">Dane firmy są wspólne dla BHP, PPOŻ i OŚ — firma pojawia się w danym trybie tylko przy zaznaczonym zakresie usług.</p>',
+      +'<label class="wt-pz-f"><span>Nowa firma</span><input class="wt-input" id="wtOsAddNew" placeholder="Nazwa firmy"></label>'+wtSvcPickHtml('wtOsNewSvc_', 'os')
+      +'<p class="small">Dane firmy są wspólne dla BHP, PPOŻ i OŚ — firma pojawia się w danym module tylko przy zaznaczonej usłudze. Usługi zmienisz też później w karcie klienta.</p>',
       async ()=>{
         const sel = (document.getElementById('wtOsAddSel')||{}).value, nm = (document.getElementById('wtOsAddNew').value||'').trim();
         if(!DB){ wtToast('Zapis wymaga otwarcia narzędzia jako strony.', true); return false; }
         if(sel){ const p = wtProjectById(sel); await DB.doc('client_projects/'+sel).update({services:Object.assign({bhp:true}, p.services||{}, {os:true})}); window.wtOsPickClient(sel); wtToast('Dodano klienta do modułu OŚ.'); return true; }
         if(!nm){ wtToast('Wybierz klienta albo wpisz nazwę nowej firmy.', true); return false; }
-        const ref = await DB.collection('client_projects').add({name:nm, color:wtNextListColor(), createdAt:Date.now(), isClient:true, services:{bhp:false, ppoz:false, os:true}});
+        const ref = await DB.collection('client_projects').add({name:nm, color:wtNextListColor(), createdAt:Date.now(), isClient:true, services:wtSvcPickRead('wtOsNewSvc_', 'os')});
         if(ref && ref.id) window.wtOsPickClient(ref.id); wtToast('Dodano firmę do modułu OŚ.'); return true;
       }, 'Dodaj');
   };
