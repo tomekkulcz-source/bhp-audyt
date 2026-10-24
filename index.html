@@ -1667,6 +1667,22 @@ html[data-theme="dark"] #sec-zrodla{--zw-navy-a:rgba(46,117,182,.22);--zw-navy-b
   #sec-zrodla tr.zw-r.zw-gray{background:var(--zw-gray-a);border-left-color:var(--zw-gray);}#sec-zrodla tr.zw-r.zw-gray.alt{background:var(--zw-gray-b);}
   #sec-zrodla .zw-foot{font-size:11.5px;padding:9px 14px;}
 }
+
+/* Obszary BHP / PPOŻ / OŚ — etykiety, przełącznik zakresu, filtr terminów */
+.wt-area-chip{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;letter-spacing:.04em;line-height:1;padding:3px 6px;border-radius:5px;margin-right:6px;vertical-align:1px;border:1px solid transparent;white-space:nowrap}
+.wt-area-chip.bhp{background:rgba(37,99,235,.12);color:#1D4ED8}
+.wt-area-chip.ppoz{background:rgba(200,52,29,.12);color:#B42E19}
+.wt-area-chip.os{background:rgba(46,125,50,.14);color:#23692A}
+html[data-theme="dark"] .wt-area-chip.bhp{background:rgba(96,165,250,.18);color:#93C5FD}
+html[data-theme="dark"] .wt-area-chip.ppoz{background:rgba(255,122,92,.18);color:#FFA48C}
+html[data-theme="dark"] .wt-area-chip.os{background:rgba(129,199,132,.18);color:#A5D6A7}
+.wt-area-f{display:inline-flex;gap:4px;align-items:center;margin-right:8px}
+.wt-area-f .wt-area-chip{cursor:pointer;font-size:11.5px;padding:5px 9px;margin:0}
+.wt-area-f .wt-area-chip.off{background:transparent;color:var(--ink-faint);border-color:var(--line);text-decoration:line-through}
+.wt-start-terms-head #wtStartAreaF{margin-left:auto}
+.wt-area-toggle{display:inline-flex;margin-top:10px;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--surface-2)}
+.wt-area-toggle button{border:0;background:transparent;color:var(--ink-soft);font:inherit;font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;cursor:pointer}
+.wt-area-toggle button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 </style>
 <style>
 /* ===== Boczne menu: zwijanie po kategoriach + własny kolor na kategorię ===== */
@@ -3200,6 +3216,7 @@ window.__WT_FIREBASE_CONFIG__ = {
                 <button class="wt-start-tab" data-tab="all" onclick="window.wtSetStartTaskTab('all')">30 dni</button>
                 <button class="wt-start-tab" data-tab="week" onclick="window.wtSetStartTaskTab('week')">Tydzień</button>
               </span>
+              <span id="wtStartAreaF"></span>
             </div>
             <div id="wtOverdueRegList"></div>
             <div id="wtStartWeekWrap" style="display:none;">
@@ -7851,6 +7868,7 @@ temat!"><td class="zw-lp mono"></td><td class="small">BHP / Książki</td><td><s
         </div>
         <div class="wt-props wt-tt-props" id="taskDetailProps">
           <label for="taskDetailListSelect" class="wt-tt-hrow">Lista</label><div class="wt-tt-hrow"><select class="status-select" id="taskDetailListSelect"></select></div>
+          <label for="taskDetailArea" class="wt-tt-hrow" id="taskDetailAreaLbl" style="display:none">Obszar</label><div class="wt-tt-hrow" style="display:none"><select class="status-select" id="taskDetailArea" onchange="window.wtSetItemArea('todos',this.value)"></select></div>
           <label for="taskDetailSecSelect" class="wt-tt-hrow">Sekcja</label><div class="wt-tt-hrow wt-tt-secrow"><select class="status-select" id="taskDetailSecSelect" onchange="wtTaskSetSection(this.value)"></select></div>
           <label for="taskDetailDue">Termin</label><div><input type="date" id="taskDetailDue"><button type="button" class="wt-chip" onclick="wtTaskSetDue(0)">Dziś</button><button type="button" class="wt-chip" onclick="wtTaskSetDue(1)">Jutro</button><button type="button" class="wt-chip" onclick="wtTaskSetDue(7)">+7 dni</button><button type="button" class="wt-chip" onclick="wtTaskSetDue('')">Bez terminu</button></div>
           <label for="taskDetailRepeat">Powtarzaj</label><div><select class="status-select" id="taskDetailRepeat" onchange="wtTaskSetRepeat(this.value)"><option value="">Nie powtarzaj</option><option value="daily">Codziennie</option><option value="weekly">Co tydzień</option><option value="monthly">Co miesiąc</option><option value="yearly">Co rok</option></select></div>
@@ -9417,6 +9435,7 @@ temat!"><td class="zw-lp mono"></td><td class="small">BHP / Książki</td><td><s
         </div>
         <div class="wt-props">
           <label for="notatnikClientSelect">Klient</label><div><select class="status-select" id="notatnikClientSelect"></select></div>
+          <label for="notatnikArea" id="notatnikAreaLbl" style="display:none">Obszar</label><div style="display:none"><select class="status-select" id="notatnikArea" onchange="window.wtSetItemArea('notes',this.value)"></select></div>
           <label for="notatnikDue">Termin</label><div><input type="date" id="notatnikDue"><button type="button" class="wt-chip" onclick="wtNoteSetDue(0)">Dziś</button><button type="button" class="wt-chip" onclick="wtNoteSetDue(1)">Jutro</button><button type="button" class="wt-chip" onclick="wtNoteSetDue(7)">+7 dni</button><button type="button" class="wt-chip" onclick="wtNoteSetDue('')">Bez terminu</button></div>
           <label id="notatnikDoneLbl">Sprawa</label><div id="notatnikDoneWrap"><label class="wt-inline-check"><input type="checkbox" class="wt-todo-check sm" id="notatnikDone" onchange="wtNoteDetailToggleDone()">załatwiona — termin znika z list terminów</label></div>
         </div>
@@ -11329,7 +11348,54 @@ document.addEventListener('keydown', e=>{
   let allTodosRaw=[], allNotesRaw=[];
   const wtIsPpozMode = ()=>!!(window.wtGetMode && window.wtGetMode()==='ppoz');
   const wtCurMode = ()=>(window.wtGetMode && window.wtGetMode()) || 'bhp';
-  const wtByMode = arr=>{ const m = wtCurMode(); return arr.filter(x=>(x.mode||'bhp')===m); };
+  /* Obszary (BHP / PPOŻ / OŚ): zadania i notatki mają pole mode (brak = BHP). Domyślnie każdy moduł pokazuje swój obszar;
+     przełącznik „Wszystkie obszary” (wt_area_all) pokazuje wszystko z kolorowymi etykietami. Karta klienta zawsze pokazuje wszystkie obszary. */
+  let wtAreaAll = false; try{ wtAreaAll = localStorage.getItem('wt_area_all')==='1'; }catch(e){}
+  const wtByMode = arr=>{ if(wtAreaAll) return arr.slice(); const m = wtCurMode(); return arr.filter(x=>(x.mode||'bhp')===m); };
+  const WT_AREA_L = {bhp:'BHP', ppoz:'PPOŻ', os:'OŚ'};
+  function wtHasMultiArea(){ try{ return (allProjects||[]).some(p=>p.isClient!==false && p.services && (p.services.ppoz===true || p.services.os===true)); }catch(e){ return false; } }
+  /* usługi klienta → dozwolone obszary (bez klienta: wszystkie) */
+  function wtAreasForProject(pid){
+    const p = pid ? wtProjectById(pid) : null;
+    if(!p || !p.services) return ['bhp','ppoz','os'];
+    const a = []; if(p.services.bhp!==false) a.push('bhp'); if(p.services.ppoz===true) a.push('ppoz'); if(p.services.os===true) a.push('os');
+    return a.length ? a : ['bhp'];
+  }
+  /* etykieta obszaru: gdy wpis jest z innego modułu albo włączone „Wszystkie obszary” / karta klienta i klient ma kilka usług */
+  function wtAreaChip(x, force){
+    const a = x.mode || 'bhp';
+    const multiClient = x.projectId ? wtAreasForProject(x.projectId).length>1 : wtHasMultiArea();
+    if(a===wtCurMode() && !((force || wtAreaAll) && multiClient)) return '';
+    return '<span class="wt-area-chip '+a+'" title="Obszar: '+WT_AREA_L[a]+'">'+WT_AREA_L[a]+'</span>';
+  }
+  function wtAreaRefresh(){ allTodos = wtByMode(allTodosRaw); allNotes = wtByMode(allNotesRaw); try{ renderTodos(); renderNotatnikList(); renderTaskDetail(); renderNoteDetail(); }catch(e){} wtAreaToggleRender(); try{ wtInvalidateSearchIndex(); wtScheduleCrossRender(); }catch(e){} }
+  window.wtSetAreaAll = function(v){ wtAreaAll = !!v; try{ localStorage.setItem('wt_area_all', v?'1':'0'); }catch(e){} wtAreaRefresh(); };
+  function wtAreaToggleRender(){
+    const show = wtHasMultiArea();
+    ['sec-todo','sec-notatnik'].forEach(sid=>{
+      const head = document.querySelector('#'+sid+' .section-head'); if(!head) return;
+      let el = head.querySelector('.wt-area-toggle');
+      if(!show){ if(el) el.remove(); return; }
+      if(!el){ el = document.createElement('div'); el.className = 'wt-area-toggle'; el.setAttribute('role','group'); el.setAttribute('aria-label','Zakres obszarów'); head.appendChild(el); }
+      el.innerHTML = '<button type="button" class="'+(wtAreaAll?'':'on')+'" aria-pressed="'+(!wtAreaAll)+'" onclick="window.wtSetAreaAll(false)">Tylko '+WT_AREA_L[wtCurMode()]+'</button>'
+        +'<button type="button" class="'+(wtAreaAll?'on':'')+'" aria-pressed="'+wtAreaAll+'" onclick="window.wtSetAreaAll(true)">Wszystkie obszary</button>';
+    });
+  }
+  /* zmiana obszaru zadania / notatki */
+  window.wtSetItemArea = function(coll, a){
+    const id = coll==='todos' ? todoSelectedTaskId : notatnikSelectedId; if(!id || !DB) return;
+    a = WT_AREA_L[a] ? a : 'bhp';
+    DB.doc(coll+'/'+id).update({mode:a}).then(()=>{ if(!wtAreaAll && a!==wtCurMode()) wtToast('Przeniesiono do obszaru '+WT_AREA_L[a]+' — zobaczysz '+(coll==='todos'?'zadanie':'notatkę')+' w module '+WT_AREA_L[a]+' albo po włączeniu „Wszystkie obszary”.'); })
+      .catch(()=>wtToast('Nie udało się zmienić obszaru.', true));
+  };
+  function wtAreaSelectFill(selId, lblId, item){
+    const sel = document.getElementById(selId); if(!sel) return;
+    const cur = item.mode || 'bhp';
+    const opts = wtAreasForProject(item.projectId); if(!opts.includes(cur)) opts.push(cur);
+    const show = wtHasMultiArea() && (opts.length>1 || cur!==wtCurMode());
+    [sel.parentNode, document.getElementById(lblId)].forEach(e=>{ if(e) e.style.display = show ? '' : 'none'; });
+    sel.innerHTML = opts.map(a=>'<option value="'+a+'"'+(a===cur?' selected':'')+'>'+WT_AREA_L[a]+'</option>').join('');
+  }
   const wtModeTag = ()=>{ const m = wtCurMode(); return m!=='bhp' ? {mode:m} : {}; };
   let allCalEvents=[]; let allEmployees=[]; let allRecommendations=[]; let allVisits=[]; let allDiseases=[]; let allTrainings=[];
   let allPdfFiles=[];
@@ -15368,7 +15434,7 @@ document.addEventListener('keydown', e=>{
      przywraca zadanie i usuwa to następne wystąpienie (o ile nie zostało już ruszone) */
   window.wtToggleTodo = async function(id, done){
     if(!DB) return;
-    const t = allTodos.find(x=>x.id===id);
+    const t = allTodos.find(x=>x.id===id) || allTodosRaw.find(x=>x.id===id);
     if(!done){
       const upd = {done:true, doneAt:Date.now(), wontDo:false};
       let nx = null;
@@ -15378,7 +15444,7 @@ document.addEventListener('keydown', e=>{
         while(nx < today && guard++ < 800) nx = wtNextRepeat(nx, t.repeat);
         try{
           const ref = await DB.collection('todos').add({text:t.text||'', notes:t.notes||'', projectId:t.projectId||'', done:false, doneAt:null, createdAt:Date.now(),
-            dueDate:nx, priority:+t.priority||0, repeat:t.repeat, subtasks:(Array.isArray(t.subtasks)?t.subtasks:[]).map(x=>({id:x.id, text:x.text, done:false})), ...(t.mode==='ppoz'?{mode:'ppoz'}:{})});
+            dueDate:nx, priority:+t.priority||0, repeat:t.repeat, subtasks:(Array.isArray(t.subtasks)?t.subtasks:[]).map(x=>({id:x.id, text:x.text, done:false})), ...(t.mode?{mode:t.mode}:{})});
           upd.nextId = (ref && ref.id) || '';
         }catch(e){ nx = null; wtToast('Nie udało się utworzyć kolejnego powtórzenia.', true); }
       }
@@ -15386,7 +15452,7 @@ document.addEventListener('keydown', e=>{
       if(t) wtToastAction('Zrobione: „'+(String(t.text||'').length>40 ? String(t.text).slice(0,40)+'…' : (t.text||''))+'”'+(nx?' · następne '+wtDueInfo(nx).txt:''), 'Cofnij', ()=>window.wtToggleTodo(id, true));
     } else {
       const upd = {done:false, doneAt:null, wontDo:false};
-      if(t && t.nextId){ const n2 = allTodos.find(x=>x.id===t.nextId); if(n2 && !n2.done) DB.doc('todos/'+n2.id).delete().catch(()=>{}); upd.nextId = ''; }
+      if(t && t.nextId){ const n2 = allTodosRaw.find(x=>x.id===t.nextId); if(n2 && !n2.done) DB.doc('todos/'+n2.id).delete().catch(()=>{}); upd.nextId = ''; }
       DB.doc('todos/'+id).update(upd).catch(()=>{});
     }
   };
@@ -15638,6 +15704,7 @@ document.addEventListener('keydown', e=>{
     if(WT_REPEAT[t.repeat]) ic.push('<span class="wt-tm-ic" title="Powtarza się: '+WT_REPEAT[t.repeat].toLowerCase()+'">'+WT_ICS.repeat+'</span>');
     if(subs.length) ic.push('<span class="wt-tm-ic'+(subDone===subs.length?' ok':'')+'" title="Kroki">'+WT_ICS.sub+subDone+'/'+subs.length+'</span>');
     if(t.notes && t.notes.trim()) ic.push('<span class="wt-tm-ic" title="Zadanie ma notatkę">'+WT_ICS.note+'</span>');
+    { const ac = wtAreaChip(t); if(ac) ic.unshift(ac); }
     if(p && showList) ic.push('<span class="wt-tm-list"><span class="wt-list-dot" style="background:'+p.color+'"></span>'+esc(p.name)+'</span>');
     const di = t.dueDate && !t.done ? wtDueInfo(t.dueDate) : null;
     const right = t.done ? '<span class="wt-tt-when">'+esc(wtRelDay(t.doneAt))+'</span>' : (di ? '<span class="wt-tt-when wt-due-'+di.cls+'">'+esc(di.txt)+'</span>' : '');
@@ -15653,6 +15720,7 @@ document.addEventListener('keydown', e=>{
   function renderTodos(){
     const activeEl=document.getElementById('todoActive');
     if(!activeEl) return;
+    try{ wtAreaToggleRender(); }catch(e){}
     wtTodoWireDnD();
     const actAll = allTodos.filter(t=>!t.done);
     if(todoSelectedList!=='completed' && todoSelectedList!=='all' && !WT_SMART[todoSelectedList] && todoSelectedList!=='' && !wtProjectById(todoSelectedList)) todoSelectedList = 'all';
@@ -15832,6 +15900,7 @@ document.addEventListener('keydown', e=>{
     document.getElementById('taskDetailDone').checked=!!t.done;
     wtRefreshTaskListSelect();
     document.getElementById('taskDetailListSelect').value=t.projectId||'';
+    wtAreaSelectFill('taskDetailArea', 'taskDetailAreaLbl', t);
     document.getElementById('taskDetailNotes').value=t.notes||'';
     document.getElementById('taskDetailDue').value=t.dueDate||'';
     wtTaskPrioRender(+t.priority||0);
@@ -15980,6 +16049,7 @@ document.addEventListener('keydown', e=>{
     const meta = [];
     if(n.dueDate && !n.done) meta.push(wtDueChip(n.dueDate));
     if(n.dueDate && n.done) meta.push('<span class="wt-tm-ic ok">załatwione</span>');
+    { const ac = wtAreaChip(n); if(ac) meta.unshift(ac); }
     if(client) meta.push('<span class="wt-tm-list"><span class="wt-list-dot" style="background:'+client.color+'"></span>'+esc(client.name)+'</span>');
     if(items.length) meta.push('<span class="wt-tm-ic'+(iDone===items.length?' ok':'')+'" title="Lista do odhaczenia">'+WT_ICS.sub+iDone+'/'+items.length+'</span>');
     meta.push('<span>'+esc(wtRelDay(n.updatedAt||n.createdAt))+'</span>');
@@ -16006,6 +16076,7 @@ document.addEventListener('keydown', e=>{
   function renderNotatnikList(){
     const el = document.getElementById('notatnikList');
     if(!el) return;
+    try{ wtAreaToggleRender(); }catch(e){}
     const searchEl = document.getElementById('notatnikSearch');
     const query = (searchEl ? searchEl.value : '').trim().toLowerCase();
     const filterEl = document.getElementById('notatnikFilterClient');
@@ -16037,6 +16108,7 @@ document.addEventListener('keydown', e=>{
     document.getElementById('notatnikBody').value = n.body||'';
     wtRefreshNotatnikClientSelect();
     document.getElementById('notatnikClientSelect').value = n.projectId||'';
+    wtAreaSelectFill('notatnikArea', 'notatnikAreaLbl', n);
     document.getElementById('notatnikDue').value = n.dueDate||'';
     document.getElementById('notatnikDone').checked = !!n.done;
     wtNoteDueVis();
@@ -16189,7 +16261,37 @@ document.addEventListener('keydown', e=>{
      w oknie [-365, +30] dni i grupuje wg pilności: przekroczone / ≤7 dni / ≤14 dni / ≤30 dni.
      Każdy wpis używa tego samego mechanizmu nawigacji (nav / wtCalNavigateToEvent), co
      kalendarz — klik przenosi od razu do właściwego rejestru/wiersza. */
-  function wtCollectUrgentDeadlines(){
+  /* Terminy z modułów PPOŻ i OŚ dla widoków przekrojowych (Start, Terminy, Terminarz, karta klienta) — z filtrem obszarów.
+     Gotowość do kontroli PIP, analiza stanu i raporty BHP NIE używają tych terminów (wywołują collectory bez withAreas). */
+  let wtAreaF = {bhp:true, ppoz:true, os:true}; try{ const v = JSON.parse(localStorage.getItem('wt_area_f')||'null'); if(v) wtAreaF = Object.assign(wtAreaF, v); }catch(e){}
+  window.wtSetAreaF = function(a){ wtAreaF[a] = !wtAreaF[a]; if(!wtAreaF.bhp && !wtAreaF.ppoz && !wtAreaF.os) wtAreaF[a] = true; try{ localStorage.setItem('wt_area_f', JSON.stringify(wtAreaF)); }catch(e){} try{ wtScheduleCrossRender(); renderTerminySection(); renderCalendar(); }catch(e){} };
+  function wtAreaFilterHtml(){
+    if(!wtHasMultiArea()) return '';
+    return '<span class="wt-area-f" role="group" aria-label="Obszary terminów">'+['bhp','ppoz','os'].map(a=>'<button type="button" class="wt-area-chip '+a+(wtAreaF[a]?' on':' off')+'" aria-pressed="'+!!wtAreaF[a]+'" onclick="window.wtSetAreaF(\''+a+'\')">'+WT_AREA_L[a]+'</button>').join('')+'</span>';
+  }
+  window.wtAreaFilterHtml = wtAreaFilterHtml;
+  function wtCollectAreaEvents(startIso, endIso){
+    if(!wtHasMultiArea()) return [];
+    const out = [];
+    if(wtAreaF.ppoz) try{ wtPpozAllEvents().forEach(e=>{ if(!e.date || e.date<startIso || e.date>endIso) return; const cl = e.pid ? wtProjectById(e.pid) : null;
+      out.push({date:e.date, kind:'review', area:'ppoz', isDeadline:true, tag:'PPOŻ', title:e.title+(e.sub?' — '+e.sub:'')+(cl?' ('+cl.name+')':''), color:cl?cl.color:null, pid:cl?cl.id:null,
+        nav:{section:'ppoz-terminarz', openFn:'wtAreaOpen', id:'p|'+(e.kind||'')+'|'+(e.id||'')+'|'+(e.pid||'')}}); }); }catch(err){ console.error('PPOŻ w terminach', err); }
+    if(wtAreaF.os) try{ wtOsCollect().forEach(e=>{ if(e.missing || !e.date || e.date<startIso || e.date>endIso) return; const cl = e.pid ? wtProjectById(e.pid) : null;
+      out.push({date:e.date, kind:'review', area:'os', isDeadline:true, tag:'OŚ', title:e.title+(cl?' ('+cl.name+')':''), color:cl?cl.color:null, pid:cl?cl.id:null,
+        nav:{section:'os-klienci', openFn:'wtAreaOpen', id:'o|'+(e.pid||'')+'|'+(e.k||'')}}); }); }catch(err){ console.error('OŚ w terminach', err); }
+    return out;
+  }
+  window.wtAreaOpen = function(key){
+    const [t, a, b, c] = String(key).split('|');
+    if(t==='p'){ if(c && window.wtPpozPickClient) window.wtPpozPickClient(c); if(window.wtPpozOpenEvent) window.wtPpozOpenEvent(a, b); }
+    else if(t==='o' && window.wtOsOpenEvent) window.wtOsOpenEvent(a, b);
+  };
+  /* wspólny filtr: wyłączony obszar BHP chowa terminy BHP, wyłączone PPOŻ / OŚ — ich terminy */
+  function wtWithAreas(events, startIso, endIso){
+    const base = wtAreaF.bhp || !wtHasMultiArea() ? events : events.filter(e=>e.area);
+    return base.concat(wtCollectAreaEvents(startIso, endIso));
+  }
+  function wtCollectUrgentDeadlines(withAreas){
     const now = new Date();
     const past = new Date(now); past.setDate(past.getDate()-365);
     const future = new Date(now); future.setDate(future.getDate()+30);
@@ -16197,7 +16299,8 @@ document.addEventListener('keydown', e=>{
     const endIso = calIso(future.getFullYear(), future.getMonth(), future.getDate());
     const todayIso = calIso(now.getFullYear(), now.getMonth(), now.getDate());
     /* calendarOnly: data wykonanej czynności (np. pomiaru) — widoczna w Terminarzu, ale to nie jest termin do zrobienia */
-    const events = wtCollectWeekEvents(startIso, endIso).filter(e=>e.kind!=='custom' && !e.calendarOnly && !(e.kind==='register' && !e.isDeadline && e.date<todayIso));
+    let events = wtCollectWeekEvents(startIso, endIso).filter(e=>e.kind!=='custom' && !e.calendarOnly && !(e.kind==='register' && !e.isDeadline && e.date<todayIso));
+    if(withAreas) events = wtWithAreas(events, startIso, endIso);
     const buckets = {overdue:[], crit:[], warn:[], notice:[]};
     events.forEach(e=>{
       const days = wtDaysUntil(e.date);
@@ -16214,7 +16317,8 @@ document.addEventListener('keydown', e=>{
   function wtRenderOverdueRegPanel(){
     const list = document.getElementById('wtOverdueRegList');
     if(!list) return;
-    const buckets = wtCollectUrgentDeadlines();
+    { const af = document.getElementById('wtStartAreaF'); if(af) af.innerHTML = wtAreaFilterHtml(); }
+    const buckets = wtCollectUrgentDeadlines(true);
     const total = buckets.overdue.length+buckets.crit.length+buckets.warn.length+buckets.notice.length;
     const nowCount = buckets.overdue.length+buckets.crit.length;
     const tabLbl = {now:'Teraz'+(nowCount?' ('+nowCount+')':''), all:'30 dni'+(total?' ('+total+')':''), week:'Tydzień'};
@@ -16323,7 +16427,7 @@ document.addEventListener('keydown', e=>{
     eyebrowEl.textContent = dayName.charAt(0).toUpperCase()+dayName.slice(1)+' · '+now.getDate()+' '+MONTH_NAMES[now.getMonth()]+' '+now.getFullYear()+' · tydzień '+wtIsoWeekNumber(now);
     const h = now.getHours();
     hEl.textContent = h<5 ? 'Dobranoc' : h<18 ? 'Dzień dobry' : 'Dobry wieczór';
-    const buckets = wtCollectUrgentDeadlines();
+    const buckets = wtCollectUrgentDeadlines(true);
     const overCount = buckets.overdue.length, soonCount = buckets.crit.length;
     const clientCount = wtClientProjects().length;
     const openAccidents = (typeof allAccidentCases!=='undefined' ? allAccidentCases : []).filter(c=>!c.approvalDate).length;
@@ -16350,7 +16454,7 @@ document.addEventListener('keydown', e=>{
       const cl = wtProjectById(v.projectId);
       rows.push({cls:'ev', txt:'Wizyta: '+(cl?cl.name:'klient'), js:"window.wtVisitEdit('"+v.id+"')"});
     });
-    const dueToday = wtCollectUrgentDeadlines().crit.filter(it=>it.days===0).length;
+    const dueToday = wtCollectUrgentDeadlines(true).crit.filter(it=>it.days===0).length;
     if(dueToday) rows.push({cls:'due', txt:dueToday+' '+wtPl(dueToday,'termin','terminy','terminów')+' na dziś', js:"wtStartScrollToTaskTab('now')"});
     const mk = wtCurMonth();
     const owed = wtClientProjects().map(p=>{ const plan = wtNum(wtBilling(p).visitsPerMonth); return plan ? {p, plan, done: wtVisitsFor(p.id, mk).length} : null; })
@@ -16370,7 +16474,7 @@ document.addEventListener('keydown', e=>{
   const CLIENT_HORIZON_DAYS = 30;
   function wtCollectStartClientUrgency(){
     const clients = wtClientProjects();
-    const bkAll = wtCollectUrgentDeadlines();
+    const bkAll = wtCollectUrgentDeadlines(true);
     const allEvents = [].concat(bkAll.overdue, bkAll.crit, bkAll.warn, bkAll.notice);
     /* źródła z własnym, zagregowanym powodem poniżej (z progami ostrzeżeń danego rejestru) — nie dublujemy ich pojedynczymi terminami */
     const OWN_REASON_TAGS = ['z Maszyn','z Terminów przeglądów','z Terminów uprawnień','z Kartoteki pracowników','Umowa z klientem'];
@@ -16988,6 +17092,7 @@ document.addEventListener('keydown', e=>{
     registerDates.push(...wtCollectEmployeeDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
     registerDates.push(...wtCollectMyPermDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
     registerDates.push(...wtCollectRecommendationDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
+    registerDates.push(...wtCollectAreaEvents(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())).map(e=>Object.assign({}, e, {title:WT_AREA_L[e.area]+' · '+e.title})));
     registerDates.push(...wtCollectAccidentDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
     registerDates.push(...wtCollectMachineDatesForMonth(calYear, calMonth));
     registerDates.push(...wtCollectChemDatesInRange(calIso(calYear, calMonth, 1), calIso(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate())));
@@ -19314,7 +19419,7 @@ document.addEventListener('keydown', e=>{
       const top = u && u.reasons && u.reasons[0];
       const topGo = top ? (top.js || "window.wtKlGo('"+p.id+"','"+top.tab+"','"+top.target+"')") : '';
       const why = top ? '<div class="wt-kl-why"><span role="link" tabindex="0" onclick="event.stopPropagation();'+topGo+'">'+esc(top.txt)+'</span>'+(u.reasons.length>1 ? ' <em>+ '+(u.reasons.length-1)+' w widoku klienta</em>' : '')+'</div>' : '';
-      const taskCount = allTodos.filter(t=>t.projectId===p.id && !t.done).length;
+      const taskCount = allTodosRaw.filter(t=>t.projectId===p.id && !t.done).length;
       const regCount = allVersions.filter(v=>v.projectId===p.id).length;
       const auditCount = allChecklistSnapshots.filter(a=>a.projectId===p.id && a.source!=='obc').length;
       const obcCount = allChecklistSnapshots.filter(a=>a.projectId===p.id && a.source==='obc').length;
@@ -19405,14 +19510,14 @@ document.addEventListener('keydown', e=>{
     function klienciTaskRow(t){
       return '<div class="wt-todo-row'+(t.done?' done':'')+'" data-id="'+t.id+'" data-done="'+(t.done?1:0)+'">'
         +'<input type="checkbox" class="wt-todo-check" data-action="toggle" aria-label="Oznacz jako '+(t.done?'do zrobienia':'zrobione')+'" title="Oznacz jako '+(t.done?'do zrobienia':'zrobione')+'"'+(t.done?' checked':'')+'>'
-        +'<div class="wt-todo-main" data-action="opentask" title="Otwórz w Zadaniach"><div class="wt-todo-text">'+esc(t.text)+'</div>'
+        +'<div class="wt-todo-main" data-action="opentask" title="Otwórz w Zadaniach"><div class="wt-todo-text">'+wtAreaChip(t, true)+esc(t.text)+'</div>'
         +(t.notes ? '<div style="font-size:12.5px;color:var(--ink-soft);margin-top:4px;white-space:pre-wrap;line-height:1.45;">'+esc(t.notes)+'</div>' : '')
         +'</div>'
         +'<span class="wt-iconbtn danger wt-todo-del" data-action="deletetask" title="Usuń zadanie"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>'
         +'</div>';
     }
-    const activeTasks = allTodos.filter(t=>t.projectId===klienciCurrentId && !t.done).sort((a,b)=>a.createdAt-b.createdAt);
-    const doneTasks = allTodos.filter(t=>t.projectId===klienciCurrentId && t.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
+    const activeTasks = allTodosRaw.filter(t=>t.projectId===klienciCurrentId && !t.done).sort((a,b)=>a.createdAt-b.createdAt);
+    const doneTasks = allTodosRaw.filter(t=>t.projectId===klienciCurrentId && t.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
     let tasksHtml = activeTasks.length ? activeTasks.map(klienciTaskRow).join('')
       : (doneTasks.length ? '' : '<div class="wt-empty">Brak zadań dla tego klienta.</div>');
     if(doneTasks.length){
@@ -19486,10 +19591,10 @@ document.addEventListener('keydown', e=>{
     renderClientTrn();
     wtKlRenderSummaries();
     renderClientRecurringIssues();
-    const notes = allNotes.filter(n=>n.projectId===klienciCurrentId).sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
+    const notes = allNotesRaw.filter(n=>n.projectId===klienciCurrentId).sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
     document.getElementById('klienciNotes').innerHTML = notes.length ? notes.map(n=>
       '<div class="wt-rj-versioncard" data-id="'+n.id+'">'
-        +'<div class="info"><h4>'+esc(n.title||'(bez tytułu)')+'</h4>'
+        +'<div class="info"><h4>'+wtAreaChip(n, true)+esc(n.title||'(bez tytułu)')+'</h4>'
         +'<div class="meta"><span>'+esc(noteSnippet(n.body))+'</span></div></div>'
         +'<div class="wt-rj-actions">'+iconBtn('opennote','Otwórz w Notatniku','M9 6l6 6-6 6')+'</div></div>'
     ).join('') : '<div class="wt-empty">Brak notatek przypisanych do tego klienta. Przypisz je w Notatniku (pole „Klient”).</div>';
@@ -21020,7 +21125,7 @@ document.addEventListener('keydown', e=>{
     const fut = new Date(now); fut.setDate(fut.getDate()+ (trmState.range==='overdue' ? 0 : parseInt(trmState.range,10)||30));
     const startIso = calIso(past.getFullYear(), past.getMonth(), past.getDate());
     const endIso = calIso(fut.getFullYear(), fut.getMonth(), fut.getDate());
-    let ev = wtCollectWeekEvents(startIso, endIso).filter(e=>(e.kind!=='custom' || e.date>=wtTodayIso()) && !e.calendarOnly && !(e.kind==='register' && !e.isDeadline && e.date<wtTodayIso()));
+    let ev = wtWithAreas(wtCollectWeekEvents(startIso, endIso), startIso, endIso).filter(e=>(e.kind!=='custom' || e.date>=wtTodayIso()) && !e.calendarOnly && !(e.kind==='register' && !e.isDeadline && e.date<wtTodayIso()));
     const today = wtTodayIso();
     if(trmState.range==='overdue') ev = ev.filter(e=>e.date<today);
     ev = ev.map(e=>{
@@ -21045,6 +21150,9 @@ document.addEventListener('keydown', e=>{
     const cs = document.getElementById('terminyClient');
     if(cs) cs.innerHTML = '<option value="">Wszyscy klienci</option>'+wtClientProjects().map(p=>'<option value="'+p.id+'"'+(p.id===trmState.client?' selected':'')+'>'+esc(p.name)+'</option>').join('');
     const list = wtTrmCollect();
+    { const af = document.getElementById('terminyAreaF'), ts0 = document.getElementById('terminyTag');
+      if(!af && ts0 && wtHasMultiArea()){ const sp = document.createElement('span'); sp.id = 'terminyAreaF'; ts0.insertAdjacentElement('beforebegin', sp); }
+      const af2 = document.getElementById('terminyAreaF'); if(af2) af2.innerHTML = wtAreaFilterHtml(); }
     const ts = document.getElementById('terminyTag');
     if(ts){
       const tags = Array.from(new Set(wtTrmCollectTagsCache())).sort();
@@ -21067,7 +21175,8 @@ document.addEventListener('keydown', e=>{
   }
   function wtTrmCollectTagsCache(){
     const now = new Date(); const a = new Date(now); a.setDate(a.getDate()-730); const b = new Date(now); b.setDate(b.getDate()+365);
-    return wtCollectWeekEvents(calIso(a.getFullYear(),a.getMonth(),a.getDate()), calIso(b.getFullYear(),b.getMonth(),b.getDate()))
+    const s0 = calIso(a.getFullYear(),a.getMonth(),a.getDate()), s1 = calIso(b.getFullYear(),b.getMonth(),b.getDate());
+    return wtWithAreas(wtCollectWeekEvents(s0, s1), s0, s1)
       .map(e=>e.tag || (e.kind==='todo'?'Zadania':e.kind==='note'?'Notatnik':e.kind==='custom'?'Terminarz':'Inne'));
   }
   window.wtTrmSet = function(k, v){ trmState[k] = v; renderTerminySection(); };
@@ -21164,7 +21273,7 @@ document.addEventListener('keydown', e=>{
     wtDailyNotifTimer = setTimeout(()=>{
       const today = wtTodayIso();
       try{ if(!force && localStorage.getItem('wtDailyNotifLast')===today) return; }catch(e){}
-      const b = wtCollectUrgentDeadlines();
+      const b = wtCollectUrgentDeadlines(true);
       const over = b.overdue.length, soon = b.crit.length;
       if(!over && !soon && !force) return;
       try{
@@ -21726,7 +21835,7 @@ document.addEventListener('keydown', e=>{
     const done = wtWorkDoneOn(cid, from, to);
     const open = wtRecFilter(wtCollectRecommendations(), {client:cid, status:'open', source:'', q:''});
     const t = new Date(); const t30 = new Date(t); t30.setDate(t30.getDate()+30);
-    const upcoming = wtCollectWeekEvents(wtTodayIso(), calIso(t30.getFullYear(), t30.getMonth(), t30.getDate())).filter(e=>(e.pid||e.projectId)===cid && e.kind!=='custom' && e.kind!=='todo' && e.kind!=='note').sort((a,b)=>a.date.localeCompare(b.date));
+    const upcoming = (()=>{ const a0 = wtTodayIso(), a1 = calIso(t30.getFullYear(), t30.getMonth(), t30.getDate()); return wtCollectWeekEvents(a0, a1).concat(wtCollectAreaEvents(a0, a1)); })().filter(e=>(e.pid||e.projectId)===cid && e.kind!=='custom' && e.kind!=='todo' && e.kind!=='note').sort((a,b)=>a.date.localeCompare(b.date));
     const emps = wtEmployeesFor(cid).filter(wtEmpActive);
     const empIssues = emps.filter(e=>wtEmpStatus(e).issues>0).length;
     return {p, visits, done, open, upcoming, emps, empIssues};
@@ -26682,7 +26791,7 @@ document.addEventListener('keydown', e=>{
     const empIssues = emps.filter(e=>wtEmpStatus(e).issues>0).length;
     const st = wtClientStatus(p);
     const contractSt = p.contractEnd ? wtPrzStatusFor(p.contractEnd) : null;
-    const tasks = allTodos.filter(t=>t.projectId===p.id && !t.done).length;
+    const tasks = allTodosRaw.filter(t=>t.projectId===p.id && !t.done).length;
     const cases = allAccidentCases.filter(c=>c.projectId===p.id && !c.approvalDate).length; // sprawa otwarta = protokół niezatwierdzony
     const reviewBad = /crit|high/.test(st.reviewHtml), upwBad = /crit|high/.test(st.upwHtml);
     const items = [];
@@ -26767,6 +26876,7 @@ document.addEventListener('keydown', e=>{
     renderClientView();
   };
   window.wtKlienciOpenTask = function(id){
+    if(!allTodos.some(x=>x.id===id) && allTodosRaw.some(x=>x.id===id)){ window.wtSetAreaAll(true); wtToast('Włączono widok „Wszystkie obszary”, żeby pokazać zadanie z innego modułu.'); }
     const t = allTodos.find(x=>x.id===id);
     showSection('todo');
     todoSelectedList = t ? (t.projectId || '') : 'all';
@@ -29498,7 +29608,7 @@ document.addEventListener('keydown', e=>{
       else if(btn.dataset.action==='viewaudit') window.wtViewAudit(id);
       else if(btn.dataset.action==='delaudit') window.wtDeleteAudit(id);
       else if(btn.dataset.action==='auditreport') window.wtOpenAuditReport(id);
-      else if(btn.dataset.action==='opennote'){ showSection('notatnik'); window.wtSelectNote(id); }
+      else if(btn.dataset.action==='opennote'){ if(!allNotes.some(x=>x.id===id) && allNotesRaw.some(x=>x.id===id)) window.wtSetAreaAll(true); showSection('notatnik'); window.wtSelectNote(id); }
       else if(btn.dataset.action==='openrisk'){ showSection('oceny-ryzyka'); window.wtRyzOpen(id); }
       else if(btn.dataset.action==='openreview'){ showSection('terminy-kontroli'); window.wtPrzOpen(id); }
       else if(btn.dataset.action==='openmachine'){ showSection('maszyny'); window.wtMaszOpen(id); }
@@ -30794,7 +30904,7 @@ document.addEventListener('keydown', e=>{
     const changed = m!==wtMode;
     wtMode = m; try{ localStorage.setItem('wt_mode', m); }catch(e){}
     wtApplyModeClass();
-    if(changed){ allTodos = wtByMode(allTodosRaw); allNotes = wtByMode(allNotesRaw); try{ renderTodos(); renderNotatnikList(); }catch(e){} wtInvalidateSearchIndex(); wtScheduleCrossRender(); }
+    if(changed){ allTodos = wtByMode(allTodosRaw); allNotes = wtByMode(allNotesRaw); try{ renderTodos(); renderNotatnikList(); }catch(e){} try{ wtAreaToggleRender(); }catch(e){} wtInvalidateSearchIndex(); wtScheduleCrossRender(); }
     if(changed && !(opts && opts.noNav)) showSection(m==='ppoz' ? 'ppoz-start' : m==='os' ? 'os-start' : 'start');
   };
   window.wtGetMode = ()=>wtMode;
