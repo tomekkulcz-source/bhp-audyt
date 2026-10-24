@@ -29273,9 +29273,18 @@ document.addEventListener('keydown', e=>{
      całkowity rozmiar opublikowanego Artifactu (limit platformy) — patrz notatka przy dodawaniu
      kolejnych kompendiów. Ponieważ kompendia (w odróżnieniu od Dokumentów PDF) działają w OBU
      trybach, tu właśnie następuje rozgałęzienie natywny/własny opisane wyżej. */
-  window.wtOpenStaticPdf = function(title, dataUri){
+  window.wtOpenStaticPdf = async function(title, dataUri){
     try{
-      const bytes = base64ToBytes(dataUri);
+      /* wersja na Cloudflare: kompendia są osobnymi plikami (kompendia/*.pdf, zob. tools/build_web.py),
+         wersja lokalna i claude.ai — wbudowane data: URI */
+      let bytes;
+      if(/^data:/.test(dataUri)) bytes = base64ToBytes(dataUri);
+      else {
+        wtToast('Wczytuję kompendium…');
+        const r = await fetch(dataUri, {credentials:'same-origin'});
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        bytes = new Uint8Array(await r.arrayBuffer());
+      }
       /* Tryb natywny (iframe + blob:, przeglądarka PDF wbudowana w Chrome) nie działa WYŁĄCZNIE
          wewnątrz sandboksa opublikowanego Artifactu na claude.ai (zob. komentarz przy
          wtSetPdfViewerMode powyżej) — to jedyne realne ograniczenie, nie ma nic wspólnego z tym,
