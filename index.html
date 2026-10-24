@@ -9159,9 +9159,7 @@ temat!"><td class="zw-lp mono"></td><td class="small">BHP / Książki</td><td><s
     <p>Jeden widok na klienta: jego zadania, wersje rejestrów, historia audytów, oceny ryzyka zawodowego, terminy przeglądów i maszyny w jednym miejscu.</p>
   </div>
   <div class="wt-toolbar wt-kl-listonly">
-    <input class="wt-input grow" id="klienciNewInput" type="text" placeholder="Nazwa nowego klienta / firmy…" maxlength="120" onkeydown="if(event.key==='Enter') wtKlienciCreate();">
-    <span class="wt-svc-pick" role="group" aria-label="Usługi dla nowego klienta"><span class="lbl">Usługi:</span><label class="wt-svc-opt bhp"><input type="checkbox" id="klNewSvc_bhp" checked><span>BHP</span></label><label class="wt-svc-opt ppoz"><input type="checkbox" id="klNewSvc_ppoz"><span>PPOŻ</span></label><label class="wt-svc-opt os"><input type="checkbox" id="klNewSvc_os"><span>OŚ</span></label></span>
-    <button class="wt-btn primary" onclick="wtKlienciCreate()">
+    <button class="wt-btn primary" type="button" onclick="window.wtClientAdd('bhp')">
       <svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
       Nowy klient
     </button>
@@ -16590,7 +16588,7 @@ document.addEventListener('keydown', e=>{
   window.wtStartToggleOkClients = function(){ window.wtStartShowOkClients = !window.wtStartShowOkClients; wtRenderStartClientUrgency(); };
   window.wtStartOnboardAddClient = function(){
     showSection('klienci');
-    setTimeout(()=>{ const i = document.getElementById('klienciNewInput'); if(i){ i.scrollIntoView({block:'center'}); i.focus(); } }, 60);
+    setTimeout(()=>window.wtClientAdd('bhp'), 60);
   };
   /* Start: karty „Stan klientów” — stan (z tej samej oceny co dawna lista „Klienci wymagający uwagi”)
      i trzy liczby, które go uzasadniają; klik otwiera klienta */
@@ -24810,7 +24808,7 @@ document.addEventListener('keydown', e=>{
       {l:'Nowa notatka', k:['notatk'], c:false, go:()=>{ showSection('notatnik'); window.wtAddNote(); }},
       {l:'Analiza stanu BHP', k:['analiz'], c:true, go:cid=>{ if(cid) window.wtAnalysisOpen(cid); else window.wtAnalysisPickClient(); }},
       {l:'Zestawienie dla klienta (PDF)', k:['zestawien','raport'], c:true, onlyClient:true, go:cid=>window.wtClientSummaryPdf(cid)},
-      {l:'Nowy klient', k:['klient','firma'], c:false, go:()=>{ showSection('klienci'); window.wtKlienciShowList(); const i=document.getElementById('klienciNewInput'); if(i) i.focus(); }},
+      {l:'Nowy klient', k:['klient','firma'], c:false, go:()=>{ showSection('klienci'); window.wtKlienciShowList(); window.wtClientAdd('bhp'); }},
       {l:'Eksportuj kopię zapasową', k:['kopia','backup','eksport'], c:false, go:()=>window.wtExportBackup()}
     ];
     try{ const k = document.getElementById('gsearchKbd'); if(k) k.textContent = /Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent) ? '⌘K' : 'Ctrl K'; }catch(e){}
@@ -30986,7 +30984,7 @@ document.addEventListener('keydown', e=>{
       +'<button type="button" class="wt-btn" onclick="window.wtPpozCloseModal();window.wtPpozEditObject(null)">Obiekt / strefa pożarowa</button>'
       +'<button type="button" class="wt-btn" onclick="window.wtPpozCloseModal();window.wtPpozEditDevice(null)">Urządzenie lub gaśnica</button>'
       +'<button type="button" class="wt-btn" onclick="window.wtPpozCloseModal();showSection(\'ppoz-kontrola\')">Kontrola ppoż.</button>'
-      +'<button type="button" class="wt-btn" onclick="window.wtPpozCloseModal();window.wtPpozAddClient()">Klient do modułu PPOŻ</button></div>'
+      +'<button type="button" class="wt-btn" onclick="window.wtPpozCloseModal();window.wtPpozAddClient()">+ Nowy klient</button></div>'
       +(cid?'':'<p class="small">Najpierw dodaj klienta do modułu PPOŻ.</p>'), null);
   }
 
@@ -31002,10 +31000,10 @@ document.addEventListener('keydown', e=>{
   window.wtPpozPickClient = function(id){ wtPpozClientId = id; try{ localStorage.setItem('wt_ppoz_client', id); }catch(e){} wtPpozRerenderIbp = true; wtPpozRerender(); };
   function wtPpozClientBar(){
     const cl = wtPpozClients(); const cid = wtPpozSelClient();
-    if(!cl.length) return '<div class="wt-pz-empty"><p>Nie masz jeszcze klientów w module PPOŻ.</p><button class="wt-btn primary" type="button" onclick="window.wtPpozAddClient()">Dodaj klienta do PPOŻ</button></div>';
+    if(!cl.length) return '<div class="wt-pz-empty"><p>Nie masz jeszcze klientów w module PPOŻ.</p><button class="wt-btn primary" type="button" onclick="window.wtPpozAddClient()">+ Nowy klient</button></div>';
     return '<div class="wt-pz-clientbar"><label class="small" for="wtPzClient">Klient</label><select id="wtPzClient" class="wt-input" onchange="window.wtPpozPickClient(this.value)">'
       +cl.map(c=>'<option value="'+esc(c.id)+'"'+(c.id===cid?' selected':'')+'>'+esc(c.name||'Klient')+'</option>').join('')+'</select>'
-      +'<button class="wt-btn ghost" type="button" onclick="window.wtPpozAddClient()">+ Klient</button></div>';
+      +'<button class="wt-btn ghost" type="button" onclick="window.wtPpozAddClient()">+ Nowy klient</button></div>';
   }
   function wtPpozRerender(){
     const act = document.querySelector('.section.active'); const k = act ? act.id.replace('sec-','') : '';
@@ -31023,26 +31021,7 @@ document.addEventListener('keydown', e=>{
   window.wtPpozRerender = wtPpozRerender;
 
   /* ---------------- klienci: dołączanie do PPOŻ i zakres usług ---------------- */
-  window.wtPpozAddClient = function(){
-    const others = allProjects.filter(p=>p.isClient!==false && !(p.services && p.services.ppoz===true)).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pl'));
-    wtPpozModal('Klient w module PPOŻ',
-      (others.length ? '<label class="wt-pz-f"><span>Istniejący klient (z kartoteki firm)</span><select class="wt-input" id="wtPzAddSel"><option value="">— wybierz —</option>'+others.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name||'')+'</option>').join('')+'</select></label><p class="small wt-pz-or">albo</p>' : '')
-      +'<label class="wt-pz-f"><span>Nowa firma</span><input class="wt-input" id="wtPzAddNew" placeholder="Nazwa firmy"></label>'+wtSvcPickHtml('wtPzNewSvc_', 'ppoz')
-      +'<p class="small">Dane firmy są wspólne dla BHP, PPOŻ i OŚ — firma pojawia się w danym module tylko przy zaznaczonej usłudze. Usługi zmienisz też później w karcie klienta.</p>',
-      async ()=>{
-        const sel = (document.getElementById('wtPzAddSel')||{}).value, nm = (document.getElementById('wtPzAddNew').value||'').trim();
-        if(!DB){ wtToast('Zapis wymaga otwarcia narzędzia jako strony.', true); return false; }
-        if(sel){
-          const p = wtProjectById(sel);
-          await DB.doc('client_projects/'+sel).update({services:Object.assign({bhp:true}, p.services||{}, {ppoz:true})});
-          window.wtPpozPickClient(sel); wtToast('Dodano klienta do modułu PPOŻ.'); return true;
-        }
-        if(!nm){ wtToast('Wybierz klienta albo wpisz nazwę nowej firmy.', true); return false; }
-        const ref = await DB.collection('client_projects').add({name:nm, color:wtNextListColor(), createdAt:Date.now(), isClient:true, services:wtSvcPickRead('wtPzNewSvc_', 'ppoz')});
-        if(ref && ref.id) window.wtPpozPickClient(ref.id);
-        wtToast('Dodano firmę do modułu PPOŻ.'); return true;
-      }, 'Dodaj');
-  };
+  window.wtPpozAddClient = function(){ window.wtClientAdd('ppoz'); };
   window.wtPpozSetService = function(cid, key, val){
     const p = wtProjectById(cid); if(!p || !DB) return;
     const sv = Object.assign({bhp:true, ppoz:false}, p.services||{}); sv[key] = !!val;
@@ -31314,7 +31293,7 @@ document.addEventListener('keydown', e=>{
   function wtPpozRenderStart(){
     const box = document.getElementById('ppozStart'); if(!box) return;
     const cl = wtPpozClients();
-    if(!cl.length){ box.innerHTML = '<div class="wt-pz-empty"><h3>Moduł PPOŻ</h3><p>Dodaj klienta do modułu PPOŻ — możesz wybrać firmę z istniejącej kartoteki (dane są wspólne z BHP) albo dodać nową, obsługiwaną tylko w zakresie PPOŻ.</p><button class="wt-btn primary" type="button" onclick="window.wtPpozAddClient()">Dodaj klienta do PPOŻ</button></div>'; return; }
+    if(!cl.length){ box.innerHTML = '<div class="wt-pz-empty"><h3>Moduł PPOŻ</h3><p>Dodaj klienta do modułu PPOŻ — możesz wybrać firmę z istniejącej kartoteki (dane są wspólne z BHP) albo dodać nową, obsługiwaną tylko w zakresie PPOŻ.</p><button class="wt-btn primary" type="button" onclick="window.wtPpozAddClient()">+ Nowy klient</button></div>'; return; }
     const ev = wtPpozCollectDeadlines();
     const over = ev.filter(e=>e.days!==null && e.days<0).sort((a,b)=>a.days-b.days);
     const soon = ev.filter(e=>e.days!==null && e.days>=0 && e.days<=60).sort((a,b)=>a.days-b.days);
@@ -33324,25 +33303,40 @@ document.addEventListener('keydown', e=>{
   window.wtOsPickClient = function(id){ wtOsClientId = id; try{ localStorage.setItem('wt_os_client', id); }catch(e){} wtOsRerender(); };
   function wtOsClientBar(){
     const cl = wtOsClients(); const cid = wtOsSelClient();
-    if(!cl.length) return '<div class="wt-pz-empty"><p>Nie masz jeszcze klientów w module OŚ.</p><button class="wt-btn primary" type="button" onclick="window.wtOsAddClient()">Dodaj klienta do OŚ</button></div>';
+    if(!cl.length) return '<div class="wt-pz-empty"><p>Nie masz jeszcze klientów w module OŚ.</p><button class="wt-btn primary" type="button" onclick="window.wtOsAddClient()">+ Nowy klient</button></div>';
     return '<div class="wt-pz-clientbar"><label class="small" for="wtOsClient">Klient</label><select id="wtOsClient" class="wt-input" onchange="window.wtOsPickClient(this.value)">'
       +cl.map(c=>'<option value="'+esc(c.id)+'"'+(c.id===cid?' selected':'')+'>'+esc(c.name||'Klient')+'</option>').join('')+'</select>'
-      +'<button class="wt-btn ghost" type="button" onclick="window.wtOsAddClient()">+ Klient</button></div>';
+      +'<button class="wt-btn ghost" type="button" onclick="window.wtOsAddClient()">+ Nowy klient</button></div>';
   }
-  window.wtOsAddClient = function(){
-    const others = allProjects.filter(p=>p.isClient!==false && !(p.services && p.services.os===true)).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pl'));
-    wtPpozModal('Klient w module OŚ',
-      (others.length ? '<label class="wt-pz-f"><span>Istniejący klient (z kartoteki firm)</span><select class="wt-input" id="wtOsAddSel"><option value="">— wybierz —</option>'+others.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name||'')+'</option>').join('')+'</select></label><p class="small wt-pz-or">albo</p>' : '')
-      +'<label class="wt-pz-f"><span>Nowa firma</span><input class="wt-input" id="wtOsAddNew" placeholder="Nazwa firmy"></label>'+wtSvcPickHtml('wtOsNewSvc_', 'os')
-      +'<p class="small">Dane firmy są wspólne dla BHP, PPOŻ i OŚ — firma pojawia się w danym module tylko przy zaznaczonej usłudze. Usługi zmienisz też później w karcie klienta.</p>',
+  window.wtOsAddClient = function(){ window.wtClientAdd('os'); };
+  /* Wspólne okienko „Nowy klient” dla BHP, PPOŻ i OŚ: nowa firma z wyborem usług albo istniejąca firma z kartoteki dołączana do modułu. */
+  window.wtClientAdd = function(area){
+    area = WT_AREA_L[area] ? area : 'bhp';
+    const has = p=>area==='bhp' ? !(p.services && p.services.bhp===false) : !!(p.services && p.services[area]===true);
+    const others = allProjects.filter(p=>p.isClient!==false && !has(p)).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pl'));
+    const open = id=>{ if(area==='bhp'){ showSection('klienci'); setTimeout(()=>{ if(window.wtKlienciOpen) window.wtKlienciOpen(id); }, 250); } else if(area==='ppoz') window.wtPpozPickClient(id); else window.wtOsPickClient(id); };
+    wtPpozModal('Nowy klient',
+      '<label class="wt-pz-f"><span>Nazwa firmy</span><input class="wt-input" id="wtCaName" placeholder="np. Kowalski Sp. z o.o." maxlength="120" onkeydown="if(event.key===\'Enter\')window.wtPpozModalOk()"></label>'
+      +wtSvcPickHtml('wtCaSvc_', '').replace('id="wtCaSvc_'+area+'"', 'id="wtCaSvc_'+area+'" checked')
+      +'<p class="small">Klient pojawi się w każdym zaznaczonym module. Usługi zmienisz też później w karcie klienta.</p>'
+      +(others.length ? '<p class="small wt-pz-or">albo</p><label class="wt-pz-f"><span>Dodaj firmę, którą już masz, do modułu '+WT_AREA_L[area]+'</span><select class="wt-input" id="wtCaSel"><option value="">— wybierz z kartoteki —</option>'+others.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name||'')+'</option>').join('')+'</select></label>' : ''),
       async ()=>{
-        const sel = (document.getElementById('wtOsAddSel')||{}).value, nm = (document.getElementById('wtOsAddNew').value||'').trim();
         if(!DB){ wtToast('Zapis wymaga otwarcia narzędzia jako strony.', true); return false; }
-        if(sel){ const p = wtProjectById(sel); await DB.doc('client_projects/'+sel).update({services:Object.assign({bhp:true}, p.services||{}, {os:true})}); window.wtOsPickClient(sel); wtToast('Dodano klienta do modułu OŚ.'); return true; }
-        if(!nm){ wtToast('Wybierz klienta albo wpisz nazwę nowej firmy.', true); return false; }
-        const ref = await DB.collection('client_projects').add({name:nm, color:wtNextListColor(), createdAt:Date.now(), isClient:true, services:wtSvcPickRead('wtOsNewSvc_', 'os')});
-        if(ref && ref.id) window.wtOsPickClient(ref.id); wtToast('Dodano firmę do modułu OŚ.'); return true;
-      }, 'Dodaj');
+        const sel = (document.getElementById('wtCaSel')||{}).value, nm = (document.getElementById('wtCaName').value||'').trim();
+        if(sel && !nm){
+          const p = wtProjectById(sel); const sv = Object.assign({bhp:true}, p.services||{}); sv[area] = true;
+          await DB.doc('client_projects/'+sel).update({services:sv}); open(sel); wtToast('Dodano „'+(p.name||'')+'” do modułu '+WT_AREA_L[area]+'.'); return true;
+        }
+        if(!nm){ wtToast('Wpisz nazwę nowej firmy albo wybierz firmę z kartoteki.', true); return false; }
+        const sv = wtSvcPickRead('wtCaSvc_', '');
+        if(!sv.bhp && !sv.ppoz && !sv.os){ wtToast('Zaznacz co najmniej jedną usługę: BHP, PPOŻ albo OŚ.', true); return false; }
+        const ref = await DB.collection('client_projects').add({name:nm, color:wtNextListColor(), createdAt:Date.now(), isClient:true, services:sv});
+        const where = ['bhp','ppoz','os'].filter(a=>sv[a]).map(a=>WT_AREA_L[a]).join(', ');
+        if(sv[area]){ if(ref && ref.id) open(ref.id); wtToast('Dodano „'+nm+'” — usługi: '+where+'.'); }
+        else wtToast('Dodano „'+nm+'” — klient jest w module '+where+', nie w '+WT_AREA_L[area]+'.');
+        return true;
+      }, 'Dodaj klienta');
+    setTimeout(()=>{ const i = document.getElementById('wtCaName'); if(i) i.focus(); }, 60);
   };
   /* zapis (debounce) */
   let wtOsPending = null, wtOsPendCid = '', wtOsT = null;
@@ -33384,7 +33378,7 @@ document.addEventListener('keydown', e=>{
   function wtOsRenderStart(){
     const box = document.getElementById('osStart'); if(!box) return;
     const cl = wtOsClients();
-    if(!cl.length){ box.innerHTML = '<div class="wt-pz-empty"><h3>Moduł Ochrona środowiska</h3><p>Dodaj klienta do modułu OŚ — wybierz firmę z kartoteki (dane wspólne z BHP i PPOŻ) albo dodaj nową. Z krótkiego profilu działalności aplikacja ustali obowiązki i terminy: BDO, KOBiZE, opłaty środowiskowe, PRTR, Wody Polskie, opłaty produktowe, F-gazy, pozwolenia.</p><button class="wt-btn primary" type="button" onclick="window.wtOsAddClient()">Dodaj klienta do OŚ</button></div>'; return; }
+    if(!cl.length){ box.innerHTML = '<div class="wt-pz-empty"><h3>Moduł Ochrona środowiska</h3><p>Dodaj klienta do modułu OŚ — wybierz firmę z kartoteki (dane wspólne z BHP i PPOŻ) albo dodaj nową. Z krótkiego profilu działalności aplikacja ustali obowiązki i terminy: BDO, KOBiZE, opłaty środowiskowe, PRTR, Wody Polskie, opłaty produktowe, F-gazy, pozwolenia.</p><button class="wt-btn primary" type="button" onclick="window.wtOsAddClient()">+ Nowy klient</button></div>'; return; }
     const ev = wtOsCollect();
     const over = ev.filter(e=>!e.missing && e.days!==null && e.days<0).sort((a,b)=>a.days-b.days), soon = ev.filter(e=>!e.missing && e.days!==null && e.days>=0 && e.days<=60).sort((a,b)=>a.days-b.days), miss = ev.filter(e=>e.missing);
     const per = cl.map(c=>{ const ce = ev.filter(e=>e.pid===c.id); const o = ce.filter(e=>!e.missing&&e.days<0).length, m = ce.filter(e=>e.missing).length, s = ce.filter(e=>!e.missing&&e.days>=0&&e.days<=30).length; const sv = osDataOf(c); const np = OS_PROFILE.filter(x=>sv.profile[x.k]).length;
